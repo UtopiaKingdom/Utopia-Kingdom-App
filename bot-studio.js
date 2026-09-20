@@ -1837,7 +1837,6 @@
   }
 
   async function newBot() {
-    if (!requireStudioBuild()) return;
     const bot = blankBot();
     bot.name = 'My bot ' + (bots.length + 1);
     bot.cookStep = 0;
@@ -2311,10 +2310,7 @@
   async function openStudio(opts) {
     opts = opts || {};
     try {
-      // Onboarding tour: show Studio UI, never paywall / bounce home.
-      if (window.__utkOnboardingActive || window.__utkAccessBypass) {
-        /* fall through to render */
-      } else if (window.__utkAccessGate && typeof window.__utkAccessGate.canOpenStudio === 'function') {
+      if (window.__utkAccessGate && typeof window.__utkAccessGate.canOpenStudio === 'function') {
         if (!window.__utkAccessGate.canOpenStudio()) {
           if (opts.warmOnly) return;
           window.__utkAccessGate.guardStudio();
@@ -2764,72 +2760,7 @@
     /* clicks: bot-studio-interactions.js */
   }
 
-  function isStudioPaid() {
-    try {
-      if (window.__utkAccessGate && typeof window.__utkAccessGate.canOpenStudio === 'function') {
-        return !!window.__utkAccessGate.canOpenStudio();
-      }
-    } catch (e) {}
-    try {
-      if (typeof window.hasActiveAppAccess === 'function') return !!window.hasActiveAppAccess();
-    } catch (e2) {}
-    try {
-      const c = window.__utkEntitlementCache;
-      if (c && (c.paidActive || c.isOwner || c.betaTester)) return true;
-    } catch (e3) {}
-    return false;
-  }
-
-  /** Tour peek / unpaid: look only — no create / save / live. */
-  function canBuildStudioBots() {
-    if (window.__utkOnboardingActive) return false;
-    return isStudioPaid();
-  }
-
-  function requireStudioBuild() {
-    if (canBuildStudioBots()) return true;
-    if (window.__utkOnboardingActive) {
-      toast('This is just a peek — Studio builds unlock with Citizen.', 'info');
-      return false;
-    }
-    toast('Citizen subscription required to build bots.', 'error');
-    try {
-      if (window.__utkAccessGate && typeof window.__utkAccessGate.openSubscribe === 'function') {
-        window.__utkAccessGate.openSubscribe('studio');
-      }
-    } catch (e) {}
-    return false;
-  }
-
   function studioCommand(action, a, b) {
-    const act = String(action || '');
-    // Read-ish navigation stays open for paid users; anything that creates or
-    // edits a bot is blocked for tour / Wanderers.
-    const buildActs = {
-      newBot: 1,
-      save: 1,
-      saveName: 1,
-      openName: 1,
-      check: 1,
-      goLive: 1,
-      pause: 1,
-      duplicate: 1,
-      delete: 1,
-      formChange: 1,
-      wizardNext: 1,
-      wizardBack: 1,
-      wizardCancel: 1,
-      wizardRestart: 1,
-      pickStyle: 1,
-      pickStrategy: 1,
-      timeframe: 1,
-      watchMode: 1,
-      publish: 1,
-      unpublish: 1,
-      aiUpgrade: 1,
-      selectBot: 1
-    };
-    if (buildActs[act] && !requireStudioBuild()) return;
     switch (action) {
       case 'strategy':
         pickStrategy(a || 'mean-revert');

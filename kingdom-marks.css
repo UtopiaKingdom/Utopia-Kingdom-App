@@ -1,0 +1,363 @@
+/* kingdom-marks.css — Citizen Marks balance + shop + cosmetic FX */
+
+.marks-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(90, 140, 255, 0.12);
+  border: 1px solid rgba(120, 160, 255, 0.28);
+  color: #c8d8ff;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.marks-pill strong {
+  color: #eef3ff;
+  font-weight: 750;
+}
+
+.marks-crest-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 180, 70, 0.14);
+  border: 1px solid rgba(255, 190, 90, 0.35);
+  color: #ffd9a0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.marks-crest-pill[hidden],
+.marks-ach-pill[hidden] {
+  display: none !important;
+}
+
+.marks-ach-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.marks-ach-cap {
+  background: rgba(90, 200, 255, 0.12);
+  border: 1px solid rgba(100, 190, 255, 0.35);
+  color: #9fd8ff;
+}
+
+.marks-ach-wipe {
+  background: rgba(255, 110, 130, 0.12);
+  border: 1px solid rgba(255, 130, 150, 0.32);
+  color: #ffb0bc;
+}
+
+.marks-ach-real {
+  background: rgba(120, 220, 160, 0.12);
+  border: 1px solid rgba(120, 220, 160, 0.32);
+  color: #9fe0b8;
+}
+
+.marks-secrets-wrap {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marks-secrets-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.marks-secrets-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8eaed;
+}
+
+.marks-secrets-count {
+  font-size: 11px;
+  font-weight: 650;
+  color: #a8c0ff;
+  letter-spacing: 0.02em;
+}
+
+.marks-po-snap {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #9aa0a6;
+}
+
+.marks-secrets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.marks-secret {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.marks-secret.is-locked {
+  opacity: 0.62;
+}
+
+.marks-secret.is-unlocked {
+  border-color: rgba(180, 120, 255, 0.28);
+  background: rgba(140, 90, 220, 0.08);
+}
+
+.marks-secret-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.marks-secret-copy strong {
+  display: block;
+  font-size: 12px;
+  color: #e8eaed;
+}
+
+.marks-secret-copy p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #9aa0a6;
+  line-height: 1.35;
+}
+
+.marks-daily {
+  margin: 0 0 14px;
+}
+
+.marks-daily-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.marks-daily-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5a8cff, #7dcea0);
+  transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.marks-daily-label {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #9aa0a6;
+}
+
+.marks-card {
+  margin-top: 16px;
+}
+
+.marks-card-head {
+  padding: 16px 16px 0;
+}
+
+.marks-card-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #eef3ff;
+}
+
+.marks-card-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9aa0a6;
+  line-height: 1.4;
+}
+
+.marks-card-body {
+  padding: 12px 16px 16px;
+}
+
+.marks-balance-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.marks-balance-value {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 780;
+  letter-spacing: -0.03em;
+  color: #eef3ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.marks-balance-label {
+  margin: 0 0 2px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.marks-earn-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9aa0a6;
+}
+
+.marks-logged-out {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #ff8a9a;
+}
+
+.marks-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marks-shop.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.marks-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.marks-item:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.marks-item-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.marks-item-copy h4 {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #e8eaed;
+}
+
+.marks-item-copy p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9aa0a6;
+}
+
+.marks-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.marks-item-cost {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a8c0ff;
+  white-space: nowrap;
+}
+
+.marks-item button {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 160, 255, 0.28);
+  background: rgba(90, 120, 220, 0.18);
+  color: #dce6ff;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.marks-item button:hover:not(:disabled) {
+  background: rgba(90, 120, 220, 0.28);
+  border-color: rgba(140, 180, 255, 0.4);
+}
+
+.marks-item button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.marks-item.is-owned {
+  border-color: rgba(46, 213, 115, 0.22);
+}
+
+.marks-item.is-owned .marks-item-cost {
+  color: #7dcea0;
+}
+
+.marks-toast {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #9aa0a6;
+  min-height: 16px;
+}
+
+.marks-toast.is-ok {
+  color: #7dcea0;
+}
+
+.marks-toast.is-err {
+  color: #ff8a9a;
+}
+
+/* Desk skin (ember atmosphere on bot panes) */
+html[data-marks-desk="ember"] #section-bot1.section.active,
+html[data-marks-desk="ember"] #section-bot2.section.active,
+html[data-marks-desk="ember"] #section-bot3.section.active,
+html[data-marks-desk="ember"] #section-bots.section.active {
+  background-image:
+    radial-gradient(90% 60% at 0% 0%, rgba(255, 120, 40, 0.14), transparent 55%),
+    radial-gradient(70% 50% at 100% 20%, rgba(180, 60, 20, 0.1), transparent 50%);
+}
+
+/* Hub title color for your messages when owned */
+body.marks-hub-title .hub-msg.is-mine .hub-msg-name,
+body.marks-hub-title .hub-msg-name--marks {
+  color: #7ec8ff !important;
+  text-shadow: 0 0 12px rgba(90, 170, 255, 0.35);
+}

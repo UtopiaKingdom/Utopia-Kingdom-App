@@ -1,4 +1,4 @@
-/* vision-ui.css — safe Vision slideshow (opacity only, no blur traps) */
+/* vision-ui.css — Vision slideshow that fits the app window / UI scale */
 
 #section-vision.section {
   padding: 0 !important;
@@ -15,17 +15,24 @@
   flex-direction: column;
   min-height: 0;
   height: 100%;
+  max-height: 100%;
 }
 
 .vision-stage {
   position: relative;
   flex: 1;
   min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 28px 28px 78px;
+  padding:
+    calc(16px * var(--spacing-scale, 1))
+    calc(18px * var(--spacing-scale, 1))
+    calc(64px * var(--spacing-scale, 1));
   overflow: hidden;
+  container-type: size;
+  container-name: vision;
 }
 
 .vision-atmosphere {
@@ -49,7 +56,10 @@
   z-index: 1;
   width: min(720px, 100%);
   margin: 0 auto;
-  min-height: 360px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  align-self: stretch;
 }
 
 .vision-slide {
@@ -57,13 +67,18 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 14px;
+  justify-content: safe center;
+  gap: clamp(8px, 1.6cqh, 14px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateX(18px);
-  transition: opacity 420ms ease, transform 480ms ease, visibility 0s linear 420ms;
+  transform: translateX(12px);
+  transition: opacity 360ms ease, transform 420ms ease, visibility 0s linear 360ms;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .vision-slide.is-active {
@@ -77,7 +92,7 @@
 
 .vision-kicker {
   margin: 0;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale, 1));
   font-weight: 650;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -86,67 +101,84 @@
 
 .vision-title {
   margin: 0;
-  font-size: clamp(26px, 4.4vw, 40px);
+  font-size: clamp(
+    calc(18px * var(--font-scale, 1)),
+    calc(2.4cqh + 2.2cqi),
+    calc(40px * var(--font-scale, 1))
+  );
   font-weight: 780;
   letter-spacing: -0.03em;
   line-height: 1.12;
   color: #f4f7f5;
-  max-width: 16ch;
+  max-width: min(16ch, 100%);
 }
 
 .vision-lead,
 .vision-fine,
 .vision-note {
   margin: 0;
-  max-width: 48ch;
-  font-size: 15px;
-  line-height: 1.55;
+  max-width: min(48ch, 100%);
+  font-size: clamp(
+    calc(12px * var(--font-scale, 1)),
+    calc(1.5cqh + 0.4cqi),
+    calc(15px * var(--font-scale, 1))
+  );
+  line-height: 1.5;
   color: rgba(255, 255, 255, 0.65);
 }
 
 .vision-fine,
 .vision-note {
-  font-size: 12.5px;
+  font-size: clamp(
+    calc(11px * var(--font-scale, 1)),
+    calc(1.2cqh + 0.3cqi),
+    calc(12.5px * var(--font-scale, 1))
+  );
   color: rgba(255, 255, 255, 0.45);
 }
 
 .vision-goal {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: clamp(6px, 1cqh, 10px);
 }
 
 .vision-goal-pill {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: clamp(8px, 1.2cqh, 12px) clamp(10px, 1.4cqi, 16px);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  max-width: 100%;
 }
 
 .vision-goal-big strong {
-  font-size: 30px;
+  font-size: clamp(
+    calc(18px * var(--font-scale, 1)),
+    calc(2.8cqh),
+    calc(30px * var(--font-scale, 1))
+  );
   font-weight: 780;
   color: #b8e8d4;
   line-height: 1;
 }
 
 .vision-goal-big span {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale, 1));
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.5);
 }
 
 .vision-bots {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(6px, 1cqh, 10px);
 }
 
 .vision-bot-card {
-  padding: 14px;
+  padding: clamp(10px, 1.4cqh, 14px);
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -154,6 +186,7 @@
   text-align: left;
   font: inherit;
   cursor: pointer;
+  min-width: 0;
 }
 
 .vision-bot-card:hover,
@@ -165,12 +198,12 @@
 
 .vision-bot-card strong {
   display: block;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale, 1));
   margin-bottom: 4px;
 }
 
 .vision-bot-card span {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale, 1));
   color: rgba(255, 255, 255, 0.52);
   line-height: 1.4;
 }
@@ -181,21 +214,21 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: clamp(6px, 1cqh, 10px);
 }
 
 .vision-timeline li {
   display: grid;
-  grid-template-columns: 64px 1fr;
+  grid-template-columns: minmax(48px, 64px) minmax(0, 1fr);
   gap: 12px;
-  padding: 12px 14px;
+  padding: clamp(8px, 1.2cqh, 12px) clamp(10px, 1.2cqi, 14px);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .vision-timeline .when {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale, 1));
   font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -206,16 +239,25 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
-.vision-timeline .what strong { font-size: 14px; color: #f0f4f2; }
-.vision-timeline .what span { font-size: 12.5px; color: rgba(255, 255, 255, 0.5); line-height: 1.4; }
+.vision-timeline .what strong {
+  font-size: calc(14px * var(--font-scale, 1));
+  color: #f0f4f2;
+}
+
+.vision-timeline .what span {
+  font-size: calc(12.5px * var(--font-scale, 1));
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
 
 .vision-wait {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 520px;
+  gap: clamp(8px, 1.4cqh, 14px);
+  max-width: min(520px, 100%);
 }
 
 .vision-wait-kinds {
@@ -228,11 +270,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale, 1));
   cursor: pointer;
 }
 
@@ -247,13 +289,14 @@
 .vision-wait textarea {
   width: 100%;
   box-sizing: border-box;
-  min-height: 70px;
-  padding: 12px 13px;
+  min-height: clamp(52px, 8cqh, 70px);
+  max-height: 18cqh;
+  padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.28);
   color: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale, 1));
   resize: vertical;
   font-family: inherit;
 }
@@ -265,7 +308,7 @@
   gap: 10px;
 }
 
-.vision-wait-status { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+.vision-wait-status { font-size: calc(12px * var(--font-scale, 1)); color: rgba(255, 255, 255, 0.5); }
 .vision-wait-status.is-ok { color: #9fe0c4; }
 .vision-wait-status.is-err { color: #f0a0a0; }
 .vision-wait-status.is-busy { color: rgba(255, 255, 255, 0.55); }
@@ -273,13 +316,13 @@
 .vision-chrome {
   position: absolute;
   z-index: 3;
-  left: 28px;
-  right: 28px;
-  bottom: 22px;
+  left: calc(16px * var(--spacing-scale, 1));
+  right: calc(16px * var(--spacing-scale, 1));
+  bottom: calc(14px * var(--spacing-scale, 1));
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   pointer-events: none;
 }
 
@@ -341,27 +384,72 @@
 }
 
 .vision-nav-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.28);
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (max-width: 700px) {
+.vision-nav-btn:hover {
+  border-color: rgba(190, 230, 210, 0.35);
+  background: rgba(20, 28, 24, 0.55);
+  transform: translateY(-1px);
+}
+
+.vision-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 0 clamp(4px, 1cqh, 10px);
+  padding: 6px 11px 6px 8px;
+  border-radius: 999px;
+  background: rgba(140, 200, 170, 0.1);
+  border: 1px solid rgba(160, 210, 180, 0.28);
+  color: #b8e0c8;
+  font-size: calc(11px * var(--font-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.vision-badge-eye {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #9fd8b8;
+}
+
+.menu-item .nav-icon.vision-nav-eye {
+  color: #9fd8b8;
+}
+
+.menu-item.active .nav-icon.vision-nav-eye,
+.menu-item:hover .nav-icon.vision-nav-eye {
+  color: #c8f0d8;
+}
+
+@media (max-width: 700px), (max-height: 620px) {
   .vision-bots { grid-template-columns: 1fr; }
   .vision-chrome {
     grid-template-columns: 1fr auto;
   }
   .vision-progress { grid-column: 1 / -1; }
+  .vision-stage {
+    padding-bottom: calc(72px * var(--spacing-scale, 1));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .vision-slide,
-  .vision-stage.is-playing .vision-progress i {
+  .vision-stage.is-playing .vision-progress i,
+  .vision-nav-btn {
     transition: none !important;
     animation: none !important;
+    transform: none !important;
   }
 }

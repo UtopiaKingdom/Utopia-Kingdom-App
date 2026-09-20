@@ -1,6 +1,6 @@
 {
   "name": "utopia-kingdom",
-  "version": "3.3.25",
+  "version": "3.3.26",
   "description": "Utopia Kingdom - Trading Platform",
   "main": "main.js",
   "author": "Utopia Kingdom",
@@ -59,9 +59,6 @@
     ],
     "appId": "com.utkingdom.trading",
     "productName": "Utopia Kingdom",
-    "toolsets": {
-      "winCodeSign": "1.1.0"
-    },
     "directories": {
       "output": "dist"
     },
@@ -100,8 +97,16 @@
       "home-hub.js",
       "home-status.js",
       "home-mover-ipc.js",
+      "boot-splash.css",
       "vision-ui.js",
       "vision-ui.css",
+      "warnings-ui.js",
+      "warnings-ui.css",
+      "kingdom-marks.js",
+      "kingdom-marks.css",
+      "kingdom-marks-fx.js",
+      "kingdom-marks-fx.css",
+      "kingdom-marks-cloud.js",
       "app-onboarding.js",
       "access-gate.js",
       "access-gate.css",
@@ -217,7 +222,11 @@
       "home-hub.css",
       "home-status.css",
       "app-onboarding.css",
+      "boot-splash.css",
       "vision-ui.css",
+      "warnings-ui.css",
+      "kingdom-marks.css",
+      "kingdom-marks-fx.css",
       "access-gate.css",
       "community-hub.css",
       "bot-studio.css",

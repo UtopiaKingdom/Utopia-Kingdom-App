@@ -1,134 +1,1813 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" style="-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Utopia Kingdom — Launcher</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="logo.png" />
-  <meta name="theme-color" content="#0b0a0d">
+ <meta charset="UTF-8">
+ <title>Utopia Kingdom</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+ <meta name="color-scheme" content="dark">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self' file: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' file:; style-src 'self' 'unsafe-inline' file:; font-src 'self' data: file:; img-src 'self' data: blob: file: https:; media-src 'self' file: blob: data:; connect-src 'self' https: wss: http://169.58.151.111:* ws://169.58.151.111:*; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src https://*.paddle.com https://buy.paddle.com https://pay.paddle.com https://*.utkingdom.com https://*.bridge.xyz https://*.withbridge.com https://*.blindpay.com; worker-src 'self' blob:;">
+ <script>
+ /* Apply stored UI scale BEFORE first paint — prevents login form / window “shrinking” flash */
+ (function () {
+   try {
+     var g = parseFloat(localStorage.getItem('ui:globalScale'));
+     if (!isFinite(g) || g <= 0) g = 1;
+     var aRaw = localStorage.getItem('ui:authScale');
+     var a = parseFloat(aRaw);
+     /* Compact login by default — already applied before paint (no shrink flash) */
+     if (!isFinite(a) || a <= 0 || a > 2 || a >= 0.98) {
+       a = 0.85;
+       try { localStorage.setItem('ui:authScale', '0.85'); } catch (e0) {}
+     }
+     /* Assume auth gate on cold start; logged-in session corrects after boot */
+     var scale = Math.min(Math.max(g * a, 0.5), 3);
+     var fs = Math.min(Math.max(scale, 0.7), 2.6);
+     var root = document.documentElement;
+     root.style.setProperty('--scale-factor', String(scale));
+     root.style.setProperty('--font-scale', String(fs));
+     root.style.setProperty('--spacing-scale', String(fs));
+     root.style.setProperty('--ui-global-scale', String(g));
+     root.style.setProperty('--auth-card-scale', String(a));
+     root.classList.add('utk-pre-auth-scale');
+   } catch (e) {}
+ })();
+ </script>
+ <style>
+ /* Show thin, unobtrusive scrollbars for scrollable areas */
+ ::-webkit-scrollbar { width: 8px; height: 8px; }
+ ::-webkit-scrollbar-track { background: transparent; }
+ ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+ ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+ /* Hold first paint under splash until boot finishes (avoids laggy half-UI) */
+ html.utk-boot-hold body { visibility: visible; }
+ html.utk-boot-hold body > *:not(#utkBootSplash) { visibility: hidden !important; }
+ html.utk-boot-ready body > *:not(#utkBootSplash) { visibility: visible; }
+ </style>
+ <link rel="stylesheet" href="boot-splash.css">
+ <link rel="stylesheet" href="style.css">
+ <link rel="stylesheet" href="bot-styles.css">
+ <link rel="stylesheet" href="connection-styles.css">
+ <link rel="stylesheet" href="bot-minimal.css">
+ <link rel="stylesheet" href="bot-history.css">
+ <link rel="stylesheet" href="strategies.css">
+ <link rel="stylesheet" href="home-hub.css">
+ <link rel="stylesheet" href="home-status.css">
+ <link rel="stylesheet" href="access-gate.css">
+ <link rel="stylesheet" href="app-onboarding.css">
+ <link rel="stylesheet" href="community-hub.css">
+ <link rel="stylesheet" href="bot-studio.css">
+ <link rel="stylesheet" href="bot-studio-desk.css">
+ <link rel="stylesheet" href="bot-studio-chart.css">
+ <link rel="stylesheet" href="bot-studio-wizard.css">
+ <link rel="stylesheet" href="studio-global-hub.css">
+ <link rel="stylesheet" href="bot-studio-life.css">
+ <link rel="stylesheet" href="bot-studio-strategy-picker.css">
+ <link rel="stylesheet" href="bot-studio-stage.css">
+ <link rel="stylesheet" href="bot-studio-skin.css">
+ <link rel="stylesheet" href="studio-shell.css">
+ <link rel="stylesheet" href="studio-bot-hub.css">
+ <link rel="stylesheet" href="studio-backtest-card.css">
+ <link rel="stylesheet" href="studio-ai-panel.css">
+ <link rel="stylesheet" href="studio-options-modal.css">
+ <link rel="stylesheet" href="studio-clarity.css">
+ <link rel="stylesheet" href="studio-backtest-proof.css">
+ <link rel="stylesheet" href="studio-bot-desk-layout.css">
+ <link rel="stylesheet" href="studio-signal-glow.css">
+ <link rel="stylesheet" href="studio-ux-polish.css">
+ <link rel="stylesheet" href="studio-tab-layout.css">
+ <link rel="stylesheet" href="auth-ui.css">
+ <link rel="stylesheet" href="exit-tray-modal.css">
+ <link rel="stylesheet" href="titlebar-ui.css">
+ <link rel="stylesheet" href="signal-notifications-ui.css">
+ <link rel="stylesheet" href="perf-ui.css">
+ <link rel="stylesheet" href="studio-scroll-fix.css">
+ <link rel="stylesheet" href="update-ui.css">
+ <link rel="stylesheet" href="terms-ui.css">
+ <link rel="stylesheet" href="signal-pip-ui.css">
+ <link rel="stylesheet" href="app-toast.css">
+ <link rel="stylesheet" href="app-polish.css">
+ <link rel="stylesheet" href="vision-ui.css">
+ <link rel="stylesheet" href="warnings-ui.css">
+ <link rel="stylesheet" href="kingdom-marks.css">
+ <link rel="stylesheet" href="kingdom-marks-fx.css">
+ <link rel="stylesheet" href="autotrade-chain-gate.css">
+ <!-- Security: Block DevTools console access -->
+ <script>
+ // Disable console in production
+ (function() {
+ try { document.documentElement.classList.add('utk-boot-hold'); } catch (e0) {}
+ const noop = function() {};
+ const methods = ['log', 'debug', 'info', 'warn', 'error', 'dir', 'trace', 'assert', 'clear', 'table'];
+ methods.forEach(function(method) {
+ try { console[method] = noop; } catch {}
+ });
+ 
+ // DevTools / right-click lock (no polling - polling made the UI lag)
+ document.addEventListener('contextmenu', function(e) {
+ e.preventDefault();
+ return false;
+ });
+ })();
+ </script>
+ <style id="trial-shine-style">
+ /* Progress bar styles (shimmer removed) */
+ #trialProgress { position: relative; }
+ #trialProgressFill { position: relative; overflow: hidden; }
+ </style>
 </head>
 <body>
-  <main class="page">
-    <header class="topbar">
-      <div class="container nav">
-        <div class="brand"><img class="brand-logo" src="logo.png" alt="Utopia Kingdom logo"/><span class="brand-text">Utopia Kingdom</span></div>
-        <nav class="nav-actions">
-          <a class="btn btn-ghost" href="#features">Features</a>
-          <a class="btn btn-discord" href="https://discord.gg/pW47Ptsp" target="_blank" rel="noopener" aria-label="Join our Discord">
-            <img class="discord-icon" src="test%20of%20site/discord.png" alt="Discord" />
-          </a>
-        </nav>
-      </div>
-    </header>
+<div id="utkBootSplash" aria-live="polite" aria-busy="true">
+ <div class="utk-boot-ring" aria-hidden="true"></div>
+ <p class="utk-boot-copy">Loading<span id="utkBootDots">…</span> wait a sec</p>
+</div>
+<script>
+(function () {
+  var el = document.getElementById('utkBootDots');
+  if (!el) return;
+  var frames = ['.', '..', '...', ''];
+  var i = 0;
+  var t = setInterval(function () {
+    if (document.documentElement.classList.contains('utk-boot-ready')) {
+      clearInterval(t);
+      return;
+    }
+    i = (i + 1) % frames.length;
+    el.textContent = frames[i] || '…';
+  }, 380);
+})();
+</script>
+<!-- Auth Modal -->
+<div id="auth-modal" class="auth-modal">
+ <div class="auth-modal-container">
+ <div class="auth-atmosphere" aria-hidden="true">
+ <div class="auth-aurora"></div>
+ <div class="auth-grain"></div>
+ <canvas id="musicVisualizer" class="music-visualizer" aria-hidden="true"></canvas>
+ </div>
 
-    <section class="hero">
-      <div class="container hero-inner">
-        <div class="hero-copy">
-          <span class="kicker">Automated Trading • Secure • Fast</span>
-          <h1 class="title">Utopia Kingdom</h1>
-          <p class="lead">A polished, lightweight launcher for automated trading — LUMIX, MIRAX and ARVION integrations, secure login, and one-click updates.</p>
-          <div class="hero-ctas">
-            <a class="btn btn-primary" href="https://www.utkingdom.com/releases/">Download Launcher</a>
-            <a class="btn btn-ghost" href="#features">Learn More</a>
-          </div>
+ <div class="auth-form-section">
+ <div class="auth-card auth-form-container">
+ <div class="auth-brand">
+ <div class="auth-brand-logo">
+ <img src="logo.png" alt="" />
+ </div>
+ <div class="auth-brand-name">Utopia Kingdom</div>
+ </div>
 
-          <div class="preview-large">
-            <div class="carousel" aria-label="Screenshots carousel">
-              <div class="carousel-viewport">
-                <div class="track">
-                    <div class="slide">
-                      <picture>
-                        <source type="image/webp" srcset="test%20of%20site/login.webp 1x, test%20of%20site/login@2x.webp 2x, test%20of%20site/login@4k.webp 4x">
-                        <img decoding="async" loading="lazy" data-src="test%20of%20site/login.png" src="test%20of%20site/login.png"
-                          srcset="test%20of%20site/login.png 1x, test%20of%20site/login@2x.png 2x, test%20of%20site/login@4k.png 4x"
-                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
-                          alt="Login"/>
-                      </picture>
+ <div class="auth-header">
+ <h2 id="auth-title">Welcome back</h2>
+ <p class="auth-subtitle" id="auth-subtitle">Sign in to your kingdom</p>
+ </div>
+
+ <div id="maintenance-check-spinner" style="display:none;align-items:center;gap:8px;justify-content:center;margin:8px 0;color:#9aa0a6;font-size:13px;">
+ <div class="spinner" aria-hidden="true" style="width:18px;height:18px;border:3px solid rgba(255,255,255,0.12);border-top-color:#2ed573;border-radius:50%;animation:spin 1s linear infinite;"></div>
+ <div id="maintenance-check-text">Verifying maintenance status...</div>
+ </div>
+
+ <form id="loginForm" class="auth-form" style="display: flex;">
+ <div class="form-group">
+ <label for="loginEmail">Email</label>
+ <input type="email" id="loginEmail" placeholder="you@email.com" required autocomplete="email" />
+ </div>
+ <div class="form-group">
+ <label for="loginPassword">Password</label>
+ <input type="password" id="loginPassword" placeholder="Your password" required autocomplete="current-password" />
+ </div>
+ <div class="form-options">
+ <div class="form-checkbox">
+ <input type="checkbox" id="rememberMe">
+ <label for="rememberMe">Remember me</label>
+ </div>
+ </div>
+ <div class="auth-error" id="loginErrorMessage"></div>
+ <button type="submit" class="btn-primary btn-auth">Sign in</button>
+ <p class="auth-switch">New here? <a href="#" id="showRegister">Create an account</a></p>
+ </form>
+
+ <form id="registerForm" class="auth-form" style="display: none;">
+ <div class="form-group">
+ <label for="registerEmail">Email</label>
+ <input type="email" id="registerEmail" placeholder="you@email.com" required autocomplete="email" />
+ </div>
+ <div class="form-group">
+ <label for="registerPassword">Password</label>
+ <input type="password" id="registerPassword" placeholder="Create a password" required autocomplete="new-password" />
+ </div>
+ <div class="form-group">
+ <label for="registerPassword2">Confirm password</label>
+ <input type="password" id="registerPassword2" placeholder="Type it once more" required autocomplete="new-password" />
+ </div>
+ <div class="auth-error" id="registerErrorMessage"></div>
+ <button type="submit" class="btn-primary btn-auth">Create account</button>
+ <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Sign in</a></p>
+ </form>
+
+ <form id="verifyCodeForm" class="auth-form verify-code-form" style="display: none;">
+ <div class="verify-card">
+ <div class="verify-header">
+ <h3 class="verify-title">Check your inbox</h3>
+ <p class="verify-subtitle">Enter the 4 digit code we sent you</p>
+ </div>
+
+ <div class="code-grid">
+ <input type="text" id="codeInput1" class="code-input" maxlength="1" placeholder="" required aria-label="Code digit 1" inputmode="numeric" />
+ <input type="text" id="codeInput2" class="code-input" maxlength="1" placeholder="" required aria-label="Code digit 2" inputmode="numeric" />
+ <input type="text" id="codeInput3" class="code-input" maxlength="1" placeholder="" required aria-label="Code digit 3" inputmode="numeric" />
+ <input type="text" id="codeInput4" class="code-input" maxlength="1" placeholder="" required aria-label="Code digit 4" inputmode="numeric" />
+ </div>
+
+ <div class="auth-error" id="codeErrorMessage"></div>
+ <button type="submit" class="btn-primary btn-auth" id="verifyCodeBtn">Verify</button>
+ <p class="auth-switch verify-hint">No code yet? <a href="#" id="resendCodeLink">Resend</a> | 3 attempts max</p>
+ <p class="auth-switch"><a href="#" id="backToRegisterLink">Go back</a></p>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
+</div>
+
+<!-- SSID security warning (before Connect modal) -->
+<div id="ssid-warning-modal" class="confirm-modal" style="display:none;">
+ <div class="confirm-modal-content ssid-warning-content">
+ <div class="confirm-icon ssid-warning-icon" aria-hidden="true">
+ <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+ <line x1="12" y1="9" x2="12" y2="13"></line>
+ <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"></circle>
+ </svg>
+ </div>
+ <h3 class="confirm-title">Keep your SSID private</h3>
+ <p class="confirm-message ssid-warning-message">
+ Never share your Pocket Option SSID with anyone. Anyone who has it can connect as you and place trades on your account.
+ </p>
+ <div class="confirm-actions">
+ <button id="ssidWarningCancel" class="btn-secondary" type="button">Cancel</button>
+ <button id="ssidWarningUnderstand" class="btn-primary" type="button">I understand</button>
+ </div>
+ </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div id="logout-modal" class="confirm-modal">
+ <div class="confirm-modal-content">
+ <div class="confirm-icon">
+ <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+ <polyline points="16 17 21 12 16 7"></polyline>
+ <line x1="21" y1="12" x2="9" y2="12"></line>
+ </svg>
+ </div>
+ <h3 class="confirm-title">Logout Confirmation</h3>
+ <p class="confirm-message">Are you sure you want to logout?</p>
+ <div class="confirm-actions">
+ <button id="cancelLogout" class="btn-secondary">Cancel</button>
+ <button id="confirmLogout" class="btn-primary">Logout</button>
+ </div>
+ </div>
+</div>
+
+<!-- Studio confirm / rename (no native window dialogs) -->
+<div id="studioDialog" class="confirm-modal studio-dialog" style="display:none" aria-hidden="true">
+ <div class="confirm-modal-content studio-dialog-card" role="dialog" aria-modal="true">
+  <div class="studio-dialog-icon" hidden aria-hidden="true">!</div>
+  <p class="studio-dialog-kicker"></p>
+  <h3 class="confirm-title"></h3>
+  <p class="confirm-message"></p>
+  <label class="studio-dialog-field" hidden>
+   <span></span>
+   <input type="text" maxlength="40" autocomplete="off" spellcheck="false" />
+   <textarea maxlength="500" rows="4" autocomplete="off" spellcheck="true" hidden></textarea>
+  </label>
+  <div class="confirm-actions">
+   <button type="button" class="btn-secondary" data-studio-dlg="no"></button>
+   <button type="button" class="btn-primary" data-studio-dlg="yes"></button>
+  </div>
+ </div>
+</div>
+
+<!-- Session Taken Modal (replace alert) -->
+<div id="session-taken-modal" class="confirm-modal">
+ <div class="confirm-modal-content">
+ <div class="confirm-icon">
+ <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <circle cx="12" cy="12" r="10"></circle>
+ <path d="M12 8v4"></path>
+ <path d="M12 16h.01"></path>
+ </svg>
+ </div>
+ <h3 class="confirm-title">Session Ended</h3>
+ <p class="confirm-message" id="sessionTakenMessage">Your account was logged in from another device.</p>
+ <div class="confirm-actions">
+ <button id="sessionTakenClose" class="btn-primary">OK</button>
+ </div>
+ </div>
+</div>
+
+<!-- Edit Username Modal -->
+<div id="username-modal" class="confirm-modal">
+ <div class="confirm-modal-content">
+ <h3 class="confirm-title">Edit Username</h3>
+ <div class="form-group" style="margin: 20px 0; text-align: left;">
+ <label for="newUsername">New Username</label>
+ <input type="text" id="newUsername" placeholder="Enter new username" maxlength="30" style="width: 100%;" />
+ <p id="usernameError" style="color: #ff6b6b; font-size: 12px; margin-top: 8px; min-height: 16px;"></p>
+ </div>
+ <div class="confirm-actions">
+ <button id="cancelUsername" class="btn-secondary">Cancel</button>
+ <button id="saveUsername" class="btn-primary">Save</button>
+ </div>
+ </div>
+</div>
+
+<!-- Legacy update modal removed — updates use bottom banner + Profile -->
+
+<!-- Signal History Modal -->
+<div id="history-modal" class="confirm-modal">
+ <div class="confirm-modal-content history-modal-content">
+ <button type="button" class="modal-icon-close" data-close="history" aria-label="Close history" title="Close">
+ <svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ </svg>
+ </button>
+ <h3 class="confirm-title" id="historyModalTitle">Signal History</h3>
+ <div class="history-list" id="historyList">
+ <p class="history-empty">No history yet</p>
+ </div>
+ </div>
+</div>
+
+<!-- Bot Info Modal -->
+<div id="info-modal" class="confirm-modal">
+ <div class="confirm-modal-content bot-info-modal-content">
+ <button type="button" class="modal-icon-close" data-close="info" aria-label="Close info" title="Close">
+ <svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ </svg>
+ </button>
+ <h3 class="confirm-title" id="infoModalTitle">Bot Info</h3>
+ <div class="bot-info-body" id="infoModalBody"></div>
+ </div>
+</div>
+
+<!-- Win streak history modal -->
+<div id="streak-modal" class="confirm-modal">
+ <div class="confirm-modal-content streak-modal-content">
+ <button type="button" class="modal-icon-close" data-close="streak" aria-label="Close streak history" title="Close">
+ <svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ </svg>
+ </button>
+ <h3 class="confirm-title" id="streakModalTitle">Win streaks</h3>
+ <p class="streak-modal-lead" id="streakModalLead">Every completed streak before a chain loss</p>
+ <div class="streak-modal-list" id="streakModalList"></div>
+ </div>
+</div>
+
+ <!-- Terms & Risk Modal (one-time) -->
+ <div id="terms-modal" class="confirm-modal terms-modal">
+ <div class="confirm-modal-content terms-modal-card">
+ <p class="terms-modal-kicker">Before you continue</p>
+ <h3 class="terms-modal-title">A quick note on risk</h3>
+ <p class="terms-modal-lead">Trading and automated signals can lose money, including everything you place with your broker.</p>
+ <ul class="terms-modal-list">
+ <li>This app sends signals and automation only. It is <strong>not</strong> financial advice.</li>
+ <li>You decide every trade, stake, and outcome.</li>
+ <li>We are not a broker and never hold your funds.</li>
+ <li>Only risk money you can afford to lose. Past results don't promise future ones.</li>
+ </ul>
+ <p class="terms-modal-note">By continuing, you accept these risks and full responsibility for any gains or losses.</p>
+ <label class="terms-modal-check" for="terms-checkbox">
+ <input type="checkbox" id="terms-checkbox">
+ <span>I understand and accept the terms</span>
+ </label>
+ <div class="terms-modal-actions">
+ <button type="button" id="terms-accept-btn" class="terms-modal-btn" disabled>Continue</button>
+ </div>
+ </div>
+ </div>
+
+<!-- Maintenance Overlay -->
+<div id="maintenance-overlay" style="display:none;visibility:hidden;opacity:0;transform:scale(0.99);position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:rgba(2,2,6,0.96);backdrop-filter:blur(4px);">
+ <div style="max-width:880px;text-align:center;padding:36px;border-radius:10px;color:#ffffff;">
+ <h1 id="maintenance-title" style="margin:0 0 8px;font-size:28px;">We'll be right back</h1>
+ <p id="maintenance-message" style="opacity:0.95;margin:0 0 12px;">We'll be back shortly. Thank you for your patience.</p>
+ <p style="opacity:0.7;margin:0;font-size:13px;">For updates, check our status or contact support.</p>
+
+ <!-- Admin debug area: visible only to admins, even during maintenance -->
+ <div id="maintenance-admin-debug" style="display:none;margin-top:18px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);font-size:13px;">
+ <label style="display:inline-flex;align-items:center;gap:8px;">
+ <input type="checkbox" id="maintenance-admin-allow-autotrade"> <span>Allow auto-trades during maintenance (admin override)</span>
+ </label>
+ <div style="margin-top:8px;opacity:0.8;font-size:12px;color:#ccc;">Toggle this to enable local auto-trades for admins while maintenance is active.</div>
+ </div>
+ </div>
+</div>
+
+<!-- Welcome after update -->
+<div id="welcome-update-modal" class="welcome-update-modal" aria-hidden="true">
+ <div id="welcome-update-backdrop" class="welcome-update-backdrop"></div>
+ <div id="welcome-update-card" class="welcome-update-card">
+ <p class="welcome-update-kicker" id="welcome-update-badge">Updated</p>
+ <h2 id="welcome-update-title" class="welcome-update-title">You're on the latest version</h2>
+ <p id="welcome-update-message" class="welcome-update-message">Custom bots feel snappier, history shows your local time, and updates stay out of your way until you're ready.</p>
+ <div class="welcome-update-actions">
+ <button id="welcome-update-cta" class="btn-primary" type="button">Got it</button>
+ </div>
+ </div>
+</div>
+
+<!-- Maintenance bypass indicator (shown when maintenance is hidden on this device) -->
+<div id="maintenance-bypass-indicator" style="display:none;position:fixed;top:12px;right:12px;z-index:100000;color:#fff;background:rgba(0,0,0,0.6);padding:8px 10px;border-radius:8px;font-size:12px;">Maintenance ON (hidden on this device)</div> 
+
+<!-- Titlebar -->
+<div class="titlebar">
+ <div class="titlebar-left">
+ <img src="logo.png" alt="Utopia Kingdom" class="titlebar-logo">
+ <span class="app-name">Utopia Kingdom</span>
+ <span id="ws-status" class="ws-status offline">Offline</span>
+ <!-- zoom controls added per user request -->
+ <span class="zoom-controls">
+ <button id="zoom-minus" class="zoom-btn" title="Zoom out">-</button>
+ <button id="zoom-plus" class="zoom-btn" title="Zoom in">+</button>
+ </span>
+ </div>
+ <div class="titlebar-actions">
+ <button class="window-btn notify-btn" id="openNotifyBtn" aria-label="Signal notifications" title="Signal notifications" type="button" aria-pressed="true">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+ <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+ <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+ </svg>
+ </button>
+ <button class="window-btn theme-btn" id="openThemeBtn" aria-label="Switch theme" title="Theme" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+ <circle cx="12" cy="12" r="4"></circle>
+ <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+ </svg>
+ </button>
+ <button class="window-btn window-min" title="Minimize" aria-label="Minimize" type="button">
+ <svg width="12" height="12" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="5" y1="11" x2="17" y2="11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+ </svg>
+ </button>
+ <button class="window-btn window-max" title="Maximize" aria-label="Maximize" type="button">
+ <svg width="12" height="12" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <rect x="5.5" y="5.5" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+ </svg>
+ </button>
+ <button class="window-btn window-close" title="Close" aria-label="Close" type="button">
+ <svg width="12" height="12" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+ </svg>
+ </button>
+ </div>
+
+ <div class="theme-menu" id="themeMenu" role="menu" aria-label="Appearance">
+ <div class="theme-menu-header">
+ <h3>Appearance</h3>
+ <p class="theme-menu-sub">Choose a color mood</p>
+ </div>
+ <div class="theme-grid">
+ <button class="theme-option" data-theme="" type="button" role="menuitemradio">
+ <span class="theme-swatch" style="--swatch-a:#121216; --swatch-b:#5a6aff;"></span>
+ <span class="theme-title">Pure Dark</span>
+ </button>
+ <button class="theme-option" data-theme="theme-cyber-orange" type="button" role="menuitemradio">
+ <span class="theme-swatch" style="--swatch-a:#16120e; --swatch-b:#ff9100;"></span>
+ <span class="theme-title">Cyber Ember</span>
+ </button>
+ <button class="theme-option" data-theme="theme-dark-blue" type="button" role="menuitemradio">
+ <span class="theme-swatch" style="--swatch-a:#0a192f; --swatch-b:#00d4ff;"></span>
+ <span class="theme-title">Ocean Blue</span>
+ </button>
+ <button class="theme-option" data-theme="theme-neon-purple" type="button" role="menuitemradio">
+ <span class="theme-swatch" style="--swatch-a:#140e18; --swatch-b:#b24bf3;"></span>
+ <span class="theme-title">Neon Purple</span>
+ </button>
+ <button class="theme-option" data-theme="theme-forest-green" type="button" role="menuitemradio">
+ <span class="theme-swatch" style="--swatch-a:#0a1410; --swatch-b:#10d97b;"></span>
+ <span class="theme-title">Forest Green</span>
+ </button>
+ </div>
+ <div class="theme-menu-divider"></div>
+ <div class="custom-color-section">
+ <div class="custom-color-label">Custom</div>
+ <div class="custom-color-picker-wrapper custom-theme-grid">
+ <label class="custom-theme-field">
+ <span>Primary</span>
+ <input type="color" id="customPrimaryPicker" value="#5a6aff" aria-label="Custom primary color">
+ </label>
+ <label class="custom-theme-field">
+ <span>Accent</span>
+ <input type="color" id="customAccentPicker" value="#7a8aff" aria-label="Custom accent color">
+ </label>
+ <button class="btn-apply-custom" id="applyCustomColor" type="button">Apply</button>
+ </div>
+ </div>
+ </div>
+
+ <div class="theme-menu notify-menu" id="notifyMenu" role="dialog" aria-label="Signal notifications">
+ <div class="theme-menu-header">
+ <h3>Notifications</h3>
+ <p class="theme-menu-sub">Only when a bot opens a fresh 1x chain</p>
+ </div>
+ <label class="notify-master-row">
+ <input type="checkbox" id="notifyMasterToggle" checked />
+ <span>Signal notifications</span>
+ </label>
+ <div class="theme-menu-divider"></div>
+ <div class="notify-scope" id="notifyScope">
+ <div class="notify-mode-row" role="radiogroup" aria-label="Notification scope">
+ <label class="notify-mode-opt">
+ <input type="radio" name="notifyMode" id="notifyModeAll" value="all" checked />
+ <span>Notify all</span>
+ </label>
+ <label class="notify-mode-opt">
+ <input type="radio" name="notifyMode" id="notifyModePick" value="pick" />
+ <span>Pick bots</span>
+ </label>
+ </div>
+ <div id="notifyPickBlock" class="notify-pick-block">
+ <div class="notify-section-label">House bots</div>
+ <div id="notifyHouseList" class="notify-bot-list"></div>
+ <div id="notifyStudioSection" hidden>
+ <div class="theme-menu-divider"></div>
+ <div class="notify-section-label">Autotraded custom bots</div>
+ <div id="notifyStudioList" class="notify-bot-list"></div>
+ </div>
+ </div>
+ </div>
+ <p id="notifySubNote" class="notify-sub-note" hidden></p>
+ <button type="button" class="notify-preview-btn" id="notifyPreviewBtn">Preview desktop toast</button>
+ </div>
+</div>
+ <div class="app-container">
+ <!-- Left Sidebar -->
+ <aside class="sidebar">
+ <!-- Small collapse arrow (subtle) -->
+ <button id="toggleSidebarBtn" class="ui-toggle-arrow" aria-label="Toggle sidebar" title="Toggle sidebar" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+ </button>
+ <nav class="sidebar-nav">
+ <div class="nav-section">
+ <a href="#" id="menu-main" class="menu-item active">
+ <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+ <polyline points="9 22 9 12 15 12 15 22"></polyline>
+ </svg>
+ <span class="nav-label">Home</span>
+ </a>
+ <a href="#" id="menu-bots" class="menu-item">
+ <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <circle cx="12" cy="12" r="1"></circle>
+ <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
+ </svg>
+ <span class="nav-label">Trading Bots</span>
+ </a>
+
+ <a href="#" id="menu-strategies" class="menu-item">
+ <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+ <path d="M2 17l10 5 10-5"></path>
+ <path d="M2 12l10 5 10-5"></path>
+ </svg>
+ <span class="nav-label">Strategies</span>
+ </a>
+ <a href="#" id="menu-hub" class="menu-item">
+ <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+ </svg>
+ <span class="nav-label">Chat</span>
+ </a>
+ <a href="#" id="menu-studio" class="menu-item">
+ <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <rect x="3" y="3" width="7" height="7"></rect>
+ <rect x="14" y="3" width="7" height="7"></rect>
+ <rect x="14" y="14" width="7" height="7"></rect>
+ <rect x="3" y="14" width="7" height="7"></rect>
+ </svg>
+ <span class="nav-label">Studio</span>
+ </a>
+ <a href="#" id="menu-vision" class="menu-item" title="Vision">
+ <svg class="nav-icon vision-nav-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
+ <circle cx="12" cy="12" r="3"></circle>
+ </svg>
+ <span class="nav-label">Vision</span>
+ </a>
+ <a href="#" id="menu-warnings" class="menu-item" title="Stay safe">
+ <svg class="nav-icon warnings-nav-tri" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M10.3 3.9L1.8 18.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+ <line x1="12" y1="9" x2="12" y2="13"></line>
+ <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"></circle>
+ </svg>
+ <span class="nav-label">Warnings</span>
+ </a>
+ 
+ </div>
+ </nav>
+
+ <div class="sidebar-footer">
+ <div class="user-card" id="userProfileCard" tabindex="0" role="button" aria-label="Open profile">
+ <div class="user-avatar" id="sidebarAvatar"><span>U</span></div>
+ <div class="user-info">
+ <p class="user-name" id="sidebarUsername">Utopia Trader</p>
+ <p class="user-status" id="sidebarUserStatus">Active • View profile</p>
+ <span id="sidebarUpdateChip" class="user-update-chip" hidden></span>
+ </div>
+ </div>
+ </div>
+ </aside>
+
+ <!-- Main Content -->
+ <main class="main-content">
+ <!-- Home Section -->
+ <section id="section-main" class="section active">
+ <div class="section-header">
+ <h1>Home</h1>
+ </div>
+
+ <div class="home-shell">
+ <div class="home-top">
+ <div class="home-logo" aria-hidden="true">
+ <img src="logo.png" alt="" />
+ </div>
+ <div class="home-intro">
+ <h2 class="home-brand-name">Utopia Kingdom</h2>
+ <p class="home-hello">
+ <span class="home-hello-line">
+ <span class="home-hello-label">Welcome back</span>
+ <span class="home-hello-name" id="homeWelcomeName">Trader</span>
+ </span>
+ </p>
+ </div>
+ </div>
+
+ <div class="home-status" id="homeStatusBar" aria-live="polite">
+ <div class="home-status-access" id="homeStatusAccess"></div>
+ <div class="home-status-streaks" id="homeStatusStreaks"></div>
+ <div class="home-status-nudge" id="homeStatusNudge" hidden></div>
+ </div>
+
+ <div class="home-prices" aria-label="Live prices">
+ <div class="home-price-chip">
+ <span class="home-price-label">BTC</span>
+ <span class="home-price-value"><span id="homeBtcPrice">...</span> <span class="home-price-change" id="homeBtcChange"></span></span>
+ </div>
+ <div class="home-price-chip">
+ <span class="home-price-label">ETH</span>
+ <span class="home-price-value"><span id="homeEthPrice">...</span> <span class="home-price-change" id="homeEthChange"></span></span>
+ </div>
+ </div>
+
+ <div class="home-destinations" role="navigation" aria-label="Main destinations">
+ <button type="button" class="home-dest" data-home-nav="bot1">
+ <span class="home-dest-name">LUMIX</span>
+ <span class="home-dest-meta">3 minutes. Fires when the hammer prints</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="bot2">
+ <span class="home-dest-name">MIRAX</span>
+ <span class="home-dest-meta">30 seconds. Signal when the entry is ready</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="bot3">
+ <span class="home-dest-name">NYX</span>
+ <span class="home-dest-meta">20s to 10m. Picks pair and expiry from live structure</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="strategies">
+ <span class="home-dest-name">Strategies</span>
+ <span class="home-dest-meta">Learn entry setups</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="hub">
+ <span class="home-dest-name">Chat</span>
+ <span class="home-dest-meta">Talk with people around the world</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="studio">
+ <span class="home-dest-name">Studio</span>
+ <span class="home-dest-meta">Create a bot, test it, go live</span>
+ </button>
+ <button type="button" class="home-dest" data-home-nav="vision">
+ <span class="home-dest-name">Vision</span>
+ <span class="home-dest-meta">More platforms, real markets, ultra streaks</span>
+ </button>
+ </div>
+
+ <div class="home-mover" aria-live="polite">
+ <div class="home-mover-label">Today's market mover</div>
+ <a class="home-mover-title" id="homeMoverTitle" href="#" target="_blank" rel="noopener noreferrer">Loading market news...</a>
+ <div class="home-mover-meta" id="homeMoverMeta"></div>
+ </div>
+
+ <form class="home-support" id="homeSupportForm" novalidate>
+ <div class="home-support-label">Support / problem / beta</div>
+ <p class="home-support-hint">Logged in? Pick Beta tester and send a message. We’ll get it by email.</p>
+ <div class="home-support-kinds" role="group" aria-label="Message type">
+ <label class="home-support-kind">
+ <input type="radio" name="homeSupportKind" value="support" checked />
+ <span>Support</span>
+ </label>
+ <label class="home-support-kind">
+ <input type="radio" name="homeSupportKind" value="problem" />
+ <span>Problem</span>
+ </label>
+ <label class="home-support-kind">
+ <input type="radio" name="homeSupportKind" value="beta" />
+ <span>Beta tester</span>
+ </label>
+ </div>
+ <textarea
+ id="homeSupportMessage"
+ class="home-support-message"
+ rows="4"
+ maxlength="4000"
+ placeholder="Describe what you need help with..."
+ required
+ ></textarea>
+ <div class="home-support-actions">
+ <button type="submit" class="home-support-send" id="homeSupportSend">Send message</button>
+ <span class="home-support-status" id="homeSupportStatus" aria-live="polite"></span>
+ </div>
+ </form>
+
+ <div class="home-foot">
+ <span>Version <span class="update-version">v0.0.0</span></span>
+ <span class="home-status" id="homeSubscriptionStatus">...</span>
+ </div>
+
+ <!-- Kept for update modal wiring; not shown on home -->
+ <ul id="homeReleaseNotes" hidden></ul>
+ <div id="homeUpdateStatus" hidden></div>
+ </div>
+ </section>
+
+ <!-- Bots Section -->
+ <section id="section-bots" class="section">
+ <div class="section-header">
+ <h1>Trading Bots</h1>
+ <p class="section-subtitle">Manage your automated trading systems</p>
+ <!-- Small toggle to hide bot panels (auto-trade & stats) -->
+ <button id="toggleBotPanelBtn" class="ui-toggle-arrow ui-toggle-right" aria-label="Toggle bot panels" title="Toggle bot panels" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"></polyline></svg>
+ </button>
+ </div>
+ <div class="content-grid">
+ <!-- Bot Card 1 -->
+ <div class="card">
+ <div class="card-header">
+ <h3>LUMIX</h3>
+ <span class="badge">Inactive</span>
+ </div>
+ <div class="card-body">
+ <p class="section-subtitle" style="margin-bottom:12px;">3 minute signals. No waiting phase. The trade idea posts when the hammer prints, with a recovery chain if needed.</p>
+ <a href="#" id="menu-bot1" class="sub-menu-item btn-primary" style="display:inline-block;padding:10px 14px;border-radius:6px;">Open</a>
+ </div>
+ </div>
+
+ <!-- Bot Card 2 -->
+ <div class="card">
+ <div class="card-header">
+ <h3>MIRAX</h3>
+ <span class="badge">Inactive</span>
+ </div>
+ <div class="card-body">
+ <p class="section-subtitle" style="margin-bottom:12px;">30 second signals. No waiting phase. The trade idea posts when the entry is ready, with a recovery chain if needed.</p>
+ <a href="#" id="menu-bot2" class="sub-menu-item btn-primary" style="display:inline-block;padding:10px 14px;border-radius:6px;">Open</a>
+ </div>
+ </div>
+
+ <div class="card">
+ <div class="card-header">
+ <h3>NYX</h3>
+ <span class="badge">Inactive</span>
+ </div>
+ <div class="card-body">
+ <p class="section-subtitle" style="margin-bottom:12px;">20s to 10m signals. Watches every 92% OTC pair and picks the expiry from live structure, with a recovery chain if needed.</p>
+ <a href="#" id="menu-bot3" class="sub-menu-item btn-primary" style="display:inline-block;padding:10px 14px;border-radius:6px;">Open</a>
+ </div>
+ </div>
+
+ </div>
+ </section>
+
+ <!-- Bot 1 Section -->
+ <section id="section-bot1" class="section">
+ <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+ <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+ <div class="bot-switch-group" style="display:flex;gap:8px;">
+ <button type="button" class="btn-secondary bot-switch-btn is-active" data-target="bot1">LUMIX</button>
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot2">MIRAX</button>
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot3">NYX</button>
+ </div>
+ <div style="display:flex;flex-direction:column;">
+ <h1>LUMIX</h1>
+ </div>
+ </div>
+ <div style="display:flex;align-items:center;gap:12px;">
+ <button class="ui-toggle-arrow ui-section-toggle" data-target-section="section-bot1" aria-label="Toggle LUMIX bot section" title="Toggle bot section" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"></polyline></svg>
+ </button>
+ <span class="bot-expiry">3 minutes</span>
+ <button class="btn-secondary" id="infoBtn-bot1">Info</button>
+ <button class="btn-secondary" id="historyBtn-bot1">History</button>
+ </div>
+ </div>
+
+ <div class="bot-container">
+ <div class="bot-signal-area">
+ <div class="signal-empty" id="signalEmpty-bot1">
+ <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+ <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+ </svg>
+ <p data-empty-text>Waiting for signals...</p>
+ <button type="button" class="btn-secondary signal-empty-cta" id="signalEmptyCta-bot1" hidden>Connect Pocket Option</button>
+ </div>
+ <div class="signal-display" id="signalDisplay-bot1" style="display:none;">
+ <!-- Signals will be injected here -->
+ </div>
+ </div>
+ <div class="bot-panels">
+ <div class="bot-auto-trade-panel">
+ <div class="card">
+ <div class="card-header autotrade-card-header">
+ <h3>Auto Trade</h3>
+ <label class="toggle-switch" title="Turn auto trade on">
+ <input type="checkbox" id="autoTradeToggle-bot1">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div class="card-body autotrade-body">
+ <div class="autotrade-live">
+ <div class="autotrade-status" id="autotradeStatus-bot1" data-field="status" aria-live="polite">Waiting for a signal</div>
+ <div class="autotrade-watch" id="autotradeWatch-bot1" data-state="off" aria-live="polite">
+ <span class="autotrade-watch-dot" aria-hidden="true"></span>
+ <span class="autotrade-watch-text"></span>
+ </div>
+ </div>
+ <div class="autotrade-reason" id="autotradeReason-bot1" aria-live="polite" hidden></div>
+ <div class="form-group autotrade-stake">
+ <label for="betSize-bot1">Amount</label>
+ <div class="bet-size-controls">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeHalf-bot1" title="Halve amount" aria-label="Halve amount">½</button>
+ <input type="number" id="betSize-bot1" value="10" min="1" step="1" class="form-input bet-size-input" inputmode="numeric">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeDouble-bot1" title="Double amount" aria-label="Double amount">×2</button>
+ </div>
+ <div class="bet-chain-hint" id="betChainHint-bot1" aria-live="polite" hidden></div>
+ </div>
+ <div class="form-group form-group-last autotrade-save">
+ <div class="form-row-toggle">
+ <label>Saving Signals</label>
+ <label class="toggle-switch">
+ <input type="checkbox" id="savingSignalEnabled-bot1">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div id="savingSignalOptions-bot1" class="saving-signal-options" style="display:none;">
+ <div class="saving-signal-strategy-block">
+ <label class="saving-signal-strategy-label">Strategy</label>
+ <div class="saving-signal-mode" id="savingSignalMode-bot1" role="group" aria-label="Saving ladder">
+ <button type="button" class="saving-ladder-chip is-on" data-saving-mode="2x" data-bot-id="bot1">2x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="4x" data-bot-id="bot1">4x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="custom" data-bot-id="bot1">Custom</button>
+ </div>
+ <div class="saving-ladder-custom" id="savingLadderCustom-bot1" hidden aria-hidden="true"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Stats Section -->
+ <div class="card stats-card compact">
+ <div class="card-header">
+ <div class="stats-header-row">
+ <h3>Stats</h3>
+ <div class="stats-date-controls">
+ <div class="stats-date-wrap" aria-label="Choose stats date">
+ <button class="stats-date-btn" id="statsDateBtn-bot1" type="button">Today</button>
+ <input id="statsDateInput-bot1" class="stats-date-input" type="date" aria-label="Stats date" />
+ </div>
+ <button class="stats-date-today" id="statsDateToday-bot1" type="button">Today</button>
+ </div>
+ </div>
+ </div>
+ <div class="card-body">
+ <div class="streak-cluster" aria-label="Win streaks">
+ <div class="win-streak-badge" id="winStreakBadge-bot1" aria-label="Current win streak" title="Wins in a row since the last full 5-loss wipe">
+                      <span class="win-streak-label">Streak</span>
+                      <span class="win-streak-value" id="winStreakValue-bot1">0</span>
                     </div>
-                    <div class="slide">
-                      <picture>
-                        <source type="image/webp" srcset="test%20of%20site/main.webp 1x, test%20of%20site/main@2x.webp 2x, test%20of%20site/main@4k.webp 4x">
-                        <img decoding="async" loading="lazy" data-src="test%20of%20site/main.png" src="test%20of%20site/main.png"
-                          srcset="test%20of%20site/main.png 1x, test%20of%20site/main@2x.png 2x, test%20of%20site/main@4k.png 4x"
-                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
-                          alt="Main"/>
-                      </picture>
+                    <div class="best-streak-badge is-clickable" id="bestStreakBadge-bot1" role="button" tabindex="0" data-bot="LUMIX" aria-label="Last completed streak" title="Last streak that ended with a full wipe on this day. Click for history.">
+                      <span class="win-streak-label">Last</span>
+ <span class="win-streak-value" id="bestStreakValue-bot1">0</span>
+ </div>
+ </div>
+
+ <div class="stats-grid stats-grid--steps" role="list">
+ <div class="stat-item" title="Won on the first try">
+                      <span class="stat-label">Entry</span>
+                      <span class="stat-value" id="stat-1x-wins-bot1">0</span>
                     </div>
-                    <div class="slide">
-                      <picture>
-                        <source type="image/webp" srcset="test%20of%20site/LUMIX.webp 1x, test%20of%20site/LUMIX@2x.webp 2x, test%20of%20site/LUMIX@4k.webp 4x">
-                        <img decoding="async" loading="lazy" data-src="test%20of%20site/LUMIX.png" src="test%20of%20site/LUMIX.png"
-                          srcset="test%20of%20site/LUMIX.png 1x, test%20of%20site/LUMIX@2x.png 2x, test%20of%20site/LUMIX@4k.png 4x"
-                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
-                          alt="LUMIX"/>
-                      </picture>
+                    <div class="stat-item" title="Won on save step 1">
+                      <span class="stat-label">S1</span>
+                      <span class="stat-value" id="stat-2x4x-wins-bot1">0</span>
                     </div>
+                    <div class="stat-item" title="Won on save step 2">
+                      <span class="stat-label">S2</span>
+                      <span class="stat-value" id="stat-4x7x-wins-bot1">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 3">
+                      <span class="stat-label">S3</span>
+                      <span class="stat-value" id="stat-10x16x-wins-bot1">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 4">
+                      <span class="stat-label">S4</span>
+ <span class="stat-value" id="stat-20x44x-wins-bot1">0</span>
+ </div>
+ </div>
+
+ <div class="stats-summary-row">
+ <div class="stat-item chains-lost" title="Full 5-loss wipe">
+ <span class="stat-label">Wipes</span>
+ <span class="stat-value" id="stat-losses-bot1">0</span>
+ </div>
+ <div class="stat-item total-wins">
+ <span class="stat-label">Wins</span>
+ <span class="stat-value" id="stat-total-wins-bot1">0</span>
+ </div>
+ </div>
+ <div class="stats-wait-row">
+ <div class="stat-item signal-wait" title="Average wait between new signals over the last 3 hours">
+ <span class="stat-label">Avg wait</span>
+ <span class="stat-value" id="stat-avg-wait-bot1">—</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Bot 3 Section (NYX) -->
+ <section id="section-bot3" class="section">
+ <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+ <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+ <div class="bot-switch-group" style="display:flex;gap:8px;">
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot1">LUMIX</button>
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot2">MIRAX</button>
+ <button type="button" class="btn-secondary bot-switch-btn is-active" data-target="bot3">NYX</button>
+ </div>
+ <div style="display:flex;flex-direction:column;">
+ <h1>NYX</h1>
+ </div>
+ </div>
+ <div style="display:flex;align-items:center;gap:12px;">
+ <button class="ui-toggle-arrow ui-section-toggle" data-target-section="section-bot3" aria-label="Toggle NYX bot section" title="Toggle bot section" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"></polyline></svg>
+ </button>
+ <span class="bot-expiry">20s to 10m</span>
+ <button class="btn-secondary" id="infoBtn-bot3">Info</button>
+ <button class="btn-secondary" id="historyBtn-bot3">History</button>
+ </div>
+ </div>
+
+ <div class="bot-container">
+ <div class="bot-signal-area">
+ <div class="nyx-mind-note" id="nyxMindNote" hidden>
+ <div class="nyx-mind-note-head">
+ <h3>Mind</h3>
+ <span class="nyx-mind-meta" id="nyxMindMeta"></span>
+ <button type="button" class="nyx-mind-note-close" id="nyxMindClose" aria-label="Close mind" title="Close">
+ <svg width="14" height="14" viewBox="0 0 22 22" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ </svg>
+ </button>
+ </div>
+ <p class="nyx-mind-said" id="nyxMindSaid">Waiting to look at the board.</p>
+ <ul class="nyx-mind-learned" id="nyxMindLearned"></ul>
+ <ul class="nyx-mind-skips" id="nyxMindSkips"></ul>
+ </div>
+ <div class="signal-empty" id="signalEmpty-bot3">
+ <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+ <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+ </svg>
+ <p data-empty-text>Waiting for signals...</p>
+ <button type="button" class="btn-secondary signal-empty-cta" id="signalEmptyCta-bot3" hidden>Connect Pocket Option</button>
+ </div>
+ <div class="signal-display" id="signalDisplay-bot3" style="display:none;">
+ </div>
+ </div>
+ <div class="bot-panels">
+ <div class="bot-auto-trade-panel">
+ <div class="card">
+ <div class="card-header autotrade-card-header">
+ <h3>Auto Trade</h3>
+ <label class="toggle-switch" title="Turn auto trade on">
+ <input type="checkbox" id="autoTradeToggle-bot3">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div class="card-body autotrade-body">
+ <div class="autotrade-live">
+ <div class="autotrade-status" id="autotradeStatus-bot3" data-field="status" aria-live="polite">Waiting for a signal</div>
+ <div class="autotrade-watch" id="autotradeWatch-bot3" data-state="off" aria-live="polite">
+ <span class="autotrade-watch-dot" aria-hidden="true"></span>
+ <span class="autotrade-watch-text"></span>
+ </div>
+ </div>
+ <div class="autotrade-reason" id="autotradeReason-bot3" aria-live="polite" hidden></div>
+ <div class="form-group autotrade-stake">
+ <label for="betSize-bot3">Amount</label>
+ <div class="bet-size-controls">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeHalf-bot3" title="Halve amount" aria-label="Halve amount">½</button>
+ <input type="number" id="betSize-bot3" value="10" min="1" step="1" class="form-input bet-size-input" inputmode="numeric">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeDouble-bot3" title="Double amount" aria-label="Double amount">×2</button>
+ </div>
+ <div class="bet-chain-hint" id="betChainHint-bot3" aria-live="polite" hidden></div>
+ </div>
+ <div class="form-group form-group-last autotrade-save">
+ <div class="form-row-toggle">
+ <label>Saving Signals</label>
+ <label class="toggle-switch">
+ <input type="checkbox" id="savingSignalEnabled-bot3">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div id="savingSignalOptions-bot3" class="saving-signal-options" style="display:none;">
+ <div class="saving-signal-strategy-block">
+ <label class="saving-signal-strategy-label">Strategy</label>
+ <div class="saving-signal-mode" id="savingSignalMode-bot3" role="group" aria-label="Saving ladder">
+ <button type="button" class="saving-ladder-chip is-on" data-saving-mode="2x" data-bot-id="bot3">2x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="4x" data-bot-id="bot3">4x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="custom" data-bot-id="bot3">Custom</button>
+ </div>
+ <div class="saving-ladder-custom" id="savingLadderCustom-bot3" hidden aria-hidden="true"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="card stats-card compact">
+ <div class="card-header">
+ <div class="stats-header-row">
+ <h3>Stats</h3>
+ <div class="stats-date-controls">
+ <div class="stats-date-wrap" aria-label="Choose stats date">
+ <button class="stats-date-btn" id="statsDateBtn-bot3" type="button">Today</button>
+ <input id="statsDateInput-bot3" class="stats-date-input" type="date" aria-label="Stats date" />
+ </div>
+ <button class="stats-date-today" id="statsDateToday-bot3" type="button">Today</button>
+ </div>
+ </div>
+ </div>
+ <div class="card-body">
+ <div class="streak-cluster" aria-label="Win streaks">
+ <div class="win-streak-badge" id="winStreakBadge-bot3" aria-label="Current win streak" title="Wins in a row since the last full 5-loss wipe">
+ <span class="win-streak-label">Streak</span>
+ <span class="win-streak-value" id="winStreakValue-bot3">0</span>
+ </div>
+ <div class="best-streak-badge is-clickable" id="bestStreakBadge-bot3" role="button" tabindex="0" data-bot="NYX" aria-label="Last completed streak" title="Last streak that ended with a full wipe on this day. Click for history.">
+ <span class="win-streak-label">Last</span>
+ <span class="win-streak-value" id="bestStreakValue-bot3">0</span>
+ </div>
+ </div>
+ <div class="stats-grid stats-grid--steps" role="list">
+ <div class="stat-item" title="Won on the first try">
+ <span class="stat-label">Entry</span>
+ <span class="stat-value" id="stat-1x-wins-bot3">0</span>
+ </div>
+ <div class="stat-item" title="Won on save step 1">
+ <span class="stat-label">S1</span>
+ <span class="stat-value" id="stat-2x4x-wins-bot3">0</span>
+ </div>
+ <div class="stat-item" title="Won on save step 2">
+ <span class="stat-label">S2</span>
+ <span class="stat-value" id="stat-4x7x-wins-bot3">0</span>
+ </div>
+ <div class="stat-item" title="Won on save step 3">
+ <span class="stat-label">S3</span>
+ <span class="stat-value" id="stat-10x16x-wins-bot3">0</span>
+ </div>
+ <div class="stat-item" title="Won on save step 4">
+ <span class="stat-label">S4</span>
+ <span class="stat-value" id="stat-20x44x-wins-bot3">0</span>
+ </div>
+ </div>
+ <div class="stats-summary-row">
+ <div class="stat-item chains-lost" title="Full 5-loss wipe">
+ <span class="stat-label">Wipes</span>
+ <span class="stat-value" id="stat-losses-bot3">0</span>
+ </div>
+ <div class="stat-item total-wins">
+ <span class="stat-label">Wins</span>
+ <span class="stat-value" id="stat-total-wins-bot3">0</span>
+ </div>
+ </div>
+ <div class="stats-wait-row">
+ <div class="stat-item signal-wait" title="Average wait between new signals over the last 3 hours">
+ <span class="stat-label">Avg wait</span>
+ <span class="stat-value" id="stat-avg-wait-bot3">—</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Bot 2 Section -->
+ <section id="section-bot2" class="section">
+ <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+ <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+ <div class="bot-switch-group" style="display:flex;gap:8px;">
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot1">LUMIX</button>
+ <button type="button" class="btn-secondary bot-switch-btn is-active" data-target="bot2">MIRAX</button>
+ <button type="button" class="btn-secondary bot-switch-btn" data-target="bot3">NYX</button>
+ </div>
+ <div style="display:flex;flex-direction:column;">
+ <h1>MIRAX</h1>
+ </div>
+ </div>
+ <div style="display:flex;align-items:center;gap:12px;">
+ <button class="ui-toggle-arrow ui-section-toggle" data-target-section="section-bot2" aria-label="Toggle MIRAX bot section" title="Toggle bot section" type="button">
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"></polyline></svg>
+ </button>
+ <span class="bot-expiry">30 seconds</span>
+ <button class="btn-secondary" id="infoBtn-bot2">Info</button>
+ <button class="btn-secondary" id="historyBtn-bot2">History</button>
+ </div>
+ </div>
+
+ <div class="bot-container">
+ <div class="bot-signal-area">
+ <div class="signal-empty" id="signalEmpty-bot2">
+ <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+ <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+ </svg>
+ <p data-empty-text>Waiting for signals...</p>
+ <button type="button" class="btn-secondary signal-empty-cta" id="signalEmptyCta-bot2" hidden>Connect Pocket Option</button>
+ </div>
+ <div class="signal-display" id="signalDisplay-bot2" style="display:none;">
+ <!-- Signals will be injected here -->
+ </div>
+ </div>
+ <div class="bot-panels">
+ <div class="bot-auto-trade-panel">
+ <div class="card">
+ <div class="card-header autotrade-card-header">
+ <h3>Auto Trade</h3>
+ <label class="toggle-switch" title="Turn auto trade on">
+ <input type="checkbox" id="autoTradeToggle-bot2">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div class="card-body autotrade-body">
+ <div class="autotrade-live">
+ <div class="autotrade-status" id="autotradeStatus-bot2" data-field="status" aria-live="polite">Waiting for a signal</div>
+ <div class="autotrade-watch" id="autotradeWatch-bot2" data-state="off" aria-live="polite">
+ <span class="autotrade-watch-dot" aria-hidden="true"></span>
+ <span class="autotrade-watch-text"></span>
+ </div>
+ </div>
+ <div class="autotrade-reason" id="autotradeReason-bot2" aria-live="polite" hidden></div>
+ <div class="form-group autotrade-stake">
+ <label for="betSize-bot2">Amount</label>
+ <div class="bet-size-controls">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeHalf-bot2" title="Halve amount" aria-label="Halve amount">½</button>
+ <input type="number" id="betSize-bot2" value="10" min="1" step="1" class="form-input bet-size-input" inputmode="numeric">
+ <button type="button" class="btn-secondary bet-size-btn" id="betSizeDouble-bot2" title="Double amount" aria-label="Double amount">×2</button>
+ </div>
+ <div class="bet-chain-hint" id="betChainHint-bot2" aria-live="polite" hidden></div>
+ </div>
+ <div class="form-group form-group-last autotrade-save">
+ <div class="form-row-toggle">
+ <label>Saving Signals</label>
+ <label class="toggle-switch">
+ <input type="checkbox" id="savingSignalEnabled-bot2">
+ <span class="toggle-slider"></span>
+ </label>
+ </div>
+ <div id="savingSignalOptions-bot2" class="saving-signal-options" style="display:none;">
+ <div class="saving-signal-strategy-block">
+ <label class="saving-signal-strategy-label">Strategy</label>
+ <div class="saving-signal-mode" id="savingSignalMode-bot2" role="group" aria-label="Saving ladder">
+ <button type="button" class="saving-ladder-chip is-on" data-saving-mode="2x" data-bot-id="bot2">2x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="4x" data-bot-id="bot2">4x</button>
+ <button type="button" class="saving-ladder-chip" data-saving-mode="custom" data-bot-id="bot2">Custom</button>
+ </div>
+ <div class="saving-ladder-custom" id="savingLadderCustom-bot2" hidden aria-hidden="true"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Stats Section -->
+ <div class="card stats-card compact">
+ <div class="card-header">
+ <div class="stats-header-row">
+ <h3>Stats</h3>
+ <div class="stats-date-controls">
+ <div class="stats-date-wrap" aria-label="Choose stats date">
+ <button class="stats-date-btn" id="statsDateBtn-bot2" type="button">Today</button>
+ <input id="statsDateInput-bot2" class="stats-date-input" type="date" aria-label="Stats date" />
+ </div>
+ <button class="stats-date-today" id="statsDateToday-bot2" type="button">Today</button>
+ </div>
+ </div>
+ </div>
+ <div class="card-body">
+ <div class="streak-cluster" aria-label="Win streaks">
+ <div class="win-streak-badge" id="winStreakBadge-bot2" aria-label="Current win streak" title="Wins in a row since the last full 5-loss wipe">
+                      <span class="win-streak-label">Streak</span>
+                      <span class="win-streak-value" id="winStreakValue-bot2">0</span>
+                    </div>
+                    <div class="best-streak-badge is-clickable" id="bestStreakBadge-bot2" role="button" tabindex="0" data-bot="MIRAX" aria-label="Last completed streak" title="Last streak that ended with a full wipe on this day. Click for history.">
+                      <span class="win-streak-label">Last</span>
+ <span class="win-streak-value" id="bestStreakValue-bot2">0</span>
+ </div>
+ </div>
+
+ <div class="stats-grid stats-grid--steps" role="list">
+ <div class="stat-item" title="Won on the first try">
+                      <span class="stat-label">Entry</span>
+                      <span class="stat-value" id="stat-1x-wins-bot2">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 1">
+                      <span class="stat-label">S1</span>
+                      <span class="stat-value" id="stat-2x4x-wins-bot2">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 2">
+                      <span class="stat-label">S2</span>
+                      <span class="stat-value" id="stat-4x7x-wins-bot2">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 3">
+                      <span class="stat-label">S3</span>
+                      <span class="stat-value" id="stat-10x16x-wins-bot2">0</span>
+                    </div>
+                    <div class="stat-item" title="Won on save step 4">
+                      <span class="stat-label">S4</span>
+ <span class="stat-value" id="stat-20x44x-wins-bot2">0</span>
+ </div>
+ </div>
+
+ <div class="stats-summary-row">
+ <div class="stat-item chains-lost" title="Full 5-loss wipe">
+ <span class="stat-label">Wipes</span>
+ <span class="stat-value" id="stat-losses-bot2">0</span>
+ </div>
+ <div class="stat-item total-wins">
+ <span class="stat-label">Wins</span>
+ <span class="stat-value" id="stat-total-wins-bot2">0</span>
+ </div>
+ </div>
+ <div class="stats-wait-row">
+ <div class="stat-item signal-wait" title="Average wait between new signals over the last 3 hours">
+ <span class="stat-label">Avg wait</span>
+ <span class="stat-value" id="stat-avg-wait-bot2">—</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Strategies Section -->
+ <section id="section-strategies" class="section">
+ <div class="strat-page">
+ <header class="strat-hero">
+ <h1>Strategies</h1>
+ <p>Nine entry setups. Candle, expiry, and the exact rules.</p>
+ </header>
+ <div class="strat-shell">
+ <nav id="strategiesNav" class="strat-nav" aria-label="Strategy list"></nav>
+ <div id="strategiesDetail" class="strat-detail"></div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Strategy detail mounts (filled by strategies-ui.js) -->
+ <section id="section-strategy1" class="section"></section>
+ <section id="section-strategy2" class="section"></section>
+ <section id="section-strategy3" class="section"></section>
+ <section id="section-strategy4" class="section"></section>
+ <section id="section-strategy5" class="section"></section>
+ <section id="section-strategy6" class="section"></section>
+ <section id="section-strategy7" class="section"></section>
+ <section id="section-strategy8" class="section"></section>
+ <section id="section-strategy9" class="section"></section>
+
+ <!-- Chat -->
+ <section id="section-hub" class="section">
+ <div class="hub-page">
+ <aside class="hub-rail">
+ <div class="hub-rail-head">
+ <h1>Chat</h1>
+ </div>
+ <button type="button" class="hub-room-btn is-on" id="hubWorldBtn" data-hub-room="lobby">
+ <span class="hub-room-name">World</span>
+ <span class="hub-room-meta">Everyone in the app</span>
+ </button>
+ <div class="hub-rail-label">Your private chats</div>
+ <div id="hubRoomList" class="hub-room-list"></div>
+ <div class="hub-rail-actions">
+ <button type="button" id="hubNewRoomBtn" class="hub-new-room">Create private chat</button>
+ <button type="button" id="hubJoinBtn" class="hub-join-btn">Join with a code</button>
+ </div>
+ </aside>
+ <div class="hub-chat">
+ <header class="hub-chat-head">
+ <div class="hub-chat-titles">
+ <h2 id="hubChatTitle">World</h2>
+ <p id="hubChatMeta"></p>
+ </div>
+ <button type="button" id="hubLeaveBtn" class="hub-leave" hidden>Leave</button>
+ </header>
+ <div id="hubInviteBar" class="hub-invite" hidden>
+ <span class="hub-invite-label">Invite code</span>
+ <strong id="hubInviteCode" class="hub-invite-code"></strong>
+ <button type="button" id="hubCopyInvite" class="hub-copy">Copy</button>
+ </div>
+ <div id="hubMessages" class="hub-messages" role="log"></div>
+ <div id="hubComposeWrap" class="hub-compose-wrap">
+ <div id="hubEmotePanel" class="hub-emote-panel" hidden></div>
+ <form id="hubComposer" class="hub-composer">
+ <button type="button" id="hubEmoteBtn" class="hub-emo-btn" title="Emoji" aria-label="Emoji" aria-expanded="false">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+ <circle cx="12" cy="12" r="9"></circle>
+ <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+ <circle cx="9" cy="10" r="0.8" fill="currentColor" stroke="none"></circle>
+ <circle cx="15" cy="10" r="0.8" fill="currentColor" stroke="none"></circle>
+ </svg>
+ </button>
+ <input id="hubInput" type="text" maxlength="400" placeholder="Message" autocomplete="off" />
+ <button type="submit" id="hubSendBtn">Send</button>
+ </form>
+ </div>
+ <p id="hubStatus" class="hub-status" aria-live="polite"></p>
+ </div>
+ </div>
+ <div id="hubModal" class="hub-modal" hidden>
+ <div class="hub-modal-card">
+ <h3 id="hubModalTitle">Create a private chat</h3>
+ <p id="hubModalText">Only people you invite can see this chat.</p>
+ <input id="hubModalInput" type="text" maxlength="40" placeholder="Name this chat" />
+ <div class="hub-modal-actions">
+ <button type="button" id="hubModalCancel">Cancel</button>
+ <button type="button" id="hubModalOk">Create</button>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- Bot studio (custom setups) -->
+ <section id="section-studio" class="section">
+ <div class="studio-page" id="studioPage">
+ <aside class="studio-rail" id="studioRail">
+ <div class="studio-rail-head">
+ <h1>Your bots</h1>
+ </div>
+ <div id="studioBotList" class="studio-bot-list"></div>
+ <button type="button" id="studioNewBtn" class="studio-new-btn">Make a bot</button>
+ </aside>
+ <div id="studioEditor" class="studio-editor"></div>
+ </div>
+ </section>
+
+ <!-- Vision / roadmap slideshow -->
+ <section id="section-vision" class="section">
+ <div class="vision-stage" id="visionStage">
+ <div class="vision-atmosphere" aria-hidden="true">
+ <div class="vision-orb vision-orb-a"></div>
+ <div class="vision-orb vision-orb-b"></div>
+ <div class="vision-grain"></div>
+ </div>
+
+ <div class="vision-slides" id="visionSlides">
+ <article class="vision-slide is-active" data-vision-slide="0">
+ <div class="vision-badge" aria-hidden="true">
+ <svg class="vision-badge-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
+ <circle cx="12" cy="12" r="3"></circle>
+ </svg>
+ <span>Looking ahead</span>
+ </div>
+ <p class="vision-kicker">Utopia Kingdom</p>
+ <h2 class="vision-title">Built for traders who want more<br />than one platform and short streaks</h2>
+ <p class="vision-lead">Right now Utopia lives on Pocket Option OTC. Ahead of us: more binary platforms, real market tools, and house bots tuned for ultra long winning runs.</p>
+ </article>
+
+ <article class="vision-slide" data-vision-slide="1">
+ <p class="vision-kicker">Our house bots</p>
+ <h2 class="vision-title">Chasing the kind of streak<br />most bots never touch</h2>
+ <p class="vision-lead">LUMIX, MIRAX, and NYX are the original Utopia desk. We care about clean entries that can hold a long win run, not a flood of weak signals.</p>
+ <div class="vision-goal">
+ <div class="vision-goal-pill vision-goal-big"><strong>~100</strong> <span>wins in a row<br />what we aim to research</span></div>
+ <div class="vision-goal-pill vision-goal-big"><strong>~1</strong> <span>loss in that window<br />the bar we chase</span></div>
+ </div>
+ <div class="vision-bots">
+ <button type="button" class="vision-bot-card" data-vision-bot="bot1"><strong>LUMIX</strong><span>3 minute structure when the hammer prints</span></button>
+ <button type="button" class="vision-bot-card" data-vision-bot="bot2"><strong>MIRAX</strong><span>30 second pace when the entry is ready</span></button>
+ <button type="button" class="vision-bot-card" data-vision-bot="bot3"><strong>NYX</strong><span>From 20 seconds to 10 minutes, expiry from live structure</span></button>
+ </div>
+ <p class="vision-fine">This is a research north star, not a guarantee for every day. Markets shift. We keep refining for fewer wipes and stronger chains.</p>
+ </article>
+
+ <article class="vision-slide" data-vision-slide="2">
+ <p class="vision-kicker">The path ahead</p>
+ <h2 class="vision-title">One clear journey</h2>
+ <ul class="vision-timeline">
+ <li>
+ <div class="when">Now</div>
+ <div class="what"><strong>Pocket Option OTC</strong><span>Live house bots, Studio, strategies, chat, and autotrade you can use today.</span></div>
+ </li>
+ <li>
+ <div class="when">Next</div>
+ <div class="what"><strong>More binary platforms</strong><span>Bring Utopia to other sites once connect quality and signal strength are ready.</span></div>
+ </li>
+ <li>
+ <div class="when">Later</div>
+ <div class="what"><strong>Real market trading</strong><span>Tools for real markets with the same streak focused discipline.</span></div>
+ </li>
+ </ul>
+ </article>
+
+ <article class="vision-slide" data-vision-slide="3">
+ <p class="vision-kicker">Your voice</p>
+ <h2 class="vision-title">Help shape what we build next</h2>
+ <p class="vision-lead">Choose what excites you. When that chapter of Utopia opens, we will reach out.</p>
+ <form class="vision-wait" id="visionWaitForm" novalidate>
+ <div class="vision-wait-kinds" role="group" aria-label="Interests">
+ <label class="vision-wait-kind">
+ <input type="checkbox" name="visionInterest" value="other-binary" checked />
+ <span>Other binary platforms</span>
+ </label>
+ <label class="vision-wait-kind">
+ <input type="checkbox" name="visionInterest" value="real-markets" />
+ <span>Real markets</span>
+ </label>
+ <label class="vision-wait-kind">
+ <input type="checkbox" name="visionInterest" value="ultra-streaks" />
+ <span>Ultra long streak bots</span>
+ </label>
+ </div>
+ <textarea id="visionWaitNote" maxlength="800" placeholder="Got a platform or market on your mind? Tell us here…"></textarea>
+ <div class="vision-wait-actions">
+ <button type="submit" class="btn-primary" id="visionWaitSend">Count me in</button>
+ <span class="vision-wait-status" id="visionWaitStatus" aria-live="polite"></span>
+ </div>
+ <p class="vision-note">This is interest only. Live trading stays on Pocket Option until the next chapter ships.</p>
+ </form>
+ </article>
+ </div>
+
+ <div class="vision-chrome">
+ <div class="vision-progress" aria-hidden="true"><i id="visionProgressFill"></i></div>
+ <div class="vision-dots" id="visionDots" role="tablist" aria-label="Vision slides"></div>
+ <div class="vision-nav">
+ <button type="button" class="vision-nav-btn" id="visionPrev" aria-label="Previous slide">←</button>
+ <button type="button" class="vision-nav-btn" id="visionNext" aria-label="Next slide">→</button>
+ </div>
+ </div>
+ </div>
+ </section>
+
+<!-- Warnings / scam radar -->
+      <section id="section-warnings" class="section">
+        <div class="warnings-stage" id="warningsStage">
+          <div class="warnings-atmosphere" aria-hidden="true"></div>
+          <div class="warnings-slides">
+            <article class="warnings-slide is-active">
+              <div class="warnings-badge">
+                <svg class="warnings-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10.3 3.9L1.8 18.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <circle cx="12" cy="17" r="0.85" fill="currentColor" stroke="none"></circle>
+                </svg>
+                Stay safe
+              </div>
+              <p class="warnings-kicker">Quick heads up</p>
+              <h2 class="warnings-title">A lot of “easy money” online is just fraud</h2>
+              <p class="warnings-lead">Telegram VIP rooms, affiliate pyramids, home mining kits, dead wallet finders. Same story every time: big promises, then fees, malware, or your funds gone. This is a short cheat sheet so you spot it early.</p>
+            </article>
+
+            <article class="warnings-slide">
+              <p class="warnings-kicker">Crypto mining</p>
+              <h2 class="warnings-title">Home mining almost never profits</h2>
+              <p class="warnings-lead">Cheap “plug in and earn” boxes and cloud miner dashboards are classic bait. Residential power is expensive, and retail GPUs lose to real farms. If the pitch is passive income with zero work, walk away.</p>
+              <div class="warnings-stats">
+                <div class="warnings-stat">
+                  <p class="warnings-stat-value">$0.16 to $0.26</p>
+                  <p class="warnings-stat-label">Typical EU home kWh. Already too expensive for thin mining margins.</p>
+                </div>
+                <div class="warnings-stat">
+                  <p class="warnings-stat-value">Under $0.08</p>
+                  <p class="warnings-stat-label">Ballpark power where mining even starts to pencil out</p>
                 </div>
               </div>
-              <button class="chev prev" aria-label="Previous">‹</button>
-              <button class="chev next" aria-label="Next">›</button>
+              <p class="warnings-fine">Without industrial hardware and cheap power, “mining income” is usually just your electricity bill with extra fans.</p>
+            </article>
+
+            <article class="warnings-slide">
+              <p class="warnings-kicker">Wallet finders</p>
+              <h2 class="warnings-title">“Abandoned wallet” tools are almost always malware</h2>
+              <p class="warnings-lead">Private keys are astronomically large. Apps that claim to hunt funded dead wallets are fake dashboards or stealers. They want your seed, clipboard, or wallet files, not to hand you free coins.</p>
+              <div class="warnings-stats">
+                <div class="warnings-stat">
+                  <p class="warnings-stat-value">~0%</p>
+                  <p class="warnings-stat-label">Practical hit rate on correctly generated keys</p>
+                </div>
+                <div class="warnings-stat">
+                  <p class="warnings-stat-value">High</p>
+                  <p class="warnings-stat-label">Risk of seed theft, clipboard stealers, remote access</p>
+                </div>
+              </div>
+              <p class="warnings-fine">If a key isn’t yours, taking the coins isn’t clever. It’s theft. And the “finder” usually never finds anything for you.</p>
+            </article>
+
+            <article class="warnings-slide">
+              <p class="warnings-kicker">Telegram and affiliates</p>
+              <h2 class="warnings-title">VIP groups, signal rooms, deposit unlocks</h2>
+              <ul class="warnings-list">
+                <li>Pay to join, then “gurus” who only win in screenshots</li>
+                <li>Affiliate pyramids: you earn only if you recruit, not from trading skill</li>
+                <li>“Cloud miner” balances that climb until withdrawal needs a tax or fee</li>
+                <li>Support that asks for seed phrases, passwords, SSID dumps, or remote desktop</li>
+              </ul>
+              <p class="warnings-fine">If payout means sending more crypto first, close the chat and leave.</p>
+            </article>
+
+            <article class="warnings-slide">
+              <p class="warnings-kicker">Red flags</p>
+              <h2 class="warnings-title">Protect yourself with a few simple rules</h2>
+              <ul class="warnings-list">
+                <li>Nobody needs your seed phrase, 2FA codes, or remote desktop to “help”</li>
+                <li>Guaranteed profits, locked withdrawals, and “upgrade to unlock” fees are traps</li>
+                <li>If income depends on recruiting friends, it is a pyramid, not a product</li>
+                <li>Slow down. Real platforms never rush you into depositing more to get your money out</li>
+              </ul>
+              <p class="warnings-fine">When something smells off, trust that feeling. Fraud thrives on urgency and FOMO.</p>
+            </article>
+          </div>
+
+          <div class="warnings-controls">
+            <div class="warnings-dots" id="warningsDots" aria-label="Slides"></div>
+            <div class="warnings-nav">
+              <button type="button" id="warningsPrev" aria-label="Previous">Prev</button>
+              <button type="button" id="warningsNext" aria-label="Next">Next</button>
             </div>
           </div>
+          <div class="warnings-progress" aria-hidden="true"><div class="warnings-progress-bar"></div></div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="promo">
-      <div class="container promo-inner">
-        <div class="promo-content">
-          <h2>Why Utopia Kingdom?</h2>
-          <p class="lead muted">A lightweight, secure launcher that syncs live signals, connects to a browser extension for execution, and keeps your tools up to date.</p>
+<!-- Profile Section -->
+ <section id="section-profile" class="section profile-section">
+ <div class="section-header"></div>
 
-          <div class="promo-features">
-            <div class="promo-item card">
-              <h4>Real-time Signals</h4>
-              <p>Preparing → Signal → Result phases are synchronized across users so you never miss the correct timing.</p>
-            </div>
-            <div class="promo-item card">
-              <h4>Extension Integration</h4>
-              <p>Send signals to the extension for one‑click execution or enable the auto‑trade bridge when you want hands‑free operation.</p>
-            </div>
-            <div class="promo-item card">
-              <h4>Secure Updates</h4>
-              <p>One‑click updates and a verified releases channel keep your launcher stable and safe.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+ <div class="content-grid" style="grid-template-columns: 1fr; max-width: calc(500px * var(--scale-factor)); margin-left: auto; margin-right: auto;">
+ <div class="card profile-card">
+ <div class="card-header profile-card-header">
+ <div class="profile-identity">
+ <div class="profile-avatar" id="profileAvatar">
+ <span>U</span>
+ <button id="changeAvatarBtn" class="avatar-upload-btn" title="Change photo">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M5 7h3l2-2h4l2 2h3v12H5z"></path>
+ <circle cx="12" cy="13" r="4"></circle>
+ </svg>
+ </button>
+ <input type="file" id="avatarInput" accept="image/*" style="display:none" />
+ </div>
+ <div style="width: 100%;">
+ <div class="username-edit-group">
+ <h3 id="displayUsername">Utopia Trader</h3>
+ <button id="editUsernameBtn" class="btn-icon" title="Edit username">
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+ <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+ <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+ </svg>
+ </button>
+ </div>
+ <p class="profile-meta" id="displayEmail"></p>
+ <div class="profile-pills">
+ <span class="pill pill-green">Active</span>
+ <span id="subscriptionPill" class="pill">Free trial</span>
+ <span id="paidUntilPill" class="pill pill-muted" style="display:none;"> </span>
+ <span id="trialCountdown" class="pill pill-muted" style="display:none;"> </span>
+ <span class="pill pill-muted">KYC verified</span>
+ <span class="marks-pill" title="Citizen Marks">Marks <strong data-marks-balance>0</strong></span>
+ <span class="marks-crest-pill" id="marksCrestPill" hidden title="Kingdom Crest">Crest</span>
+ <span class="marks-ach-pill marks-ach-cap" id="marksCapPill" hidden title="Hit the daily Marks goal">Cap Crusher</span>
+ <span class="marks-ach-pill marks-ach-wipe" id="marksWipePill" hidden title="Survived a full 5-loss chain">Wipe Survivor</span>
+ <span class="marks-ach-pill marks-ach-real" id="marksRealPill" hidden title="Real account linked">Real Wire</span>
+ </div>
+ <div id="trialCountdownDetail" style="display:none; margin-top:6px; color:rgba(255,255,255,0.72); font-weight:600; font-size:12px;">
+ <div style="margin-bottom:6px; color:rgba(255,255,255,0.72); font-size:13px;">Time left: <span id="trialCountdownText"></span></div>
+ <div id="trialProgress" style="position:relative;height:6px;background:rgba(255,255,255,0.02);border-radius:6px;overflow:hidden;width:180px;margin:6px auto 0 auto;border:1px solid rgba(255,255,255,0.04);box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);">
+ <div id="trialProgressFill" style="position:relative;height:100%;width:100%;background:rgba(0,0,0,0.28);transition:width 800ms linear;transform-origin:left center;"></div>
+ </div>
+ </div> 
+ </div>
+ </div>
+ </div>
+ <div class="card-body profile-grid">
+ <div class="profile-field">
+ <p class="profile-label">Member since</p>
+ <p class="profile-value" id="memberSince">Jan 2024</p>
+ </div>
+ <div class="profile-field">
+ <p class="profile-label">Last login</p>
+ <p class="profile-value" id="lastLogin">Today, 09:24 UTC</p>
+ </div>
+ </div>
+ </div>
 
-    <section id="features" class="container features">
-      <div class="grid">
-        <div class="card">
-          <h3>LUMIX</h3>
-          <p>Fast scalping bridge using 1‑minute candles; emits short signals with a typical 5‑minute expiry and can route signals to the extension for one‑click or automated execution.</p>
-        </div>
-        <div class="card">
-          <h3>MIRAX</h3>
-          <p>Heuristic market scanner that evaluates setups and applies quality/payout gates. MIRAX issues short 1‑minute signals (≈60s expiry) and schedules retries/locks when configured.</p>
-        </div>
-        <div class="card">
-          <h3>ARVION</h3>
-          <p>Longer‑horizon strategy focused on 15‑minute expiry signals. ARVION watches multi‑frame candles (1m/5m/15m), manages trade lifecycle, and integrates with the WebSocket/extension.</p>
-        </div>
-      </div>
-    </section>
+ </div>
 
-    <section class="container stats">
-      <div class="live-stats">
-        <div class="stat"><div class="num" id="stat-users">—</div><div class="label">Users online</div></div>
-        <div class="stat"><div class="num" id="stat-bots">3</div><div class="label">Active bots</div></div>
-        <div class="stat"><div class="num" id="stat-signals">—</div><div class="label">Signals / min</div></div>
-      </div>
-    </section>
+ <div class="content-grid" style="grid-template-columns: 1fr; max-width: calc(500px * var(--scale-factor)); margin-left: auto; margin-right: auto;">
+ <div class="card marks-card">
+ <div class="card-header marks-card-head">
+ <h3>Kingdom Marks</h3>
+ <p class="marks-card-sub">Citizenship currency for Utopia Kingdom</p>
+ </div>
+ <div class="card-body marks-card-body">
+ <div class="marks-balance-row">
+ <div>
+ <p class="marks-balance-label">Your Marks</p>
+ <p class="marks-balance-value"><span data-marks-balance>0</span></p>
+ </div>
+ <div class="marks-balance-side" id="marksUnlockCount" hidden></div>
+ </div>
+ <p class="marks-earn-note">Marks are Citizenship currency. You only earn them on a live Real Pocket Option connection, with Auto Trade on, through the house bots (LUMIX, MIRAX, NYX). Demo trades and Studio bots do not count. Balance lives on Kingdom servers, so editing the app locally will not invent Marks. Fill today's bar for a bonus, spend Marks on perks, or trade 500 for a Citizen week.</p>
+ <div class="marks-daily">
+ <div class="marks-daily-track" aria-hidden="true"><div class="marks-daily-fill" id="marksDailyFill"></div></div>
+ <p class="marks-daily-label" id="marksDailyLabel">Today 0 of 100</p>
+ </div>
+ <p class="marks-logged-out" id="marksLoggedOutNote" hidden>Sign in so Marks can follow you.</p>
+ <div class="marks-shop" id="marksShop"></div>
+ <p class="marks-toast" id="marksToast"></p>
+ <div class="marks-secrets-wrap">
+ <div class="marks-secrets-head">
+ <h4 class="marks-secrets-title">Secrets</h4>
+ <span class="marks-secrets-count" id="marksSecretsCount">0 of 9</span>
+ </div>
+ <p class="marks-po-snap" id="marksPoSnap">Connect Pocket Option to unlock account secrets.</p>
+ <div class="marks-secrets" id="marksSecrets"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <footer class="container footer">
-      <div class="foot-inner">© Utopia Kingdom — Built with Electron</div>
-    </footer>
-  </main>
+<div class="content-grid" style="grid-template-columns: 1fr; max-width: calc(500px * var(--scale-factor)); margin-left: auto; margin-right: auto;">
+ <div class="card profile-update-card">
+ <div class="card-header" style="padding: 16px;">
+ <h3 style="font-size: 16px; margin: 0;">Updates</h3>
+ </div>
+ <div class="card-body">
+ <p class="profile-app-version">Installed <span id="profileAppVersion" class="update-version"></span></p>
+ <p class="profile-update-lead">New versions download quietly while you trade. Restart when it suits you.</p>
+ <button id="checkUpdatesBtn" class="btn-primary" style="width:100%; padding: 8px 12px; font-size: 12px;">Check for updates</button>
+ <div id="updateStatus" class="profile-update-status"></div>
+ <div id="updateProgressContainer" class="profile-update-progress">
+ <div id="updateProgressBar" class="profile-update-progress-bar">
+ <div id="updateProgressFill" class="profile-update-progress-fill"></div>
+ </div>
+ <div id="updateProgressText" class="profile-update-progress-text">0%</div>
+ <button id="retryUpdateBtn" class="btn-secondary" style="display:none;padding:6px 10px;font-size:12px;">Try again</button>
+ </div>
+ <div id="profileUpdateActions" class="profile-update-actions" hidden>
+ <button type="button" id="profileUpdateLaterBtn" class="btn-secondary">Later</button>
+ <button type="button" id="profileUpdateRestartBtn" class="btn-primary">Refresh now</button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <script src="script.js"></script>
+ <div class="content-grid" style="grid-template-columns: 1fr; max-width: calc(500px * var(--scale-factor)); margin-left: auto; margin-right: auto;">
+ <div class="card">
+ <div class="card-header" style="padding: 16px;">
+ <h3 style="font-size: 16px; margin: 0;">Account</h3>
+ </div>
+ <div class="card-body profile-actions" style="padding: 12px 16px;">
+ <button class="btn-ghost danger" id="logoutBtn" style="width:100%; padding: calc(8px * var(--spacing-scale)) calc(12px * var(--spacing-scale)); font-size: calc(12px * var(--font-scale));">Log out</button>
+ <p class="profile-meta" style="margin-top: 8px;">Logging out will close active sessions on this device.</p>
+ </div>
+ </div>
+ </div>
+ </section>
+ </main>
+ </div>
+
+<!-- Pocket Option SSID Modal -->
+<div id="ssid-modal" class="confirm-modal" style="display:none;">
+ <div class="confirm-modal-content ssid-modal-content">
+ <header class="ssid-modal-header">
+ <div class="ssid-modal-header-text">
+ <h3 class="ssid-modal-title">Connect Account</h3>
+ <p class="ssid-modal-desc">Paste your Pocket Option session token to enable Auto Trade</p>
+ </div>
+ <button id="cancelSSID" class="ssid-modal-close modal-icon-close" type="button" aria-label="Close" title="Close">
+ <svg width="18" height="18" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <line x1="6" y1="6" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ <line x1="16" y1="6" x2="6" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+ </svg>
+ </button>
+ </header>
+
+ <div class="ssid-modal-body">
+ <article class="ssid-slot is-demo" data-account="demo">
+ <div class="ssid-slot-top">
+ <div class="ssid-slot-identity">
+ <span id="demoPanelDot" class="ssid-slot-dot"></span>
+ <span class="ssid-slot-name">Demo</span>
+ <span id="demoPanelStatus" class="ssid-slot-badge">Offline</span>
+ </div>
+ <div class="ssid-slot-meta-row">
+ <span id="demoBalanceAmount" class="ssid-slot-balance"></span>
+ <select id="ssidCurrencyDemo" class="ssid-slot-currency" aria-label="Demo balance currency">
+ <option value="EUR">EUR</option>
+ <option value="USD">USD</option>
+ <option value="GBP">GBP</option>
+ </select>
+ </div>
+ </div>
+ <textarea id="ssidInputDemo" class="ssid-textarea" rows="2" placeholder="Paste demo SSID..." spellcheck="false"></textarea>
+ <p id="ssidHintDemo" class="ssid-detected-hint" style="display:none;"></p>
+ <p id="demoBalanceTime" class="ssid-slot-time" style="display:none;"></p>
+ <div class="ssid-slot-actions">
+ <button id="disconnectDemoSSID" class="ssid-btn-disc" type="button" style="display:none;">Disconnect</button>
+ <button id="connectDemoSSID" class="ssid-btn-connect is-demo" type="button">Connect</button>
+ </div>
+ </article>
+
+ <article class="ssid-slot is-real" data-account="real">
+ <div class="ssid-slot-top">
+ <div class="ssid-slot-identity">
+ <span id="realPanelDot" class="ssid-slot-dot"></span>
+ <span class="ssid-slot-name">Real</span>
+ <span id="realPanelStatus" class="ssid-slot-badge">Offline</span>
+ </div>
+ <div class="ssid-slot-meta-row">
+ <span id="realBalanceAmount" class="ssid-slot-balance"></span>
+ <select id="ssidCurrencyReal" class="ssid-slot-currency" aria-label="Real balance currency">
+ <option value="EUR">EUR</option>
+ <option value="USD">USD</option>
+ <option value="GBP">GBP</option>
+ </select>
+ </div>
+ </div>
+ <textarea id="ssidInputReal" class="ssid-textarea" rows="2" placeholder="Paste real SSID..." spellcheck="false"></textarea>
+ <p id="ssidHintReal" class="ssid-detected-hint" style="display:none;"></p>
+ <p id="realBalanceTime" class="ssid-slot-time" style="display:none;"></p>
+ <div class="ssid-slot-actions">
+ <button id="disconnectRealSSID" class="ssid-btn-disc" type="button" style="display:none;">Disconnect</button>
+ <button id="connectRealSSID" class="ssid-btn-connect is-real" type="button">Connect</button>
+ </div>
+ </article>
+
+ <div id="ssidAutotradePicker" class="ssid-autotrade-picker" style="display:none;">
+ <span class="ssid-autotrade-label">Trading account</span>
+ <div class="ssid-account-toggle ssid-autotrade-toggle">
+ <label class="ssid-account-option is-demo">
+ <input type="radio" name="ssidAutotradeAccount" id="ssidAutotradeDemo" value="demo">
+ <span>Demo</span>
+ </label>
+ <label class="ssid-account-option is-real">
+ <input type="radio" name="ssidAutotradeAccount" id="ssidAutotradeReal" value="real">
+ <span>Real</span>
+ </label>
+ </div>
+ </div>
+
+ <p class="ssid-apply-hint">Connects LUMIX, MIRAX, and NYX together so all three can autotrade at once</p>
+
+ <p id="ssidError" class="ssid-error" style="display:none;"></p>
+ <div id="balanceLoading" class="ssid-loading" style="display:none;">
+ <div class="ssid-spinner"></div>
+ <span>Checking...</span>
+ </div>
+ </div>
+ </div>
+</div>
+
+<script>
+try { require('./renderer-boot.js'); } catch (e) {
+  try { document.body.classList.add('app-loaded'); } catch (_) {}
+  try {
+    document.documentElement.classList.remove('utk-boot-hold');
+    document.documentElement.classList.add('utk-boot-ready');
+  } catch (_) {}
+  console.error('[boot] renderer-boot failed', e);
+}
+</script>
 </body>
 </html>

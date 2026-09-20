@@ -7,11 +7,10 @@
 (function () {
   'use strict';
 
-  // Short wipe — snappy, not sticky. One frame under veil is enough.
-  // Heavy Hub/Studio enter work must NOT run under the veil (use afterReveal).
-  const FADE_OUT_MS = 32;
+  // Soft wipe — quick enough to feel snappy, long enough to read as smooth.
+  const FADE_OUT_MS = 48;
   const HOLD_MS = 0;
-  const FADE_IN_MS = 68;
+  const FADE_IN_MS = 96;
   const EASE = 'cubic-bezier(0.33, 0, 0.2, 1)';
 
   let running = null;
@@ -51,7 +50,6 @@
 
   function setVeil(opacity, durationMs) {
     const el = getOverlay();
-    el.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
     el.style.transition = 'opacity ' + durationMs + 'ms ' + EASE;
     el.style.opacity = String(opacity);
     return wait(durationMs);
@@ -62,7 +60,6 @@
       if (!overlayEl) return;
       overlayEl.style.transition = 'none';
       overlayEl.style.opacity = '0';
-      overlayEl.style.pointerEvents = 'none';
     } catch (e) {}
   }
 
@@ -185,8 +182,6 @@
   function installNavigateWrap() {
     const orig = window.navigateToSection;
     if (typeof orig !== 'function' || orig.__utkSectionFx) return;
-    // Access gate must stay outermost so paywall can block before the wipe.
-    if (orig.__utkAccessWrapped) return;
 
     function wrapped(id, activeMenuItem) {
       const target = document.getElementById(sectionIdFromNav(id));

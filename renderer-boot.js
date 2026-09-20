@@ -36,10 +36,7 @@
   }
 
   try { document.body.classList.add('app-loaded'); } catch (e) {}
-  try {
-    document.documentElement.classList.remove('utk-boot-hold');
-    document.documentElement.classList.add('utk-boot-ready');
-  } catch (e2) {}
+  // Keep boot splash up until modules finish — do not mark ready here.
 
   bootRequire('./bots-registry.js');
   bootRequire('./asset-bootstrap.js');
@@ -91,6 +88,10 @@
   bootRequire('./home-support.js');
   bootRequire('./home-status.js');
   bootRequire('./vision-ui.js');
+  bootRequire('./warnings-ui.js');
+  bootRequire('./kingdom-marks-fx.js');
+  bootRequire('./kingdom-marks-cloud.js');
+  bootRequire('./kingdom-marks.js');
   bootRequire('./app-onboarding.js');
   bootRequire('./community-hub-censor.js');
   bootRequire('./community-hub-avatars.js');
@@ -148,4 +149,25 @@
   try {
     window.__utkBoot = { ok: failed.length === 0, failed: failed.map((f) => f.rel), dev: DEV };
   } catch (_) {}
+
+  // Reveal app after heavy requires finish (splash fades out).
+  function markBootReady() {
+    try {
+      document.documentElement.classList.remove('utk-boot-hold');
+      document.documentElement.classList.add('utk-boot-ready');
+      var splash = document.getElementById('utkBootSplash');
+      if (splash) splash.setAttribute('aria-busy', 'false');
+    } catch (_) {}
+  }
+  try {
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(markBootReady);
+      });
+    } else {
+      setTimeout(markBootReady, 0);
+    }
+  } catch (_) {
+    markBootReady();
+  }
 })();

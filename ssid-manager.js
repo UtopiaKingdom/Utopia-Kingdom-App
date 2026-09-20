@@ -505,6 +505,11 @@ class SSIDManager {
      window.connectionSystem.onSsidConnected(payload.botId, payload.status);
    }
  } catch (eCs) {}
+ try {
+   if (window.utkMarks && typeof window.utkMarks.onPoStatus === 'function' && payload.status) {
+     window.utkMarks.onPoStatus(payload.status);
+   }
+ } catch (eMarks) {}
  });
  }
 

@@ -5,6 +5,7 @@
  * - /updates → Update server for Electron
  */
 import { handleCommunityHub } from './community-hub-cf.js';
+import { handleKingdomMarks } from './kingdom-marks-cf.js';
 
 function applyR2HttpMetadata(headers, httpMetadata) {
   if (!httpMetadata) return;
@@ -278,6 +279,11 @@ export default {
     // Community chat (R2). Live now, no Contabo tape restart needed.
     if (pathname === '/api/hub' || pathname.startsWith('/api/hub/')) {
       return handleCommunityHub(request, env, pathname);
+    }
+
+    // Kingdom Marks (Citizenship currency — server authority via Firestore Admin).
+    if (pathname === '/api/marks' || pathname.startsWith('/api/marks/')) {
+      return handleKingdomMarks(request, env, pathname);
     }
 
     // Bot WIN/LOSS tape (Contabo SQLite via HISTORY_ORIGIN).

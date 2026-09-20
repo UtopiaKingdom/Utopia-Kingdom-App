@@ -246,7 +246,15 @@
     try {
       const { ipcRenderer } = require('electron');
       const theme = readToastTheme();
+      let sound = payload && payload.sound;
+      try {
+        if (!sound && window.__utkMarksSound === 'chime') sound = 'chime';
+        if (!sound && window.utkMarks && typeof window.utkMarks.has === 'function' && window.utkMarks.has('signal-chime')) {
+          sound = 'chime';
+        }
+      } catch (e) {}
       ipcRenderer.invoke('show-notification', Object.assign({}, theme, payload, {
+        sound: sound || undefined,
         autoCloseMs: payload && payload.autoCloseMs ? payload.autoCloseMs : 5200
       })).catch(function () {});
     } catch (e) {}

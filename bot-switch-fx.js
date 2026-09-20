@@ -142,8 +142,6 @@
 
  const el = getOverlay();
 
- el.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
-
  el.style.transition = `opacity ${durationMs}ms ${EASE}`;
 
  el.style.opacity = String(opacity);
@@ -181,8 +179,6 @@
  overlayEl.style.transition = 'none';
 
  overlayEl.style.opacity = '0';
-
- overlayEl.style.pointerEvents = 'none';
 
  }
 
@@ -237,8 +233,6 @@
  overlayEl.style.transition = 'none';
 
  overlayEl.style.opacity = '0';
-
- overlayEl.style.pointerEvents = 'none';
 
  }
 
@@ -365,8 +359,6 @@
 
  overlayEl.style.opacity = '0';
 
- overlayEl.style.pointerEvents = 'none';
-
  }
 
  } catch (e) {}
@@ -399,34 +391,11 @@
 
  goTo(botId) {
 
- const id = String(botId || '');
+ const btn = document.querySelector(`.bot-switch-btn[data-target="${botId}"]:not([hidden])`)
 
- if (!id) return;
+ || document.querySelector(`.bot-switch-btn[data-target="${botId}"]`);
 
- const target = document.getElementById('section-' + id);
-
- if (!target) return;
-
- try {
-   if (!window.__utkAccessBypass && window.__utkAccessGate &&
-       typeof window.__utkAccessGate.guardHouseBot === 'function') {
-     if (!window.__utkAccessGate.guardHouseBot(id)) return;
-   }
- } catch (e) {}
-
- try {
-   if (window.utkSectionFx && typeof window.utkSectionFx.cancel === 'function') {
-     window.utkSectionFx.cancel();
-   }
- } catch (e2) {}
-
- const current = document.querySelector('.section.active');
-
- syncChrome(id);
-
- if (current === target) return;
-
- animateSwap(current, target);
+ if (btn && !btn.hasAttribute('hidden')) btn.click();
 
  },
 

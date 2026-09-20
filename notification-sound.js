@@ -4,6 +4,7 @@ const { pathToFileURL } = require('url');
 
 const SOUND_DIR = path.join(__dirname, 'assets', 'sounds');
 const SOUND_CANDIDATES = ['signal.wav', 'signal.mp3', 'signal.ogg', 'signal.m4a', 'signal.aac'];
+const CHIME_CANDIDATES = ['signal-chime.wav', 'signal-chime.mp3', 'signal-chime.ogg', 'signal-chime.m4a'];
 
 let soundWindow = null;
 let logFn = null;
@@ -60,12 +61,63 @@ function createSignalWavBuffer() {
   return buffer;
 }
 
+function createChimeWavBuffer() {
+  const sampleRate = 44100;
+  const duration = 0.55;
+  const samples = Math.floor(sampleRate * duration);
+  const dataSize = samples * 2;
+  const buffer = Buffer.alloc(44 + dataSize);
+
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write('WAVE', 8);
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+
+  for (let i = 0; i < samples; i++) {
+    const t = i / sampleRate;
+    let sample = 0;
+
+    if (t < 0.1) {
+      const env = Math.sin((Math.PI * t) / 0.1) * Math.exp(-t * 5);
+      sample += Math.sin(2 * Math.PI * 1318 * t) * env * 0.42;
+    }
+    if (t >= 0.12 && t < 0.28) {
+      const localT = t - 0.12;
+      const env = Math.sin((Math.PI * localT) / 0.16) * Math.exp(-localT * 4);
+      sample += Math.sin(2 * Math.PI * 1568 * localT) * env * 0.38;
+    }
+    if (t >= 0.3 && t < 0.5) {
+      const localT = t - 0.3;
+      const env = Math.sin((Math.PI * localT) / 0.2) * Math.exp(-localT * 3.5);
+      sample += Math.sin(2 * Math.PI * 2093 * localT) * env * 0.32;
+    }
+
+    const clamped = Math.max(-1, Math.min(1, sample));
+    buffer.writeInt16LE(Math.floor(clamped * 32767), 44 + i * 2);
+  }
+
+  return buffer;
+}
+
 function ensureDefaultSounds() {
   try {
     fs.mkdirSync(SOUND_DIR, { recursive: true });
     const signalPath = path.join(SOUND_DIR, 'signal.wav');
     if (!fs.existsSync(signalPath)) {
       fs.writeFileSync(signalPath, createSignalWavBuffer());
+    }
+    const chimePath = path.join(SOUND_DIR, 'signal-chime.wav');
+    if (!fs.existsSync(chimePath)) {
+      fs.writeFileSync(chimePath, createChimeWavBuffer());
     }
   } catch (e) {
     soundLog('warn', '[NotificationSound] Failed to ensure default sound', e && e.message);
@@ -103,10 +155,11 @@ function detectAudioKind(filePath) {
   return 'wav';
 }
 
-function resolveSoundPath() {
+function resolveSoundPath(preferred) {
   ensureDefaultSounds();
 
-  for (const fileName of SOUND_CANDIDATES) {
+  const list = preferred === 'chime' ? CHIME_CANDIDATES.concat(SOUND_CANDIDATES) : SOUND_CANDIDATES;
+  for (const fileName of list) {
     const candidate = path.join(SOUND_DIR, fileName);
     if (fs.existsSync(candidate)) {
       return candidate;
@@ -195,8 +248,8 @@ function playWithElectron(filePath) {
   return true;
 }
 
-function playNotificationSound() {
-  const soundPath = getPlayableSoundPath(resolveSoundPath());
+function playNotificationSound(preferred) {
+  const soundPath = getPlayableSoundPath(resolveSoundPath(preferred));
   if (!soundPath) {
     soundLog('warn', '[NotificationSound] No sound file found');
     return false;

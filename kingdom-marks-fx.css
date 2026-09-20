@@ -1,0 +1,182 @@
+/* kingdom-marks-fx.css — celebration overlays */
+
+.marks-fx-host {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 12000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+}
+
+.marks-fx-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(16, 18, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  transition: opacity 320ms ease, transform 380ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.marks-fx-card.is-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.marks-fx-card.is-out {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
+.marks-fx-glow {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 30% 40%, rgba(90, 140, 255, 0.28), transparent 55%);
+  pointer-events: none;
+}
+
+.marks-fx-secret .marks-fx-glow {
+  background: radial-gradient(circle at 30% 40%, rgba(180, 100, 255, 0.32), transparent 55%);
+}
+
+.marks-fx-big .marks-fx-glow {
+  background: radial-gradient(circle at 30% 40%, rgba(255, 160, 60, 0.3), transparent 55%);
+}
+
+.marks-fx-badge {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  animation: marks-fx-badge-pop 520ms ease;
+}
+
+.marks-fx-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  flex: 1;
+}
+
+.marks-fx-kicker {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(200, 210, 255, 0.7);
+  font-weight: 700;
+}
+
+.marks-fx-secret .marks-fx-kicker {
+  color: rgba(220, 180, 255, 0.8);
+}
+
+.marks-fx-title {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 780;
+  color: #f4f6fb;
+  letter-spacing: -0.02em;
+}
+
+.marks-fx-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(200, 205, 220, 0.72);
+  line-height: 1.35;
+}
+
+.marks-fx-amount {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 800;
+  color: #9fd8a8;
+  flex-shrink: 0;
+  animation: marks-fx-amount-float 900ms ease;
+}
+
+.marks-fx-particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: hsl(var(--fx-hue, 200) 90% 65%);
+  opacity: 0;
+  animation: marks-fx-spark 700ms ease forwards;
+  animation-delay: var(--fx-delay, 0ms);
+  pointer-events: none;
+}
+
+@keyframes marks-fx-badge-pop {
+  0% { transform: scale(0.4) rotate(-12deg); }
+  60% { transform: scale(1.12) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes marks-fx-amount-float {
+  0% { transform: translateY(8px); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(0); }
+}
+
+@keyframes marks-fx-spark {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--fx-x), var(--fx-y)) scale(0.2); }
+}
+
+.marks-bal-pop {
+  animation: marks-bal-pop 420ms ease;
+  display: inline-block;
+}
+
+@keyframes marks-bal-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); color: #9fd8a8; }
+  100% { transform: scale(1); }
+}
+
+.marks-fill-flash {
+  animation: marks-fill-flash 500ms ease;
+}
+
+@keyframes marks-fill-flash {
+  0%, 100% { filter: brightness(1); }
+  40% { filter: brightness(1.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marks-fx-card,
+  .marks-fx-badge,
+  .marks-fx-amount,
+  .marks-fx-particle,
+  .marks-bal-pop,
+  .marks-fill-flash {
+    animation: none !important;
+    transition: opacity 200ms ease !important;
+  }
+}

@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Toggle the menu on button click
   openBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    try {
+      const notifyMenu = document.getElementById('notifyMenu');
+      if (notifyMenu) notifyMenu.classList.remove('show');
+    } catch (err) {}
     menuOpen = !menuOpen;
     if (menuOpen) {
       menu.classList.add('show');
@@ -58,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Hide menu when clicking anywhere outside the menu or button
   document.addEventListener('click', (e) => {
-    if (!menu.contains(e.target) && e.target !== openBtn) {
+    if (!menu.contains(e.target) && !(openBtn && openBtn.contains(e.target))) {
       menu.classList.remove('show');
       menuOpen = false;
     }
@@ -72,6 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
       openBtn.focus();
     }
   });
+
+  function pulseThemeTransition() {
+    try {
+      const root = document.documentElement;
+      root.classList.add('theme-animating');
+      clearTimeout(window.__utkThemeAnimTimer);
+      window.__utkThemeAnimTimer = setTimeout(() => {
+        try { root.classList.remove('theme-animating'); } catch (e) {}
+      }, 260);
+    } catch (e) {}
+  }
 
   // Theme apply logic
   options.forEach(btn => {
@@ -88,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
       menu.classList.remove('show');
       menuOpen = false;
       localStorage.setItem('utk-theme', chosen || '');
+      pulseThemeTransition();
 
       // Ensure readable text on accent-colored buttons for any theme
       setTimeout(setComputedAccentContrast, 0);
@@ -117,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       body.className = body.className.replace(/theme-\S+/g, '').trim();
       body.classList.add('theme-custom');
       options.forEach(b => b.classList.remove('active'));
+      pulseThemeTransition();
       
       menu.classList.remove('show');
       menuOpen = false;

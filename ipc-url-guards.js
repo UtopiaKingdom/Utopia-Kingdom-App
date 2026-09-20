@@ -26,10 +26,6 @@ const EXTERNAL_HOST_ALLOW = [
   /(^|\.)telegram\.org$/i,
   /(^|\.)pocketoption\.com$/i,
   /(^|\.)po\.market$/i,
-  /(^|\.)bridge\.xyz$/i,
-  /(^|\.)withbridge\.com$/i,
-  /(^|\.)blindpay\.com$/i,
-  /(^|\.)cryptomus\.com$/i,
 ];
 
 function safeParseUrl(raw) {
@@ -84,9 +80,6 @@ function isAllowedPaymentUrl(raw) {
   return (
     /(^|\.)paddle\.com$/i.test(u.hostname) ||
     /(^|\.)utkingdom\.com$/i.test(u.hostname) ||
-    /(^|\.)bridge\.xyz$/i.test(u.hostname) ||
-    /(^|\.)withbridge\.com$/i.test(u.hostname) ||
-    /(^|\.)blindpay\.com$/i.test(u.hostname) ||
     !!u.searchParams.get('_ptxn')
   );
 }

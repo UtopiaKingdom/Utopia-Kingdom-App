@@ -10,22 +10,22 @@ routes = [
 
 # Environment variables
 [vars]
-APP_VERSION = "3.3.24"
-FILE_SIZE_BYTES = "224194975"
+APP_VERSION = "3.3.26"
+FILE_SIZE_BYTES = "224245301"
 WS_SERVER_URL = "wss://site-production-24de.up.railway.app"
-FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.24/Utopia%20Kingdom-Setup-3.3.24.exe"
+FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.26/Utopia%20Kingdom-Setup-3.3.26.exe"
 MAC_FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.25/Utopia%20Kingdom-3.3.25-mac.dmg"
 ANDROID_DOWNLOAD_URL = "https://utkingdom.com/releases/mobile/UtopiaKingdom-1.2.8.apk"
 # Mobile in-app update check (bump when you upload a new APK)
 MOBILE_APP_VERSION = "1.2.8"
 MOBILE_VERSION_CODE = "30"
-MOBILE_RELEASE_NOTES = "History/winrate fixed (Berlin tape), chat join/send fixed, Studio cook matches PC styles."
+MOBILE_RELEASE_NOTES = "Marks Citizenship currency, Stay Safe + Vision scale fix, boot splash, Vision eye / Warnings icons."
 # iOS skipped — page explains Windows/Android only (no App Store / TestFlight).
 IOS_DOWNLOAD_URL = "https://utkingdom.com/ios-install"
 # Contabo bot tape HTTP origin (no credentials). Worker proxies GET /api/bot-tape/*
 HISTORY_ORIGIN = "http://169.58.151.111:8788"
 # (sha512 of full EXE; compute locally if needed)
-FILE_SHA512 = "xQtkMZNPCnYN9ISJRdYKlE1RNUGAxU0UDJ+KrstUxWtbdpSaYIGEnd+BY/tMMwI66dIko0TFqgQ2mbO5qQBrjQ=="
+FILE_SHA512 = "jEStP4fpOuV7dyrQabBV2aNQ5KDoM94w96V8JDQeZfk59MsAwjEdXWXX6NO8h/MAo1s1wm3dwxSwqnDlFCV42A=="
 PADDLE_DEFAULT_PRICE_ID = "pri_01km1j1mhsbckjb95kxra7qkww"
 # Optional: forward POST /webhook to your real Paddle verification backend.
 # Example: "https://api.utkingdom.com/webhook"

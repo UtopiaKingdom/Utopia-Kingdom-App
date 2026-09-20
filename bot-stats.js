@@ -675,7 +675,7 @@
 
   /**
    * Last / modal: rebuild from 5-loss wipes in the tape walk, then Contabo /streaks.
-   * Always fold in board.lastCompletedStreak so a fresh wipe paints Last before /streaks poll.
+   * Board lastCompleted is only a fallback when both lists are empty.
    * Never trust Firebase pastWinStreaks (hop-fakes / truncated).
    */
   function mergeCompletedStreaks(persisted, walkedCompleted, board) {
@@ -700,7 +700,7 @@
     (walkedCompleted || []).forEach(add);
     (persisted || []).forEach(add);
 
-    if (board) {
+    if (!out.length && board) {
       const boardLen = Math.max(0, parseInt(board.lastCompletedStreak, 10) || 0);
       if (boardLen > 0) {
         add({
@@ -728,9 +728,8 @@
   }
 
   /**
-   * Completed streak history for Last badge + modal: Contabo /streaks,
-   * plus board.lastCompletedStreak so wipe → Last updates on the next /live tick
-   * (do not wait for the slower /streaks poll or an app restart).
+   * Completed streak history for Last badge + modal: Contabo /streaks only.
+   * Local tape walk must not change what everyone sees.
    */
   function completedStreaksFromContabo(persisted, board) {
     const out = [];
@@ -746,7 +745,7 @@
     }
 
     (persisted || []).forEach(add);
-    if (board) {
+    if (!out.length && board) {
       const boardLen = Math.max(0, parseInt(board.lastCompletedStreak, 10) || 0);
       if (boardLen > 0) {
         add({

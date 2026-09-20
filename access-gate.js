@@ -40,46 +40,26 @@
     }
   }
 
-  const OWNER_EMAILS = ['kricoeasygame@gmail.com'];
-
-  function currentEmail() {
-    try {
-      const fromAuth = window.auth && window.auth.currentUser && window.auth.currentUser.email;
-      if (fromAuth) return String(fromAuth).trim().toLowerCase();
-    } catch (e) {}
-    try {
-      const av = require('./auth-verification');
-      const u = av && av.auth && av.auth.currentUser;
-      if (u && u.email) return String(u.email).trim().toLowerCase();
-    } catch (e2) {}
-    return '';
-  }
-
-  function isOwnerEmail(email) {
-    const e = String(email || currentEmail() || '').trim().toLowerCase();
-    return !!e && OWNER_EMAILS.indexOf(e) >= 0;
-  }
-
   function isPaid() {
-    // Owner email always has full desk access
-    if (isOwnerEmail()) return true;
-
+    // Dev runs: don't brick Studio / house-bot switching while building.
+    try {
+      if (typeof process !== 'undefined' && process.env && process.env.UTK_DEV_MODE === '1') return true;
+    } catch (e0) {}
+    // Explicit locked labels
+    const t = pillText();
+    if (t === 'wanderer' || t === 'trial ended') return false;
+    // Active free trial = full access (Studio + all house bots)
+    if (t === 'free trial') return true;
+    if (t === 'subscribed' || t === 'member' || t === 'citizen' || t === 'beta tester' || t === 'owner') return true;
     try {
       const c = window.__utkEntitlementCache;
       if (c) {
-        if (c.paidActive === true) return true;
-        if (c.subscriptionStatus === 'active') return true;
-        if (c.betaTester === true) return true;
-        if (c.isOwner === true) return true;
+        if (c.paidActive === true || c.subscriptionStatus === 'active' || c.betaTester === true || c.isOwner === true) {
+          return true;
+        }
+        if (c.trialActive === true) return true;
       }
     } catch (e) {}
-
-    const t = pillText();
-    if (t === 'subscribed' || t === 'member' || t === 'citizen' || t === 'beta tester' || t === 'owner') {
-      return true;
-    }
-    // Wanderer / trial labels only deny when entitlement cache does not say paid
-    if (t === 'wanderer' || t === 'free trial' || t === 'trial ended') return false;
     return false;
   }
 
@@ -233,8 +213,6 @@
   }
 
   function openSubscribeCheckout(reason, botId) {
-    // Tour showcase may enter Studio — never pop subscribe mid-walkthrough.
-    if (window.__utkOnboardingActive || window.__utkAccessBypass) return;
     const copy = subscribeCopy(botId, reason);
     try {
       window.__utkSubscribeReason = reason || '';
@@ -256,11 +234,8 @@
     try {
       if (window.utkBotTransitions && typeof window.utkBotTransitions.goTo === 'function') {
         window.__utkAccessBypass = true;
-        try {
-          window.utkBotTransitions.goTo(id);
-        } finally {
-          window.__utkAccessBypass = false;
-        }
+        window.utkBotTransitions.goTo(id);
+        window.__utkAccessBypass = false;
         return;
       }
     } catch (e) {
@@ -269,11 +244,8 @@
     try {
       if (typeof window.navigateToSection === 'function') {
         window.__utkAccessBypass = true;
-        try {
-          window.navigateToSection(id, menu);
-        } finally {
-          window.__utkAccessBypass = false;
-        }
+        window.navigateToSection(id, menu);
+        window.__utkAccessBypass = false;
       }
     } catch (e2) {
       window.__utkAccessBypass = false;
@@ -288,7 +260,6 @@
   }
 
   function guardStudio() {
-    if (window.__utkAccessBypass || window.__utkOnboardingActive) return true;
     if (canOpenStudio()) return true;
     openSubscribeCheckout('studio', 'bot1');
     return false;
@@ -297,10 +268,7 @@
   function wrapNav() {
     try {
       const prev = window.navigateToSection;
-      if (typeof prev !== 'function') return;
-      // Already outermost.
-      if (prev.__utkAccessWrapped) return;
-
+      if (typeof prev !== 'function' || prev.__utkAccessWrapped) return;
       const wrapped = function (id, menu) {
         if (window.__utkAccessBypass) return prev.apply(this, arguments);
         const sid = String(id || '');
@@ -311,9 +279,9 @@
           return prev.apply(this, arguments);
         }
 
-        // Sidebar "Trading Bots" lands on bot1 — unpaid users go to today's free bot.
-        if (sid === 'bots' || (fromBotsMenu && sid === 'bot1' && !isPaid())) {
-          return prev.call(this, freeBotId(), menu || document.getElementById('menu-bots'));
+        if (fromBotsMenu || sid === 'bots') {
+          const target = isPaid() ? (HOUSE.indexOf(sid) >= 0 ? sid : freeBotId()) : freeBotId();
+          return prev.call(this, target, menu || document.getElementById('menu-bots'));
         }
 
         if (HOUSE.indexOf(sid) >= 0) {
@@ -324,6 +292,20 @@
       wrapped.__utkAccessWrapped = true;
       window.navigateToSection = wrapped;
     } catch (e) {}
+
+    try {
+      const tx = window.utkBotTransitions;
+      if (tx && typeof tx.goTo === 'function' && !tx.goTo.__utkAccessWrapped) {
+        const prevGo = tx.goTo.bind(tx);
+        const go = function (botId) {
+          if (window.__utkAccessBypass) return prevGo(botId);
+          if (!guardHouseBot(botId)) return;
+          return prevGo(botId);
+        };
+        go.__utkAccessWrapped = true;
+        tx.goTo = go;
+      }
+    } catch (e2) {}
   }
 
   function hasActiveAppAccessPaid() {
@@ -356,10 +338,6 @@
   function boot() {
     clearBadgeJunk();
     wrapNav();
-    // Stay outermost if other modules re-wrap navigateToSection later.
-    setTimeout(wrapNav, 0);
-    setTimeout(wrapNav, 500);
-    setTimeout(wrapNav, 1400);
     fetchUnlock().then(clearBadgeJunk).catch(clearBadgeJunk);
     setInterval(function () {
       fetchUnlock().catch(function () {});

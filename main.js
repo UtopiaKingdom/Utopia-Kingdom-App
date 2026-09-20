@@ -578,7 +578,8 @@ ipcMain.handle('show-notification', async (event, { title, body, botName, curren
     })();
 
     if (playSound !== false) {
-      playNotificationSound();
+      const preferred = sound === 'chime' ? 'chime' : undefined;
+      playNotificationSound(preferred);
     }
 
     const toastPayload = {
@@ -3400,7 +3401,85 @@ function resetSsidLadderToStart(botId, reason, opts = {}) {
   }
 }
 
+/** Trusted Marks deals — only main-originated PO settles can mint Marks. */
+const marksTrustedDeals = new Map();
+const MARKS_TRUST_TTL_MS = 120000;
+const MARKS_HOUSE_BOTS = new Set(['bot1', 'bot2', 'bot3']);
+
+function marksDealKey(payload) {
+  if (!payload || !payload.botId) return '';
+  const outcome = String(payload.outcome || '').toLowerCase();
+  const attempt = Number(payload.attempt) || 1;
+  if (outcome === 'win') {
+    return (
+      String(payload.botId) +
+      '|' +
+      String(payload.dealId || payload.openId || payload.settleAt || '') +
+      '|' +
+      String(attempt)
+    );
+  }
+  if (attempt >= 5 && (outcome === 'loss' || outcome === 'lose' || outcome === 'lost')) {
+    return (
+      'wipe|' +
+      String(payload.botId) +
+      '|' +
+      String(payload.dealId || payload.openId || payload.settleAt || '') +
+      '|a' +
+      String(attempt)
+    );
+  }
+  if (outcome === 'loss' || outcome === 'lose' || outcome === 'lost') {
+    return (
+      'loss|' +
+      String(payload.botId) +
+      '|' +
+      String(payload.dealId || payload.openId || payload.settleAt || '') +
+      '|' +
+      String(attempt)
+    );
+  }
+  return '';
+}
+
+function registerMarksTrustedDeal(payload) {
+  if (!payload || !MARKS_HOUSE_BOTS.has(String(payload.botId || ''))) return;
+  const st = ssidStatusByBot.get(payload.botId);
+  const account = String((st && st.activeAccount) || loadAutotradeAccount(payload.botId) || '').toLowerCase();
+  if (account !== 'real') return;
+  const key = marksDealKey(payload);
+  if (!key) return;
+  marksTrustedDeals.set(key, { at: Date.now(), botId: payload.botId, account: 'real' });
+  if (marksTrustedDeals.size > 200) {
+    const now = Date.now();
+    for (const [k, v] of marksTrustedDeals) {
+      if (!v || now - Number(v.at || 0) > MARKS_TRUST_TTL_MS) marksTrustedDeals.delete(k);
+    }
+  }
+}
+
+ipcMain.handle('marks-verify-deal', async (_event, payload = {}) => {
+  try {
+    const key = String(payload.dedupeKey || marksDealKey(payload) || '');
+    if (!key) return { ok: false, reason: 'missing-key' };
+    const hit = marksTrustedDeals.get(key);
+    if (!hit) return { ok: false, reason: 'untrusted' };
+    if (Date.now() - Number(hit.at || 0) > MARKS_TRUST_TTL_MS) {
+      marksTrustedDeals.delete(key);
+      return { ok: false, reason: 'expired' };
+    }
+    // One-time consume so the same fake replay cannot farm Marks.
+    marksTrustedDeals.delete(key);
+    return { ok: true, botId: hit.botId, account: hit.account };
+  } catch (e) {
+    return { ok: false, reason: 'error' };
+  }
+});
+
 function notifyPoDealResult(payload) {
+  try {
+    registerMarksTrustedDeal(payload);
+  } catch (e) {}
   BrowserWindow.getAllWindows().forEach((win) => {
     try { win.webContents.send('po-deal-result', payload); } catch (e) {}
   });

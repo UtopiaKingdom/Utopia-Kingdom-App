@@ -100,30 +100,7 @@
   function setLive(bot, data) {
     const key = botStore.normalizeBotKey(bot);
     if (!key) return;
-    const prev = LIVE[key];
     LIVE[key] = data && typeof data === 'object' ? data : null;
-
-    // Wipe just landed on /live: fold lastCompleted into cache so Last badge
-    // updates now — Contabo /streaks can lag up to a minute otherwise.
-    try {
-      const lastLen = Math.max(0, parseInt(data && data.lastCompletedStreak, 10) || 0);
-      const lastEnded = Math.trunc(Number(data && data.lastCompletedStreakEndedAt) || 0);
-      const prevEnded = Math.trunc(Number(prev && prev.lastCompletedStreakEndedAt) || 0);
-      const prevLen = Math.max(0, parseInt(prev && prev.lastCompletedStreak, 10) || 0);
-      const wipedFresh =
-        lastLen > 0 &&
-        lastEnded > 0 &&
-        (lastEnded !== prevEnded || lastLen !== prevLen);
-      if (wipedFresh) {
-        mergeIntoCache(key, {
-          length: lastLen,
-          endedAt: lastEnded,
-          startedAt: null
-        });
-        void loadContaboStreaks(key);
-      }
-    } catch (eWipe) {}
-
     try {
       if (window.__utkBotStats && typeof window.__utkBotStats.setLiveBoard === 'function') {
         window.__utkBotStats.setLiveBoard(key, LIVE[key]);

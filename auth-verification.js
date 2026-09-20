@@ -1,9 +1,22 @@
   // console.log('auth-verification.js loaded');
-const { initializeApp } = require("firebase/app");
-const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = require("firebase/auth");
-const { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, limit, onSnapshot, runTransaction } = require("firebase/firestore");
+const { initializeApp, getApps, getApp } = require("firebase/app");
+const {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  setPersistence,
+  browserSessionPersistence
+} = require("firebase/auth");
+const { getFirestore, initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, limit, onSnapshot } = require("firebase/firestore");
 const { getDatabase, ref: dbRef, runTransaction: rtdbRunTransaction, onDisconnect, remove, onValue, set } = require("firebase/database");
 const { ipcRenderer } = require('electron');
+const {
+  isForeignActiveLock,
+  isActiveElsewhereError,
+  decideLockClaim,
+  DEFAULT_STALE_MS
+} = require('./session-lock-logic.js');
 
 const firebaseConfig = {
     apiKey: "AIzaSyCQdYOL6Tng3GgpRtFEUE7uy3aypmh7cMU",
@@ -14,19 +27,42 @@ const firebaseConfig = {
     appId: "1:591024383099:web:11229950759c753c722ede",
     measurementId: "G-KX1S4WPYPF"
 };
-const app = initializeApp(firebaseConfig);
+// Reuse existing initialized app when possible to avoid multiple auth instances
+const app = (getApps && getApps().length) ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+function makeDb() {
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentSingleTabManager()
+      })
+    });
+  } catch (e) {
+    return getFirestore(app);
+  }
+}
+const db = makeDb();
 // Use RTDB only if databaseURL is provided; otherwise rely on Firestore fallback
 const hasRTDB = !!(firebaseConfig && firebaseConfig.databaseURL);
 const rtdb = hasRTDB ? getDatabase(app) : null;
 
+// PC "Remember me" only prefills email/password — do NOT stay logged in across restarts.
+try {
+  setPersistence(auth, browserSessionPersistence).catch(() => {});
+} catch (e) {}
+
 // --- Single-Session Enforcement (presence lock) ---
+// One active device per account. Logout / app quit clears the lock + signs out.
+// If a device dies without logout, lock goes stale after SESSION_STALE_MS
+// so the other device (phone/PC) can sign in.
+const SESSION_STALE_MS = DEFAULT_STALE_MS; // heartbeat is 30s → ~4 missed ticks
+const SESSION_HEARTBEAT_MS = 30 * 1000;
+
 let sessionState = {
   uid: null,
   sessionId: null,
   deviceId: null,
-  lockType: null, // 'rtdb' | 'firestore'
+  lockType: null, // 'rtdb' | 'firestore' | 'disabled'
   heartbeatTimer: null,
   unsubscribeWatcher: null
 };
@@ -45,146 +81,211 @@ function generateSessionId() {
   return Math.random().toString(36).slice(2) + '-' + Date.now().toString(36);
 }
 
-async function acquirePresenceLock(uid, email) {
-  sessionState.uid = uid;
-  sessionState.sessionId = generateSessionId();
-  sessionState.deviceId = getOrCreateDeviceId(email);
+function startFirestoreHeartbeat(fsLockRef) {
+  if (sessionState.heartbeatTimer) clearInterval(sessionState.heartbeatTimer);
+  sessionState.heartbeatTimer = setInterval(async () => {
+    try {
+      await updateDoc(fsLockRef, { updatedAt: Date.now(), platform: 'desktop' });
+    } catch (e) {}
+  }, SESSION_HEARTBEAT_MS);
+  // Immediate touch so other devices see us as active right away
+  try { updateDoc(fsLockRef, { updatedAt: Date.now(), platform: 'desktop' }).catch(() => {}); } catch (e) {}
+}
 
-  // Try Realtime Database transactional lock first (only if configured)
+function watchFirestoreLock(fsLockRef) {
+  if (sessionState.unsubscribeWatcher) {
+    try { sessionState.unsubscribeWatcher(); } catch (e) {}
+    sessionState.unsubscribeWatcher = null;
+  }
+  const unsubscribeFs = onSnapshot(fsLockRef, (snap) => {
+    const data = snap.data();
+    if (!data) return;
+    try {
+      if (
+        data.sessionId &&
+        sessionState.sessionId &&
+        data.sessionId !== sessionState.sessionId &&
+        data.deviceId &&
+        data.deviceId !== sessionState.deviceId
+      ) {
+        forceLogout('Your account was signed in from another device.');
+      }
+    } catch (e) {}
+  });
+  sessionState.unsubscribeWatcher = unsubscribeFs;
+}
+
+/**
+ * Claim the single-session lock.
+ * - Same deviceId may reclaim (restart / crash recovery).
+ * - Foreign live lock + !force → active_elsewhere (blocks login).
+ * - Never bricks login on transient Firestore errors (fail-open → lockType disabled).
+ * - force is reserved for rare admin/recovery; normal login does NOT kick other devices.
+ */
+async function acquirePresenceLock(uid, email, opts = {}) {
+  const force = !!(opts && opts.force);
+  const deviceId = getOrCreateDeviceId(email);
+  if (!force && sessionState.uid === uid && sessionState.deviceId === deviceId && sessionState.sessionId) {
+    return true;
+  }
+
+  const sessionId = generateSessionId();
+  sessionState.uid = uid;
+  sessionState.sessionId = sessionId;
+  sessionState.deviceId = deviceId;
+
   if (rtdb) {
     const lockPath = `userPresence/${uid}`;
     const lockRef = dbRef(rtdb, lockPath);
     try {
-    const trxResult = await rtdbRunTransaction(lockRef, (current) => {
-        if (!current) {
+      const trxResult = await rtdbRunTransaction(lockRef, (current) => {
+        if (!current || !current.sessionId) {
           return {
-            sessionId: sessionState.sessionId,
-            deviceId: sessionState.deviceId,
+            sessionId,
+            deviceId,
             startedAt: Date.now(),
             lastActive: Date.now()
           };
         }
-        // Allow same-device takeover to recover from crashes
-        if (current.deviceId === sessionState.deviceId) {
+        if (current.deviceId === deviceId) {
           return {
-            sessionId: sessionState.sessionId,
-            deviceId: sessionState.deviceId,
+            sessionId,
+            deviceId,
             startedAt: current.startedAt || Date.now(),
             lastActive: Date.now()
           };
         }
-        // Someone else holds lock
-        return; // abort write
-    }, { applyLocally: false });
+        if (!force && isForeignActiveLock(current, deviceId, sessionId)) {
+          return; // abort — live session elsewhere
+        }
+        return {
+          sessionId,
+          deviceId,
+          startedAt: Date.now(),
+          lastActive: Date.now()
+        };
+      }, { applyLocally: false });
 
       if (!trxResult.committed) {
         throw new Error('active_elsewhere');
       }
 
-      // Ensure cleanup on disconnect
-      try { onDisconnect(lockRef).remove(); } catch {}
+      try { onDisconnect(lockRef).remove(); } catch (e) {}
 
-      // Watch for external takeover
-      if (sessionState.unsubscribeWatcher) { sessionState.unsubscribeWatcher(); sessionState.unsubscribeWatcher = null; }
+      if (sessionState.unsubscribeWatcher) {
+        try { sessionState.unsubscribeWatcher(); } catch (e) {}
+        sessionState.unsubscribeWatcher = null;
+      }
       const unsubscribe = onValue(lockRef, (snap) => {
         const val = snap.val();
-        if (!val) return; // removed due to disconnect
-        if (val.sessionId && val.sessionId !== sessionState.sessionId && val.deviceId !== sessionState.deviceId) {
-          forceLogout('Your account was signed in from another device.');
-        }
+        if (!val) return;
+        try {
+          if (
+            val.sessionId &&
+            val.sessionId !== sessionState.sessionId &&
+            val.deviceId &&
+            val.deviceId !== sessionState.deviceId
+          ) {
+            forceLogout('Your account was signed in from another device.');
+          }
+        } catch (e) {}
       });
       sessionState.unsubscribeWatcher = () => unsubscribe();
 
       sessionState.lockType = 'rtdb';
       return true;
     } catch (err) {
-      if (err && err.message === 'active_elsewhere') throw err;
-      // console.warn('[Presence] RTDB lock unavailable, falling back to Firestore:', err?.message || err);
+      if (isActiveElsewhereError(err)) throw new Error('active_elsewhere');
     }
   }
 
-  // Firestore fallback: transactional lock with soft TTL + heartbeat
   const fsLockRef = doc(db, 'userSessions', uid);
   const now = Date.now();
-  const ttlMs = 2 * 60 * 1000; // 2 minutes TTL
   try {
-    const committed = await runTransaction(db, async (trx) => {
-      const snap = await trx.get(fsLockRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        const age = now - (data.updatedAt || 0);
-        // Allow same-device takeover, block different device within TTL
-        if (data.sessionId && data.sessionId !== sessionState.sessionId && age < ttlMs && data.deviceId !== sessionState.deviceId) {
-          throw new Error('active_elsewhere');
-        }
+    let data = null;
+    try {
+      const snap = await getDoc(fsLockRef);
+      data = snap.exists() ? snap.data() : null;
+    } catch (readErr) {
+      const msg = (readErr && (readErr.code || readErr.message || '')) + '';
+      if (msg.includes('PERMISSION_DENIED') || msg.includes('permission-denied')) {
+        sessionState.lockType = 'disabled';
+        return true;
       }
-      const prevCreated = snap && snap.exists() ? (snap.data().createdAt || now) : now;
-      trx.set(fsLockRef, {
-        sessionId: sessionState.sessionId,
-        deviceId: sessionState.deviceId,
-        createdAt: prevCreated,
-        updatedAt: now
-      });
-      return true;
-    });
-    if (!committed) throw new Error('lock_failed');
-
-    // Heartbeat to keep lock fresh
-    if (sessionState.heartbeatTimer) clearInterval(sessionState.heartbeatTimer);
-    sessionState.heartbeatTimer = setInterval(async () => {
-      try { await updateDoc(fsLockRef, { updatedAt: Date.now() }); } catch {}
-    }, 30 * 1000);
-
-    // Watch for external takeover
-    if (sessionState.unsubscribeWatcher) { sessionState.unsubscribeWatcher(); sessionState.unsubscribeWatcher = null; }
-    const unsubscribeFs = onSnapshot(fsLockRef, (snap) => {
-      const data = snap.data();
-      if (!data) return;
-      if (data.sessionId && data.sessionId !== sessionState.sessionId) {
-        forceLogout('Your account was signed in from another device.');
-      }
-    });
-    sessionState.unsubscribeWatcher = unsubscribeFs;
-
-    sessionState.lockType = 'firestore';
-    return true;
-  } catch (err) {
-    if (err && err.message === 'active_elsewhere') throw err;
-    // If security rules block this (PERMISSION_DENIED), don't block login; just disable single-session temporarily
-    const msg = (err && (err.code || err.message || '')) + '';
-    if (msg.includes('PERMISSION_DENIED') || msg.includes('permission-denied')) {
-      // console.warn('[Presence] Firestore lock denied by rules. Continuing without single-session enforcement.');
+      console.warn('[session] lock read failed — allowing login without enforcement', readErr);
       sessionState.lockType = 'disabled';
       return true;
     }
-    // console.error('[Presence] Firestore lock failed:', err);
-    // Continue without blocking login
+
+    if (decideLockClaim(data, deviceId, sessionId, { force, staleMs: SESSION_STALE_MS }) === 'active_elsewhere') {
+      throw new Error('active_elsewhere');
+    }
+
+    const prevCreated = data && data.createdAt ? data.createdAt : now;
+    await setDoc(fsLockRef, {
+      sessionId,
+      deviceId,
+      createdAt: prevCreated,
+      updatedAt: now,
+      platform: 'desktop'
+    });
+
+    startFirestoreHeartbeat(fsLockRef);
+    watchFirestoreLock(fsLockRef);
+    sessionState.lockType = 'firestore';
+    return true;
+  } catch (err) {
+    if (isActiveElsewhereError(err)) throw new Error('active_elsewhere');
+    const msg = (err && (err.code || err.message || '')) + '';
+    if (msg.includes('PERMISSION_DENIED') || msg.includes('permission-denied')) {
+      sessionState.lockType = 'disabled';
+      return true;
+    }
+    // Fail open: never block PC login with "Unable to verify session" for lock I/O glitches
+    console.warn('[session] lock claim failed — allowing login without enforcement', err);
     sessionState.lockType = 'disabled';
     return true;
   }
 }
 
 async function releasePresenceLock() {
+  const uid = sessionState.uid;
+  const sessionId = sessionState.sessionId;
+  const lockType = sessionState.lockType;
   try {
-    if (!sessionState.uid || !sessionState.sessionId) return;
-    if (sessionState.unsubscribeWatcher) { try { sessionState.unsubscribeWatcher(); } catch {} sessionState.unsubscribeWatcher = null; }
-    if (sessionState.heartbeatTimer) { clearInterval(sessionState.heartbeatTimer); sessionState.heartbeatTimer = null; }
-    if (sessionState.lockType === 'rtdb') {
-      const lockRef = dbRef(rtdb, `userPresence/${sessionState.uid}`);
-      try { await remove(lockRef); } catch {}
-    } else if (sessionState.lockType === 'firestore') {
-      const fsLockRef = doc(db, 'userSessions', sessionState.uid);
+    if (sessionState.unsubscribeWatcher) {
+      try { sessionState.unsubscribeWatcher(); } catch (e) {}
+      sessionState.unsubscribeWatcher = null;
+    }
+    if (sessionState.heartbeatTimer) {
+      clearInterval(sessionState.heartbeatTimer);
+      sessionState.heartbeatTimer = null;
+    }
+    if (!uid) return;
+
+    if (lockType === 'rtdb' && rtdb) {
+      const lockRef = dbRef(rtdb, `userPresence/${uid}`);
+      try { await remove(lockRef); } catch (e) {}
+    } else {
+      // Always clear Firestore lock when we own it (or when lockType unknown after crash recovery)
+      const fsLockRef = doc(db, 'userSessions', uid);
       try {
         const snap = await getDoc(fsLockRef);
         const data = snap.data();
-        if (data && data.sessionId === sessionState.sessionId) {
-          await setDoc(fsLockRef, { sessionId: null, updatedAt: Date.now() }, { merge: true });
+        if (!data || !data.sessionId || !sessionId || data.sessionId === sessionId || data.deviceId === sessionState.deviceId) {
+          await setDoc(fsLockRef, {
+            sessionId: null,
+            deviceId: null,
+            updatedAt: Date.now(),
+            platform: 'desktop'
+          }, { merge: true });
         }
-      } catch {}
+      } catch (e) {}
     }
   } finally {
     sessionState.uid = null;
     sessionState.sessionId = null;
+    sessionState.deviceId = null;
     sessionState.lockType = null;
   }
 }
@@ -220,17 +321,16 @@ async function forceLogout(reason) {
       if (closeBtn) closeBtn.addEventListener('click', handleClose);
     }
   } catch (e) {
-    // fallback to alert if modal fails
-    try { alert(reason || 'You have been signed out.'); } catch {}
+    try {
+      if (typeof window.showAppToast === 'function') window.showAppToast(reason || 'You have been signed out.', { tone: 'error' });
+    } catch {}
   }
 
   // Show auth screen again
-  const authModal = document.getElementById('auth-modal');
-  const mainApp = document.querySelector('.app-container');
-  if (mainApp) mainApp.style.display = 'none';
-  if (authModal) authModal.style.display = 'flex';
-  document.body.classList.add('auth-visible');
+  showAuthScreenAfterSignOut();
 }
+
+const MAX_CODE_ATTEMPTS = 3;
 
 // Verification code storage
 let verificationCodeData = {
@@ -239,8 +339,40 @@ let verificationCodeData = {
   password: null,
   timestamp: null,
   mode: null, // 'register' or 'login'
-  rememberMe: false
+  rememberMe: false,
+  failedAttempts: 0
 };
+
+function resetVerificationCodeData(extra = {}) {
+  verificationCodeData = {
+    code: null,
+    email: null,
+    password: null,
+    timestamp: null,
+    mode: null,
+    rememberMe: false,
+    failedAttempts: 0,
+    ...extra
+  };
+}
+
+function setVerifyInputsLocked(locked) {
+  const inputs = document.querySelectorAll('.code-input');
+  inputs.forEach((input) => {
+    input.disabled = !!locked;
+    input.classList.toggle('is-locked', !!locked);
+  });
+  const verifyBtn = document.getElementById('verifyCodeBtn');
+  if (verifyBtn) verifyBtn.disabled = !!locked;
+}
+
+function invalidateVerificationCode() {
+  if (!verificationCodeData) return;
+  verificationCodeData.code = null;
+  verificationCodeData.timestamp = null;
+  verificationCodeData.failedAttempts = MAX_CODE_ATTEMPTS;
+  setVerifyInputsLocked(true);
+}
 
 // Send verification code via IPC to main process
 async function sendVerificationCodeEmail(email, code) {
@@ -256,6 +388,37 @@ async function sendVerificationCodeEmail(email, code) {
     // console.error('❌ Failed to send email:', err);
     throw err;
   }
+}
+
+async function showWelcomeBackNotification(_user) {
+  // Intentionally quiet: welcome lives on the Home screen, not as a desktop toast.
+  return;
+}
+
+function setAuthHeader(mode) {
+  const titleEl = document.getElementById('auth-title');
+  const subtitleEl = document.getElementById('auth-subtitle');
+  const map = {
+    login: {
+      title: 'Welcome back',
+      subtitle: 'Sign in to your kingdom'
+    },
+    register: {
+      title: 'Create your account',
+      subtitle: 'A few details and you are in'
+    },
+    verifyLogin: {
+      title: 'Almost there',
+      subtitle: 'Confirm it is you with the code we sent'
+    },
+    verifyRegister: {
+      title: 'Check your inbox',
+      subtitle: 'Enter the code we sent to finish signing up'
+    }
+  };
+  const copy = map[mode] || map.login;
+  if (titleEl) titleEl.textContent = copy.title;
+  if (subtitleEl) subtitleEl.textContent = copy.subtitle;
 }
 
 function setupAuth() {
@@ -285,12 +448,12 @@ function setupAuth() {
     if (registerForm) registerForm.style.display = 'none';
     if (verifyCodeForm) verifyCodeForm.style.display = 'none';
     if (loginForm) loginForm.style.display = 'flex';
-    const authTitle = document.getElementById('auth-title');
-    if (authTitle) authTitle.textContent = 'Sign In';
+    setAuthHeader('login');
     loginError.textContent = '';
     registerError.textContent = '';
     if (authModal) {
       authModal.style.display = 'flex';
+      authModal.style.removeProperty('z-index');
       authModal.classList.remove('hidden', 'closing');
     }
     if (mainApp) mainApp.style.display = 'none';
@@ -302,21 +465,24 @@ function setupAuth() {
 
   document.body.classList.add('auth-visible');
 
-  showRegister.onclick = (e) => {
-    e.preventDefault();
-    loginForm.style.display = 'none';
-    verifyCodeForm.style.display = 'none';
-    registerForm.style.display = 'flex';
-    document.getElementById('auth-title').textContent = 'Register';
-  };
-  
-  showLogin.onclick = (e) => {
-    e.preventDefault();
-    registerForm.style.display = 'none';
-    verifyCodeForm.style.display = 'none';
-    loginForm.style.display = 'flex';
-    document.getElementById('auth-title').textContent = 'Sign In';
-  };
+  if (showRegister) {
+    showRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (loginForm) loginForm.style.display = 'none';
+      if (verifyCodeForm) verifyCodeForm.style.display = 'none';
+      if (registerForm) registerForm.style.display = 'flex';
+      setAuthHeader('register');
+    });
+  }
+  if (showLogin) {
+    showLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (registerForm) registerForm.style.display = 'none';
+      if (verifyCodeForm) verifyCodeForm.style.display = 'none';
+      if (loginForm) loginForm.style.display = 'flex';
+      setAuthHeader('login');
+    });
+  }
 
   // LOGIN FORM (2FA on first device login)
   loginForm.onsubmit = async (e) => {
@@ -339,7 +505,7 @@ function setupAuth() {
           await acquirePresenceLock(userCredential.user.uid, email);
         } catch (lockErr) {
           await signOut(auth);
-          const msg = lockErr && lockErr.message === 'active_elsewhere'
+          const msg = isActiveElsewhereError(lockErr)
             ? 'This account is already active on another device.'
             : 'Unable to verify session. Please try again later.';
           loginError.textContent = msg;
@@ -353,6 +519,7 @@ function setupAuth() {
           localStorage.removeItem('savedPassword');
         }
         await loadUserProfile(userCredential.user);
+        try { showWelcomeBackNotification(userCredential.user); } catch (e) {}
         modalContainer.classList.remove('error-glow');
         modalContainer.classList.add('success');
         authModal.classList.add('closing');
@@ -366,6 +533,7 @@ function setupAuth() {
           } catch (e) { allowed = true; }
 
           authModal.style.display = 'none';
+          authModal.style.removeProperty('z-index');
           modalContainer.classList.remove('success');
           authModal.classList.remove('closing');
 
@@ -376,7 +544,7 @@ function setupAuth() {
               mainApp.classList.add('app-fade-in');
               setTimeout(() => mainApp.classList.remove('app-fade-in'), 420);
               // show subscription prompt after app entrance animation
-              setTimeout(() => { try { showSubscriptionOverlay(); } catch (e) {} }, 480);
+              setTimeout(() => { try { /* free app — no auto paywall */ } catch (e) {} }, 480);
             }
           } else {
             // Maintenance active: ensure overlay is applied before removing auth-visible
@@ -428,18 +596,30 @@ function setupAuth() {
         password,
         timestamp: Date.now(),
         mode: 'login',
-        rememberMe
+        rememberMe,
+        failedAttempts: 0
       };
+      setVerifyInputsLocked(false);
 
-      await sendVerificationCodeEmail(email, verificationCode);
+      try {
+        await sendVerificationCodeEmail(email, verificationCode);
+      } catch (err) {
+        const msg = (err && err.message) ? err.message : 'Failed to send verification email.';
+        loginError.style.color = '#ff6b6b';
+        loginError.textContent = msg;
+        codeErrorMessage.style.color = '#ff6b6b';
+        codeErrorMessage.textContent = msg;
+        console.error('sendVerificationCodeEmail failed:', err);
+        return;
+      }
 
       // Show verification form for login
       loginForm.style.display = 'none';
       verifyCodeForm.style.display = 'flex';
-      document.getElementById('auth-title').textContent = 'Verify Your Login';
+      setAuthHeader('verifyLogin');
       codeErrorMessage.textContent = '';
       codeErrorMessage.style.color = '#9aa0a6';
-      codeErrorMessage.textContent = `Code sent to ${email}`;
+      codeErrorMessage.textContent = '';
       setTimeout(() => {
         codeErrorMessage.textContent = '';
         codeErrorMessage.style.color = '';
@@ -472,63 +652,123 @@ function setupAuth() {
   };
 
   // REGISTER FORM - generate code and show verification screen
-  registerForm.onsubmit = async (e) => {
-    e.preventDefault();
-    registerError.textContent = '';
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const password2 = document.getElementById('registerPassword2').value;
-    const modalContainer = document.querySelector('.auth-modal-container');
-    
-    if (password !== password2) {
-      registerError.textContent = 'Passwords do not match.';
-      modalContainer.classList.add('error-glow');
-      setTimeout(() => modalContainer.classList.remove('error-glow'), 400);
-      return;
-    }
-    
-    if (password.length < 6) {
-      registerError.textContent = 'Password must be at least 6 characters.';
-      modalContainer.classList.add('error-glow');
-      setTimeout(() => modalContainer.classList.remove('error-glow'), 400);
-      return;
-    }
-    
-    try {
-      // Generate 4-digit code
-      const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-      
-      // Store data
-      verificationCodeData.code = verificationCode;
-      verificationCodeData.email = email;
-      verificationCodeData.password = password;
-      verificationCodeData.timestamp = Date.now();
-      verificationCodeData.mode = 'register';
-      verificationCodeData.rememberMe = false;
-      
-      // Send code to email
-      await sendVerificationCodeEmail(email, verificationCode);
-      
-      // Show verification form
-      registerForm.style.display = 'none';
-      verifyCodeForm.style.display = 'flex';
-      document.getElementById('auth-title').textContent = 'Verify Your Email';
-      codeErrorMessage.textContent = '';
-      
-      // Clear inputs
-      document.getElementById('codeInput1').value = '';
-      document.getElementById('codeInput2').value = '';
-      document.getElementById('codeInput3').value = '';
-      document.getElementById('codeInput4').value = '';
-      document.getElementById('codeInput1').focus();
-      
-    } catch (err) {
-      registerError.style.color = '#ff4444';
-      registerError.textContent = err.message || 'Failed to send verification code. Try again.';
-      modalContainer.classList.add('error-glow');
-      setTimeout(() => modalContainer.classList.remove('error-glow'), 400);
-    }
-  };
+  if (registerForm) {
+    // mark handler attached for quick debugging
+    registerForm.dataset.uHandler = 'attached';
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        registerError.textContent = '';
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        const emailEl = document.getElementById('registerEmail');
+        const passEl = document.getElementById('registerPassword');
+        const pass2El = document.getElementById('registerPassword2');
+        const modalContainer = document.querySelector('.auth-modal-container');
+
+        const email = emailEl ? String(emailEl.value || '').trim() : '';
+        const password = passEl ? String(passEl.value || '') : '';
+        const password2 = pass2El ? String(pass2El.value || '') : '';
+
+        // immediate UI feedback
+        registerError.textContent = '';
+        codeErrorMessage.textContent = '';
+
+        if (!email) {
+          registerError.textContent = 'Please enter an email address.';
+          throw new Error('validation');
+        }
+
+        if (password !== password2) {
+          registerError.textContent = 'Passwords do not match.';
+          if (modalContainer) modalContainer.classList.add('error-glow');
+          setTimeout(() => { if (modalContainer) modalContainer.classList.remove('error-glow'); }, 400);
+          throw new Error('validation');
+        }
+
+        if (password.length < 6) {
+          registerError.textContent = 'Password must be at least 6 characters.';
+          if (modalContainer) modalContainer.classList.add('error-glow');
+          setTimeout(() => { if (modalContainer) modalContainer.classList.remove('error-glow'); }, 400);
+          throw new Error('validation');
+        }
+
+        // Don't display the email/send status to the user
+        registerError.style.color = '';
+        registerError.textContent = '';
+
+        // Generate 4-digit code and store locally for verification step
+        const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+        verificationCodeData.code = verificationCode;
+        verificationCodeData.email = email;
+        verificationCodeData.password = password;
+        verificationCodeData.timestamp = Date.now();
+        verificationCodeData.mode = 'register';
+        verificationCodeData.rememberMe = false;
+        verificationCodeData.failedAttempts = 0;
+        setVerifyInputsLocked(false);
+
+        // attempt to send — surface any error message to the user (with timeout)
+        try {
+          const sendPromise = sendVerificationCodeEmail(email, verificationCode);
+          // fail-fast after 15s if the main process is unresponsive
+          await Promise.race([
+            sendPromise,
+            new Promise((_, rej) => setTimeout(() => rej(new Error('Email send timed out')), 15000))
+          ]);
+        } catch (err) {
+          const msg = (err && err.message) ? err.message : 'Failed to send verification email.';
+          codeErrorMessage.style.color = '#ff6b6b';
+          codeErrorMessage.textContent = msg;
+          // clear the interim register status so UI doesn't remain stuck
+          try { registerError.style.color = '#ff4444'; registerError.textContent = msg; } catch (e) {}
+          console.error('sendVerificationCodeEmail failed:', err);
+          throw err;
+        }
+
+        // success → show verify UI
+        registerForm.style.display = 'none';
+        if (verifyCodeForm) verifyCodeForm.style.display = 'flex';
+        setAuthHeader('verifyRegister');
+        codeErrorMessage.style.color = '';
+        codeErrorMessage.textContent = '';
+
+        // Clear code inputs and focus
+        const i1 = document.getElementById('codeInput1');
+        if (i1) i1.value = '';
+        const i2 = document.getElementById('codeInput2'); if (i2) i2.value = '';
+        const i3 = document.getElementById('codeInput3'); if (i3) i3.value = '';
+        const i4 = document.getElementById('codeInput4'); if (i4) i4.value = '';
+        if (i1) i1.focus();
+
+      } catch (err) {
+        // Clear the 'Sending verification code…' placeholder and show a helpful message to the user
+        try {
+          if (codeErrorMessage && codeErrorMessage.textContent) {
+            registerError.style.color = '#ff4444';
+            registerError.textContent = codeErrorMessage.textContent;
+          } else {
+            const userMsg = (err && err.message && err.message !== 'validation') ? err.message : 'Failed to send verification code. Try again.';
+            registerError.style.color = '#ff4444';
+            registerError.textContent = (userMsg === 'validation') ? (registerError.textContent || 'Invalid input') : userMsg;
+          }
+        } catch (e) {
+          registerError.style.color = '#ff4444';
+          registerError.textContent = 'Failed to send verification code. Try again.';
+        }
+
+        // Log unexpected errors for diagnostics (keep validation quiet)
+        if (err && err.message && err.message !== 'validation') {
+          console.error('Register handler error:', err);
+        }
+      } finally {
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
 
   // Code input auto-advance
   const codeInputs = document.querySelectorAll('.code-input');
@@ -549,7 +789,16 @@ function setupAuth() {
   // VERIFICATION CODE FORM
   verifyCodeForm.onsubmit = async (e) => {
     e.preventDefault();
+    codeErrorMessage.style.color = '';
     codeErrorMessage.textContent = '';
+
+    const attemptsUsed = Number(verificationCodeData.failedAttempts || 0);
+    if (!verificationCodeData.code || attemptsUsed >= MAX_CODE_ATTEMPTS) {
+      setVerifyInputsLocked(true);
+      codeErrorMessage.style.color = '#ff6b6b';
+      codeErrorMessage.textContent = 'Code invalid after too many attempts. Resend a new code.';
+      return;
+    }
     
     const enteredCode = [
       document.getElementById('codeInput1').value,
@@ -566,13 +815,28 @@ function setupAuth() {
     // Check expiration (10 minutes)
     const codeAge = Date.now() - verificationCodeData.timestamp;
     if (codeAge > 10 * 60 * 1000) {
+      invalidateVerificationCode();
+      codeErrorMessage.style.color = '#ff6b6b';
       codeErrorMessage.textContent = 'Code expired. Request a new one.';
       return;
     }
     
     // Verify code
     if (enteredCode !== verificationCodeData.code) {
-      codeErrorMessage.textContent = '❌ Invalid code. Try again.';
+      verificationCodeData.failedAttempts = attemptsUsed + 1;
+      const left = Math.max(0, MAX_CODE_ATTEMPTS - verificationCodeData.failedAttempts);
+      ['codeInput1', 'codeInput2', 'codeInput3', 'codeInput4'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('codeInput1')?.focus();
+      codeErrorMessage.style.color = '#ff6b6b';
+      if (left <= 0) {
+        invalidateVerificationCode();
+        codeErrorMessage.textContent = 'Too many incorrect attempts. This code is now invalid. Resend a new one.';
+      } else {
+        codeErrorMessage.textContent = `Invalid code. ${left} attempt${left === 1 ? '' : 's'} left.`;
+      }
       return;
     }
     
@@ -586,7 +850,7 @@ function setupAuth() {
         );
         try { await acquirePresenceLock(userCredential.user.uid, verificationCodeData.email); } catch (lockErr) {
           await signOut(auth);
-          codeErrorMessage.textContent = lockErr && lockErr.message === 'active_elsewhere'
+          codeErrorMessage.textContent = isActiveElsewhereError(lockErr)
             ? 'This account is already active on another device.'
             : 'Unable to verify session. Please try again later.';
           return;
@@ -603,7 +867,8 @@ function setupAuth() {
         // Trust this device for this email
         localStorage.setItem(`trusted_login_${verificationCodeData.email}`, '1');
         // Clear data
-        verificationCodeData = { code: null, email: null, password: null, timestamp: null, mode: null, rememberMe: false };
+        resetVerificationCodeData();
+        setVerifyInputsLocked(false);
         // Load profile and close modal
         await loadUserProfile(userCredential.user);
         const modalContainer = document.querySelector('.auth-modal-container');
@@ -620,6 +885,7 @@ function setupAuth() {
           } catch (e) { allowed = true; }
 
           authModal.style.display = 'none';
+          authModal.style.removeProperty('z-index');
           modalContainer.classList.remove('success');
           authModal.classList.remove('closing');
 
@@ -630,7 +896,7 @@ function setupAuth() {
               mainApp.classList.add('app-fade-in');
               setTimeout(() => mainApp.classList.remove('app-fade-in'), 420);
               // show subscription prompt after app entrance animation
-              setTimeout(() => { try { showSubscriptionOverlay(); } catch (e) {} }, 480);
+              setTimeout(() => { try { /* free app — no auto paywall */ } catch (e) {} }, 480);
             }
           } else {
             try {
@@ -652,7 +918,7 @@ function setupAuth() {
         );
         try { await acquirePresenceLock(userCredential.user.uid, verificationCodeData.email); } catch (lockErr) {
           await signOut(auth);
-          codeErrorMessage.textContent = lockErr && lockErr.message === 'active_elsewhere'
+          codeErrorMessage.textContent = isActiveElsewhereError(lockErr)
             ? 'This account is already active on another device.'
             : 'Unable to verify session. Please try again later.';
           return;
@@ -668,7 +934,8 @@ function setupAuth() {
         // Trust this device for this email
         localStorage.setItem(`trusted_login_${verificationCodeData.email}`, '1');
         // Clear data
-        verificationCodeData = { code: null, email: null, password: null, timestamp: null, mode: null, rememberMe: false };
+        resetVerificationCodeData();
+        setVerifyInputsLocked(false);
         // Load profile and close modal
         const modalContainer = document.querySelector('.auth-modal-container');
         await loadUserProfile(userCredential.user);
@@ -687,6 +954,7 @@ function setupAuth() {
           finally { if (typeof window.hideMaintenanceCheckSpinner === 'function') window.hideMaintenanceCheckSpinner(); }
 
           authModal.style.display = 'none';
+          authModal.style.removeProperty('z-index');
           modalContainer.classList.remove('success');
           authModal.classList.remove('closing');
 
@@ -697,7 +965,7 @@ function setupAuth() {
               mainApp.classList.add('app-fade-in');
               setTimeout(() => mainApp.classList.remove('app-fade-in'), 420);
               // show subscription prompt after app entrance animation
-              setTimeout(() => { try { showSubscriptionOverlay(); } catch (e) {} }, 480);
+              setTimeout(() => { try { /* free app — no auto paywall */ } catch (e) {} }, 480);
             }
           } else {
             try {
@@ -730,9 +998,23 @@ function setupAuth() {
       const newCode = Math.floor(1000 + Math.random() * 9000).toString();
       verificationCodeData.code = newCode;
       verificationCodeData.timestamp = Date.now();
-      await sendVerificationCodeEmail(verificationCodeData.email, newCode);
-      codeErrorMessage.style.color = '#00ff88';
-      codeErrorMessage.textContent = '✅ New code sent to ' + verificationCodeData.email;
+      verificationCodeData.failedAttempts = 0;
+      setVerifyInputsLocked(false);
+      ['codeInput1', 'codeInput2', 'codeInput3', 'codeInput4'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('codeInput1')?.focus();
+      try {
+        await sendVerificationCodeEmail(verificationCodeData.email, newCode);
+        codeErrorMessage.style.color = '#00ff88';
+        codeErrorMessage.textContent = 'Verification code resent';
+      } catch (err) {
+        codeErrorMessage.style.color = '#ff6b6b';
+        codeErrorMessage.textContent = 'Could not send the code. Try again in a moment.';
+        console.error('sendVerificationCodeEmail failed:', err);
+        return;
+      }
       setTimeout(() => {
         codeErrorMessage.style.color = '';
         codeErrorMessage.textContent = '';
@@ -748,12 +1030,13 @@ function setupAuth() {
     verifyCodeForm.style.display = 'none';
     if (verificationCodeData.mode === 'login') {
       loginForm.style.display = 'flex';
-      document.getElementById('auth-title').textContent = 'Sign In';
+      setAuthHeader('login');
     } else {
       registerForm.style.display = 'flex';
-      document.getElementById('auth-title').textContent = 'Register';
+      setAuthHeader('register');
     }
-    verificationCodeData = { code: null, email: null, password: null, timestamp: null, mode: null, rememberMe: false };
+    resetVerificationCodeData();
+    setVerifyInputsLocked(false);
   };
 
   if (logoutBtn) {
@@ -820,10 +1103,20 @@ function setupAuth() {
     }
   });
 
-  // Ensure lock cleanup on app close (best-effort; RTDB will remove via onDisconnect)
-  window.addEventListener('beforeunload', async () => {
-    try { await releasePresenceLock(); } catch {}
+  // Ensure lock cleanup on app close (best-effort)
+  window.addEventListener('beforeunload', () => {
+    try { releasePresenceLock(); } catch (e) {}
   });
+
+  // Main process asks us to free the lock before quit (more reliable than beforeunload).
+  // Also sign out so PC "Remember me" only keeps email/password, not a live session.
+  try {
+    ipcRenderer.on('release-session-lock', async () => {
+      try { await releasePresenceLock(); } catch (e) {}
+      try { await signOut(auth); } catch (e) {}
+      try { ipcRenderer.send('session-lock-released'); } catch (e) {}
+    });
+  } catch (e) {}
 }
 
 // Trial durations (ms)
@@ -843,6 +1136,7 @@ let entitlementCache = {
   trialExpiresAtMs: null,
   paidActive: false,
   trialActive: false,
+  betaTester: false,
   updatedAt: 0
 };
 
@@ -851,6 +1145,21 @@ function updateEntitlementCache(next) {
     entitlementCache = Object.assign({}, entitlementCache, next || {}, { updatedAt: Date.now() });
     try { window.__utkEntitlementCache = entitlementCache; } catch (e) {}
   } catch (e) {}
+}
+
+function pillLabel(userData, paidActive) {
+  try {
+    const email = String(
+      (userData && (userData.email || userData.Email)) ||
+      (window.auth && window.auth.currentUser && window.auth.currentUser.email) ||
+      ''
+    ).trim().toLowerCase();
+    if (email === 'kricoeasygame@gmail.com') return 'Owner';
+  } catch (e) {}
+  if (userData && (userData.role === 'owner' || userData.isOwner)) return 'Owner';
+  if (userData && userData.betaTester) return 'Beta tester';
+  if (paidActive) return 'Citizen';
+  return 'Wanderer';
 }
 
 function canShowSubscriptionOverlayNow() {
@@ -864,6 +1173,112 @@ function canShowSubscriptionOverlayNow() {
   }
 }
 
+let subscriptionGateRefreshTimer = null;
+function scheduleSubscriptionGateRefresh(delayMs = 200) {
+  try {
+    if (subscriptionGateRefreshTimer) clearTimeout(subscriptionGateRefreshTimer);
+    subscriptionGateRefreshTimer = setTimeout(() => {
+      subscriptionGateRefreshTimer = null;
+      try { refreshSubscriptionGate(); } catch (e) {}
+    }, delayMs);
+  } catch (e) {}
+}
+
+async function refreshSubscriptionGate() {
+  try {
+    if (!auth || !auth.currentUser) {
+      try { hideSubscriptionOverlay(true); } catch (e) {}
+      return;
+    }
+    if (!canShowSubscriptionOverlayNow()) return;
+
+    ensureSubscriptionOverlay();
+    const ov = document.getElementById('subscription-overlay');
+    if (!ov) return;
+
+    const forceOpen = !!window.__utkForceSubscribe;
+    try { window.__utkForceSubscribe = false; } catch (e) {}
+    const waiting = ov.classList.contains('waiting') || ov.classList.contains('waiting-only');
+
+    let allowed = true;
+    if (typeof ov._updateSubscriptionUI === 'function') {
+      try {
+        allowed = await ov._updateSubscriptionUI();
+      } catch (e) {
+        allowed = false;
+      }
+    }
+
+    // App is free — never auto-block. Only open when user taps Subscribe / lock CTA, or mid-checkout.
+    if (!forceOpen && !waiting) {
+      try { hideSubscriptionOverlay(true); } catch (e) {}
+      return;
+    }
+
+    // Force-open from locked bot/studio: show unless entitlement update proves paid.
+    if (!allowed && !forceOpen) {
+      try { hideSubscriptionOverlay(true); } catch (e) {}
+      return;
+    }
+    if (!allowed && forceOpen) {
+      try {
+        const c = window.__utkEntitlementCache || entitlementCache;
+        if (c && c.paidActive) {
+          hideSubscriptionOverlay(true);
+          return;
+        }
+      } catch (e) {
+        try { hideSubscriptionOverlay(true); } catch (e2) {}
+        return;
+      }
+    }
+
+    try {
+      if (typeof window.__utkRestoreSubscriptionOverlayView === 'function') {
+        window.__utkRestoreSubscriptionOverlayView('main');
+      }
+    } catch (e) {}
+
+    try {
+      const copy = window.__utkSubscribeCopy || {};
+      const reason = String((copy && copy.reason) || window.__utkSubscribeReason || '');
+      const titleEl = ov.querySelector('#subTitle');
+      const sub = ov.querySelector('.sub-subtitle');
+      if (titleEl && copy.title) titleEl.textContent = copy.title;
+      else if (titleEl) titleEl.textContent = 'Go Beyond Wanderer';
+      if (sub) {
+        if (copy.subtitle) {
+          sub.textContent = copy.subtitle;
+        } else if (reason === 'studio') {
+          sub.textContent = 'We can see you are only wandering here. Studio and Feed are for members. Chat and Strategies stay free. Subscribe when you want the full desk.';
+        } else if (reason === 'house-bot') {
+          sub.textContent = 'We can see you are only wandering here. Right now you can use the quietest house bot from the last day. Subscribe to unlock all three and a lot more.';
+        } else {
+          sub.textContent = 'Subscribe for all bots and Studio. Chat and Strategies stay free.';
+        }
+      }
+    } catch (e) {}
+
+    ov.style.removeProperty('opacity');
+    ov.style.removeProperty('pointer-events');
+    ov.style.display = 'flex';
+    ov.classList.remove('closing', 'waiting', 'waiting-only');
+    ov.classList.add('active', 'opening');
+
+    const content = ov.querySelector('.sub-content');
+    try {
+      if (content) {
+        content.classList.add('pulse');
+        setTimeout(() => { try { content.classList.remove('pulse'); } catch (e) {} }, 760);
+      }
+    } catch (e) {}
+
+    setTimeout(() => { try { ov.classList.remove('opening'); } catch (e) {} }, 1100);
+  } catch (e) {}
+}
+
+try { window.__utkRefreshSubscriptionGate = refreshSubscriptionGate; } catch (e) {}
+
 // If auth temporarily drops to signed-out, ensure subscribe overlay doesn't linger/flash.
 try {
   if (!window.__utkSubOverlayAuthGuardAttached) {
@@ -871,8 +1286,8 @@ try {
     if (auth && typeof auth.onAuthStateChanged === 'function') {
       auth.onAuthStateChanged((user) => {
         if (!user) {
-          try { updateEntitlementCache({ paidActive: false, trialActive: false, subscriptionStatus: null }); } catch (e) {}
-          try { hideSubscriptionOverlay(); } catch (e) {}
+          try { updateEntitlementCache({ paidActive: false, trialActive: false, subscriptionStatus: null, betaTester: false }); } catch (e) {}
+          try { showAuthScreenAfterSignOut(); } catch (e) {}
         }
       });
     }
@@ -924,7 +1339,7 @@ function renderTrialCountdown(trialExpiresAt) {
         clearTrialCountdown();
         if (subPill) subPill.textContent = 'Trial ended';
         // Immediately show subscription overlay when trial expires (only if still signed in)
-        try { if (canShowSubscriptionOverlayNow()) showSubscriptionOverlay(); } catch (e) {}
+        try { /* free app — no forced paywall */ } catch (e) {}
         return;
       }
       const mm = Math.floor(rem / 60000);
@@ -999,8 +1414,8 @@ function renderPaidCountdown(paidUntilRaw, lastPaidRaw) {
       const rem = expires - Date.now();
       if (rem <= 0) {
         clearTrialCountdown(true);
-        if (subPill) subPill.textContent = 'Subscription ended';
-        try { if (canShowSubscriptionOverlayNow()) showSubscriptionOverlay(); } catch (e) {}
+        if (subPill) subPill.textContent = 'Wanderer';
+        try { /* free app — soft CTA only */ } catch (e) {}
         return;
       }
 
@@ -1011,11 +1426,31 @@ function renderPaidCountdown(paidUntilRaw, lastPaidRaw) {
       if (detailEl) { detailEl.style.display = 'block'; detailEl.style.color = 'rgba(255,255,255,0.65)'; detailEl.style.fontSize = '12px'; }
       if (detailText) { detailText.textContent = formatHMS(rem); }
       if (progressFill) { try { progressFill.style.width = pct + '%'; progressFill.style.background = 'rgba(0,0,0,0.28)'; } catch (e) {} }
-      if (subPill) subPill.textContent = 'Subscribed';
+      if (subPill) {
+        try {
+          const cached = window.__utkEntitlementCache;
+          subPill.textContent = pillLabel(
+            { role: cached && cached.isOwner ? 'owner' : '', isOwner: !!(cached && cached.isOwner), betaTester: !!(cached && cached.betaTester) },
+            true
+          );
+        } catch (e) {
+          subPill.textContent = 'Citizen';
+        }
+      }
     };
 
     clearTrialCountdown();
-    if (subPill) subPill.textContent = 'Subscribed';
+    if (subPill) {
+      try {
+        const cached = window.__utkEntitlementCache;
+        subPill.textContent = pillLabel(
+          { role: cached && cached.isOwner ? 'owner' : '', isOwner: !!(cached && cached.isOwner), betaTester: !!(cached && cached.betaTester) },
+          true
+        );
+      } catch (e) {
+        subPill.textContent = 'Citizen';
+      }
+    }
     update();
     trialCountdownTimer = setInterval(update, 1000);
   } catch (e) {}
@@ -1123,8 +1558,10 @@ async function loadUserProfile(user) {
               paidUntilMs: paidUntil || null,
               trialExpiresAtRaw,
               trialExpiresAtMs: trialExpiresAt || null,
-              paidActive: !!paidActive,
-              trialActive: !!trialActive
+              paidActive: !!paidActive || !!(userData && (userData.role === 'owner' || userData.isOwner)),
+              trialActive: !!trialActive,
+              betaTester: !!(userData && userData.betaTester),
+              isOwner: !!(userData && (userData.role === 'owner' || userData.isOwner))
             });
           } catch (e) {}
 
@@ -1136,20 +1573,23 @@ async function loadUserProfile(user) {
 
 
 
-          // Detect transition: previously active trial -> now expired (but never override active paid)
+          const isOwnerUser = !!(userData && (userData.role === 'owner' || userData.isOwner));
+          const effectivePaid = !!paidActive || isOwnerUser;
+
+          // Free app: never auto-open paywall on profile sync
           try {
-            if (prevTrialActive && !trialActive && !paidActive && canShowSubscriptionOverlayNow()) {
-              try { showSubscriptionOverlay(); } catch (e) {}
+            if (effectivePaid) {
+              try { hideSubscriptionOverlay(true); } catch (e) {}
             }
           } catch (e) {}
 
           // Update lastTrialExpiresAt
           lastTrialExpiresAt = trialExpiresAt || null;
 
-          // If paid subscription active, show Subscribed and render countdown
-          if (paidActive) {
+          // If paid subscription active, show Member/Owner and render countdown
+          if (effectivePaid) {
             try { console.debug('profile: taking paid branch', { subscriptionStatus: userData && userData.subscriptionStatus, paidUntilRaw: userData && userData.paidUntil, paidUntilMs: paidUntil, nowMs: now }); } catch (dbgE) { console.debug('profile paid-branch debug failed', dbgE); }
-            const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = 'Subscribed';
+            const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = pillLabel(userData, true);
             // prefer top-level paidUntil, fallback to subscription.paidUntil
             const effectivePaidUntilRaw = userData && (userData.paidUntil || (userData.subscription && userData.subscription.paidUntil)) ? (userData.paidUntil || userData.subscription.paidUntil) : null;
             const effectivePaidUntilMs = effectivePaidUntilRaw ? Date.parse(effectivePaidUntilRaw) : null;
@@ -1168,14 +1608,14 @@ async function loadUserProfile(user) {
 
           // Trial consumed in past
           if (trialUsed) {
-            const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = 'Trial used';
+            const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = 'Wanderer';
             clearTrialCountdown();
             return;
           }
 
-          // Default: show free trial label (not active)
-          try { console.debug('profile: default branch - showing Free trial', { subscriptionStatus: userData && userData.subscriptionStatus, paidUntilRaw: userData && userData.paidUntil, trialExpiresAtRaw }); } catch (dbgE) { console.debug('profile default-branch debug failed', dbgE); }
-          const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = 'Free trial';
+          // Default free tier
+          try { console.debug('profile: wanderer (free)', { subscriptionStatus: userData && userData.subscriptionStatus }); } catch (dbgE) {}
+          const subPill = document.getElementById('subscriptionPill'); if (subPill) subPill.textContent = 'Wanderer';
         } catch (e) {}
       });
     } catch (e) {
@@ -1188,7 +1628,7 @@ async function loadUserProfile(user) {
 
         const subPill = document.getElementById('subscriptionPill');
         const paidPill = document.getElementById('paidUntilPill');
-        if (subPill) subPill.textContent = (userData && userData.subscriptionStatus === 'active') ? 'Subscribed' : 'Free trial';
+        if (subPill) subPill.textContent = pillLabel(userData, true);
         // Do not display the 'Paid until' pill (user requested removal)
         if (paidPill) { try { paidPill.style.display = 'none'; } catch (e) {} }
         // single-shot fallback: prefer subscription.paidUntil if top-level paidUntil missing
@@ -1292,9 +1732,9 @@ async function loadUserProfile(user) {
         const paidUntil = userData && userData.paidUntil ? Date.parse(userData.paidUntil) : null;
         const trialUsed = !!userData && (!!userData.trialUsed || !!userData.trialHasBeenUsed || !!userData.trial_used);
 
-        // If paid subscription active, show Subscribed
-        if ((paidUntil && paidUntil > now) || (userData && userData.subscriptionStatus === 'active')) {
-          if (subPill) subPill.textContent = 'Subscribed';
+        // If paid subscription active, show Member/Owner
+        if ((paidUntil && paidUntil > now) || (userData && userData.subscriptionStatus === 'active') || (userData && (userData.role === 'owner' || userData.isOwner))) {
+          if (subPill) subPill.textContent = pillLabel(userData, true);
           // Clear any timers/UI but preserve the pill text we just set
           clearTrialCountdown(true);
           return;
@@ -1445,7 +1885,10 @@ function setupAvatarUpload() {
     // Limit file size to ~200KB to keep Firestore payload small
     const maxSize = 200 * 1024;
     if (file.size > maxSize) {
-      alert('Please choose an image under 200KB.');
+      try {
+        if (typeof window.showAppToast === 'function') window.showAppToast('Please choose an image under 200KB.', { tone: 'error' });
+        else alert('Please choose an image under 200KB.');
+      } catch (e) {}
       avatarInput.value = '';
       return;
     }
@@ -1478,8 +1921,10 @@ function setupAvatarUpload() {
           if (sidebarSpan) sidebarSpan.textContent = '';
         }
       } catch (err) {
-        // console.error('Error saving avatar:', err);
-        alert('Failed to save avatar. Please try again.');
+        try {
+          if (typeof window.showAppToast === 'function') window.showAppToast('Could not save avatar. Try again.', { tone: 'error' });
+          else alert('Failed to save avatar. Please try again.');
+        } catch (e) {}
       } finally {
         avatarInput.value = '';
       }
@@ -1502,198 +1947,270 @@ if (document.readyState === 'loading') {
   setupAvatarUpload();
 }
 
+// Subscription overlay feature list (matches website pricing)
+const SUBSCRIPTION_FEATURES_HTML = `
+  <ul class="feature-list">
+    <li style="--i:0"><span class="feature-icon"></span>All three house bots unlocked</li>
+    <li style="--i:1"><span class="feature-icon"></span>Studio to cook and publish custom bots</li>
+    <li style="--i:2"><span class="feature-icon"></span>Feed to follow community live tapes</li>
+    <li style="--i:3"><span class="feature-icon"></span>Citizen mark in chat</li>
+  </ul>
+`;
+
 // Subscription overlay helpers
 function ensureSubscriptionOverlay() {
-  if (document.getElementById('subscription-overlay')) return;
+  const OVERLAY_VERSION = '10';
+  const existing = document.getElementById('subscription-overlay');
+  if (existing && existing.dataset.version === OVERLAY_VERSION) return;
+  if (existing) existing.remove();
+  const oldStyle = document.getElementById('subscription-overlay-style');
+  if (oldStyle) oldStyle.remove();
   try {
     const style = document.createElement('style');
     style.id = 'subscription-overlay-style';
     style.textContent = `
-/* Pure black/white premium SaaS overlay with smooth transitions */
 #subscription-overlay {
   position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  z-index: 2147483646; pointer-events: none; opacity: 0; background: #000 !important;
-  transition: opacity 420ms cubic-bezier(.4,1,.4,1), background-color 420ms cubic-bezier(.4,1,.4,1);
+  z-index: 2147483646; pointer-events: none; opacity: 0;
+  background: #050607;
+  transition: opacity 560ms cubic-bezier(.22,1,.36,1);
+  overflow: hidden;
 }
 #subscription-overlay:not(.active) .sub-content {
-  transform: translateY(32px) scale(0.97); opacity: 0;
+  transform: translateY(36px) scale(0.985); opacity: 0;
 }
 #subscription-overlay.active {
-  opacity: 1; pointer-events: auto; background: #000 !important;
+  opacity: 1; pointer-events: auto;
 }
 #subscription-overlay.active .sub-content {
   transform: translateY(0) scale(1); opacity: 1;
-  transition: transform 480ms cubic-bezier(.22,1,.36,1), opacity 380ms cubic-bezier(.22,1,.36,1);
+  transition: transform 720ms cubic-bezier(.22,1,.36,1), opacity 520ms cubic-bezier(.22,1,.36,1);
 }
+#subscription-overlay .sub-letterbox {
+  position: absolute; left: 0; right: 0; height: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 2;
+  transition: height 720ms cubic-bezier(.22,1,.36,1);
+}
+#subscription-overlay .sub-letterbox-top { top: 0; }
+#subscription-overlay .sub-letterbox-bottom { bottom: 0; }
+#subscription-overlay.active .sub-letterbox { height: 52px; }
 #subscription-overlay .decor {
-  display: none;
+  position: absolute; inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#subscription-overlay .decor::before {
+  content: '';
+  position: absolute; inset: -20%;
+  background:
+    radial-gradient(ellipse 50% 36% at 48% 22%, rgba(255,255,255,0.07), transparent 58%),
+    radial-gradient(ellipse 42% 28% at 72% 68%, rgba(255,255,255,0.035), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(255,255,255,0.025), transparent 55%);
+  animation: subDrift 16s ease-in-out infinite alternate;
+}
+#subscription-overlay .decor::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 18%, transparent 82%, rgba(0,0,0,0.45) 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 3px);
+  opacity: 0.55;
+  animation: subGrain 7s linear infinite;
+  mix-blend-mode: soft-light;
+}
+@keyframes subDrift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.06); }
+}
+@keyframes subGrain {
+  from { transform: translateY(0); }
+  to { transform: translateY(-12px); }
+}
+#subscription-overlay.active .decor {
+  animation: subVeilIn 900ms cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes subVeilIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes subRise {
+  from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 #subscription-overlay .sub-content {
-  color: #fff; text-align: center;
-  transform: translateY(32px) scale(0.97); opacity: 0;
-  transition: transform 480ms cubic-bezier(.22,1,.36,1), opacity 380ms cubic-bezier(.22,1,.36,1);
-  max-width: 340px; padding: 22px 16px 18px 16px; border-radius: 14px;
-  width: 100%;
-  box-shadow: 0 8px 32px #000a, 0 0 40px 0 #fff2;
-  background: #111;
-  border: 1.5px solid #222;
-  font-family: 'Inter', 'Segoe UI', 'Montserrat', 'Arial', sans-serif;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  will-change: transform, opacity;
+  position: relative; z-index: 3;
+  color: rgba(255,255,255,0.92); text-align: left;
+  transform: translateY(36px) scale(0.985); opacity: 0;
+  transition: transform 720ms cubic-bezier(.22,1,.36,1), opacity 520ms cubic-bezier(.22,1,.36,1);
+  max-width: 420px; width: calc(100% - 48px);
+  padding: 40px 36px 32px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,11,13,0.88);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-#subscription-overlay.active .sub-content {
-  transform: translateY(0) scale(1); opacity: 1;
+#subscription-overlay.opening .sub-eyebrow,
+#subscription-overlay.active.opening .sub-eyebrow {
+  animation: subRise 680ms cubic-bezier(.22,1,.36,1) 90ms both;
+}
+#subscription-overlay.opening h1,
+#subscription-overlay.active.opening h1 {
+  animation: subRise 720ms cubic-bezier(.22,1,.36,1) 160ms both;
+}
+#subscription-overlay.opening .sub-subtitle,
+#subscription-overlay.active.opening .sub-subtitle {
+  animation: subRise 740ms cubic-bezier(.22,1,.36,1) 240ms both;
+}
+#subscription-overlay.opening .pay-card .price,
+#subscription-overlay.active.opening .pay-card .price {
+  animation: subRise 700ms cubic-bezier(.22,1,.36,1) 320ms both;
+}
+#subscription-overlay.opening .pay-card .features,
+#subscription-overlay.active.opening .pay-card .features {
+  animation: subRise 700ms cubic-bezier(.22,1,.36,1) 380ms both;
+}
+#subscription-overlay.opening .feature-list li,
+#subscription-overlay.active.opening .feature-list li {
+  animation: subRise 640ms cubic-bezier(.22,1,.36,1) calc(420ms + (var(--i, 0) * 70ms)) both;
+}
+#subscription-overlay.opening .sub-buttons,
+#subscription-overlay.active.opening .sub-buttons {
+  animation: subRise 700ms cubic-bezier(.22,1,.36,1) 700ms both;
+}
+#subscription-overlay .sub-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 36px; height: 36px; border-radius: 2px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  font-size: 22px; line-height: 1; cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+  z-index: 4;
+}
+#subscription-overlay .sub-close:hover { background: rgba(255,255,255,0.05); color: #fff; }
+#subscription-overlay .sub-eyebrow {
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); font-weight: 600; margin: 0 0 12px;
 }
 #subscription-overlay h1 {
-  font-size: 1.7rem; letter-spacing: 2.2px; margin: 0 0 6px 0; text-transform: uppercase;
-  color: #fff; font-family: 'Inter', 'Montserrat', 'Segoe UI', 'Arial', sans-serif;
-  font-weight: 900;
-  letter-spacing: 3px;
-  text-shadow: 0 2px 12px #0008;
-  transition: text-shadow 320ms cubic-bezier(.22,1,.36,1);
+  margin: 0 0 12px; font-size: 1.65rem; font-weight: 650; letter-spacing: -0.02em;
+  color: #fff;
 }
 #subscription-overlay .sub-subtitle {
-  font-size: 0.9rem; color: #bbb; margin-bottom: 16px; font-weight: 400; letter-spacing: 0.4px;
-  transition: color 320ms cubic-bezier(.22,1,.36,1);
+  margin: 0 0 28px; font-size: 0.95rem; line-height: 1.55;
+  color: rgba(255,255,255,0.52);
 }
 #subscription-overlay .pay-card {
-  margin: 8px auto 14px; padding: 14px 10px 12px 10px; border-radius: 10px;
-  background: #181818;
-  border: 1.5px solid #222;
-  box-shadow: 0 2px 16px #0006;
-  max-width: 300px;
-  position: relative;
-  transition: box-shadow 320ms cubic-bezier(.22,1,.36,1), background 320ms cubic-bezier(.22,1,.36,1);
+  border-radius: 2px; padding: 0 0 4px;
+  background: transparent;
+  border: none;
 }
 #subscription-overlay .pay-card .price {
-  font-size: 1.25rem; font-weight: 800; color: #fff;
-  display:flex; align-items:baseline; justify-content:center; gap:8px;
-  margin-bottom: 6px;
-  transition: color 320ms cubic-bezier(.22,1,.36,1);
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px;
 }
 #subscription-overlay .pay-card .price .amount {
-  font-size: 1.7rem; color: #fff;
-  transition: color 320ms cubic-bezier(.22,1,.36,1);
+  font-size: 2.1rem; font-weight: 650; color: #fff; letter-spacing: -0.03em;
+}
+#subscription-overlay .pay-card .price .period {
+  color: rgba(255,255,255,0.4); font-size: 0.9rem;
 }
 #subscription-overlay .pay-card .features {
-  font-size: 0.82rem; color: #bbb; margin-top:6px; letter-spacing: 0.4px;
-  transition: color 320ms cubic-bezier(.22,1,.36,1);
+  font-size: 0.78rem; color: rgba(255,255,255,0.38); margin-bottom: 18px;
+  letter-spacing: 0.04em;
 }
 #subscription-overlay .feature-list {
-  margin: 18px 0 0 0; padding: 0; list-style: none; text-align: left;
-  border-top: 1px solid #222;
-  border-bottom: 1px solid #222;
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
 }
 #subscription-overlay .feature-list li {
-  color: #fff; font-size: 0.95rem; font-weight: 500; margin: 0; padding: 12px 0 12px 0; position: relative;
-  border-bottom: 1px solid #222;
-  display: flex; align-items: center; gap: 12px;
-  opacity: 0.92;
-  transition: color 320ms cubic-bezier(.22,1,.36,1), opacity 320ms cubic-bezier(.22,1,.36,1);
-}
-#subscription-overlay .feature-list li:last-child {
-  border-bottom: none;
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 0.88rem; color: rgba(255,255,255,0.72); line-height: 1.4;
 }
 #subscription-overlay .feature-list .feature-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px; margin-right: 2px;
-  opacity: 0.8;
-  transition: opacity 320ms cubic-bezier(.22,1,.36,1);
-}
-#subscription-overlay .feature-list .feature-icon svg {
-  display: block;
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 7px;
+  background: rgba(255,255,255,0.55);
 }
 #subscription-overlay .sub-buttons {
-  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px;
+  display: flex; flex-direction: column; gap: 8px; margin-top: 28px;
 }
 #subscription-overlay button {
-  background: #fff; color: #111; border: none;
-  padding: 9px 18px; border-radius: 7px; cursor: pointer; font-weight: 700;
-  font-size: 0.95rem; font-family: 'Inter', 'Segoe UI', 'Montserrat', 'Arial', sans-serif;
-  transition: background 220ms cubic-bezier(.22,1,.36,1), color 220ms cubic-bezier(.22,1,.36,1), transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 220ms cubic-bezier(.22,1,.36,1);
-  box-shadow: 0 2px 8px #0002;
-  letter-spacing: 0.5px;
-  outline: none;
+  border: none; border-radius: 2px; padding: 13px 16px;
+  font-weight: 650; font-size: 0.82rem; letter-spacing: 0.08em;
+  text-transform: uppercase; cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, opacity 160ms ease, transform 180ms ease;
 }
+#subscription-overlay button.primary {
+  background: #fff;
+  color: #0a0b0e;
+}
+#subscription-overlay button.primary:hover { background: rgba(255,255,255,0.92); transform: translateY(-1px); }
 #subscription-overlay button.secondary {
-  background: #181818; color: #fff; border: 1.5px solid #444;
-  box-shadow: none;
+  background: transparent; color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.12);
 }
-#subscription-overlay button:hover {
-  background: #222; color: #fff;
-  transform: scale(1.03) translateY(-1px);
-  box-shadow: 0 6px 24px #0006;
+#subscription-overlay button.secondary:hover {
+  color: #fff; border-color: rgba(255,255,255,0.28);
 }
-#subscription-overlay button:active {
-  background: #fff; color: #111;
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px #0002;
-}
+#subscription-overlay button:active { opacity: 0.9; }
 #subscription-overlay .sub-message {
-  margin-top: 12px; opacity: 0; transition: opacity 300ms cubic-bezier(.22,1,.36,1); color: #fff; font-weight:600; font-size: 0.9rem;
+  margin-top: 14px; min-height: 1.2em; font-size: 0.82rem;
+  color: rgba(255,255,255,0.55); text-align: center;
 }
-#subscription-overlay .waiting-only { color: #fff; font-size: 0.95rem; }
-#subscription-overlay .waiting-only button { color: #fff; background: transparent; border: none; cursor: pointer; font-weight:700; }
 #subscription-overlay .sub-message.spinner::after {
-  content: ''; display:inline-block; width:12px; height:12px; border-radius:50%; border:2px solid #fff2; border-top-color: #fff; margin-left:8px; animation: sub-spin 900ms linear infinite; vertical-align:middle;
+  content: ''; display: inline-block; width: 12px; height: 12px; margin-left: 8px;
+  border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff;
+  border-radius: 50%; animation: subSpin 0.7s linear infinite; vertical-align: -2px;
 }
-@keyframes sub-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-#subscription-overlay.waiting button { opacity: 0.6; pointer-events: none; }
+@keyframes subSpin { to { transform: rotate(360deg); } }
+#subscription-overlay.waiting:not(.waiting-only) button { opacity: 0.6; pointer-events: none; }
 #subscription-overlay.waiting-only .sub-content > :not(#waiting-only) { display: none !important; }
-#subscription-overlay.waiting-only { background: #000 !important; pointer-events: auto; }
-#subscription-overlay.waiting-only #waiting-only { display:flex !important; flex-direction:column; align-items:center; gap:12px; margin-top:8px; }
-#subscription-overlay.waiting-only #waiting-only button { display:inline-block; margin-top:8px; background:transparent;border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:700; cursor:pointer; }
+#subscription-overlay.waiting-only #waiting-only {
+  display:flex !important; flex-direction:column; align-items:center; gap:14px;
+  margin-top:8px; padding: 8px 0; text-align: center;
+}
+#subscription-overlay.waiting-only #waiting-only .waiting-title { color:#fff; font-size:1rem; font-weight:600; }
+#subscription-overlay.waiting-only #waiting-only .waiting-hint { color:rgba(255,255,255,0.5); font-size:0.85rem; line-height:1.45; max-width:280px; }
+#subscription-overlay.waiting-only #waitingReopenBtn { background:#fff; color:#0a0b0e; }
+#subscription-overlay.waiting-only #waitingCancelBtn { background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.2); }
+#subscription-overlay .sub-content.pulse { animation: subPulse 720ms cubic-bezier(.22,1,.36,1); }
+@keyframes subPulse {
+  0% { transform: translateY(28px) scale(0.985); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
 `;
     document.head.appendChild(style);
 
     const overlay = document.createElement('div');
     overlay.id = 'subscription-overlay';
+    overlay.dataset.version = '10';
     overlay.innerHTML = `
+      <div class="sub-letterbox sub-letterbox-top" aria-hidden="true"></div>
+      <div class="sub-letterbox sub-letterbox-bottom" aria-hidden="true"></div>
       <div class="decor"></div>
-      <div class="sub-content">
-        <h1>SUBSCRIPTION</h1>
-        <div class="sub-subtitle">Unlock premium features for traders</div>
+      <div class="sub-content" role="dialog" aria-modal="true" aria-labelledby="subTitle">
+        <button type="button" class="sub-close" id="subCloseBtn" aria-label="Close">×</button>
+        <div class="sub-eyebrow">Citizen</div>
+        <h1 id="subTitle">Go Beyond Wanderer</h1>
+        <div class="sub-subtitle">Subscribe for all bots and Studio. Chat and Strategies stay free.</div>
         <div id="sub-main-section">
           <div class="pay-card">
-            <div class="price"><span class="amount">$19.99</span><span class="period">/month</span></div>
-            <div class="features">Monthly access • Cancel anytime</div>
-            <ul class="feature-list">
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Auto Pocket Option Bot</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Small delay</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Daily updates</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Advanced strategies</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Overall stats & analytics</li>
-            </ul>
-          </div>
-          <hr style="border: none; border-top: 1px solid #222; margin: 22px 0 14px 0;">
-          <div class="sub-buttons" style="margin-top:auto;">
-            <button id="subPayBtn" class="primary">Subscribe</button>
-            <button id="subTrialBtn">1 hour trial</button>
-            <button id="subLogoutBtn">Logout</button>
-          </div>
-        </div>
-        <div id="sub-payment-section" style="display:none;">
-          <div class="pay-card">
-            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=026" alt="Crypto" style="height:26px;margin-bottom:8px;filter: grayscale(1) brightness(1.2);" />
-            <div class="price"><span class="amount">$19.99</span><span class="period">/month</span></div>
-            <div class="features">Pay securely with crypto (Coinbase)</div>
-            <ul class="feature-list">
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Auto Pocket Option Bot</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Small delay</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Daily updates</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Advanced strategies</li>
-              <li><span class="feature-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="2" fill="#181818"/><path d="M6 11l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Overall stats & analytics</li>
-            </ul>
+            <div class="price"><span class="amount">€20</span><span class="period">/month</span></div>
+            <div class="features">Card via Paddle. Cancel anytime.</div>
+            ${SUBSCRIPTION_FEATURES_HTML}
           </div>
           <div class="sub-buttons">
-            <button id="subConfirmPayBtn" class="primary">Pay $19.99</button>
-            <button id="subCancelBtn" class="secondary" style="margin-left:12px;">Cancel</button>
+            <button id="subPayBtn" class="primary">Subscribe with card</button>
+            <button id="subCloseSoftBtn" class="secondary">Maybe later</button>
           </div>
+        </div>
+        <div id="waiting-only" class="waiting-only" style="display:none;">
+          <div class="waiting-title">Waiting for payment…</div>
+          <div class="waiting-hint">Checkout opened in your browser. This closes when payment confirms. If you closed checkout, tap Cancel.</div>
+          <button id="waitingReopenBtn">Reopen checkout</button>
+          <button id="waitingCancelBtn">Cancel</button>
         </div>
         <div id="subMessage" class="sub-message"></div>
       </div>
@@ -1702,227 +2219,75 @@ function ensureSubscriptionOverlay() {
 
     try {
       const payBtn = document.getElementById('subPayBtn');
-      const trialBtn = document.getElementById('subTrialBtn');
-      const logoutBtn = document.getElementById('subLogoutBtn');
-      const confirmPayBtn = document.getElementById('subConfirmPayBtn');
-      const cancelBtn = document.getElementById('subCancelBtn');
+      const trialBtn = null;
+      const logoutBtn = null;
+      const SUB_PAY_LABEL = 'Subscribe with card';
+      const closeBtn = document.getElementById('subCloseBtn');
+      const closeSoft = document.getElementById('subCloseSoftBtn');
+      const closePaywall = () => { try { hideSubscriptionOverlay(); } catch (e) {} };
+      if (closeBtn) closeBtn.addEventListener('click', closePaywall);
+      if (closeSoft) closeSoft.addEventListener('click', closePaywall);
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay && !overlay.classList.contains('waiting-only')) closePaywall();
+      });
       const subMessageEl = document.getElementById('subMessage');
-      // Subscribe button: show payment section
-      if (payBtn) {
-        payBtn.addEventListener('click', () => {
-          const mainSection = document.getElementById('sub-main-section');
-          const paymentSection = document.getElementById('sub-payment-section');
-          if (mainSection && paymentSection) {
-            mainSection.style.transition = 'opacity 320ms cubic-bezier(.22,1,.36,1), transform 320ms cubic-bezier(.22,1,.36,1)';
-            paymentSection.style.transition = 'opacity 320ms cubic-bezier(.22,1,.36,1), transform 320ms cubic-bezier(.22,1,.36,1)';
-            mainSection.style.opacity = '1';
-            mainSection.style.transform = 'scale(1)';
-            paymentSection.style.opacity = '0';
-            paymentSection.style.transform = 'scale(0.97)';
-            // Animate out main section
-            setTimeout(() => {
-              mainSection.style.opacity = '0';
-              mainSection.style.transform = 'scale(0.97)';
-              setTimeout(() => {
-                mainSection.style.display = 'none';
-                paymentSection.style.display = '';
-                // Animate in payment section
-                setTimeout(() => {
-                  paymentSection.style.opacity = '1';
-                  paymentSection.style.transform = 'scale(1)';
-                }, 20);
-              }, 320);
-            }, 20);
-          }
-          // Keep overlay column size stable (do not stretch full-height)
+
+      let lastPaymentUrl = null;
+      let paymentOpenInProgress = false;
+
+async function startPaddleCardCheckout() {
+        try {
+          if (!auth.currentUser) throw new Error('No user');
+
           const ov = document.getElementById('subscription-overlay');
-          if (ov) ov.style.alignItems = '';
-        });
-      }
-      // Pay button: triggers payment flow
-      if (confirmPayBtn) {
-        confirmPayBtn.addEventListener('click', async () => {
-          try {
-            console.log('[DEBUG] subConfirmPayBtn (Pay $19.99) clicked');
-            if (!auth.currentUser) throw new Error('No user');
-
-            // If already waiting and we have a URL, reopen it
-            const ov = document.getElementById('subscription-overlay');
-            if (ov && ov.classList.contains('waiting') && lastPaymentUrl) {
-              try {
-                await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null);
-                showSubMessage('Reopened payment window...');
-              } catch (e) { console.error('Reopen failed', e); showSubMessage('Unable to reopen payment.'); }
-              return;
-            }
-
-            // Small click/pop animation
-            try { confirmPayBtn.classList.add('pop'); setTimeout(() => confirmPayBtn.classList.remove('pop'), 420); } catch (e) {}
-
-            // If server gave us a static payment link, open it directly as a reliable fallback
+          if (ov && ov.classList.contains('waiting') && lastPaymentUrl) {
             try {
-              const ovEl = document.getElementById('subscription-overlay');
-              const staticLink = ovEl && ovEl._staticPaymentLink ? ovEl._staticPaymentLink : null;
-              if (staticLink) {
-                lastPaymentUrl = staticLink;
-                if (paymentOpenInProgress) { try { enterWaitingOnlyState(); } catch (e) {} try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) {} try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {} return; }
-                paymentOpenInProgress = true;
-                try { enterWaitingOnlyState(); } catch (e) {}
-                try { console.debug('[payments] opening payment window (static):', lastPaymentUrl); } catch (e) {}
-                try { await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null); } catch (e) {}
-                try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) { console.error('waitForSubscriptionConfirmation failed', e); }
-                try { if (confirmPayBtn) confirmPayBtn.textContent = 'Reopen payment'; } catch (e) {}
-                try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {}
-                return;
-              }
-            } catch (e) {}
-
-            // Get a fresh ID token and selected price id, then ask main to open Checkout
-            try {
-              const idToken = await auth.currentUser.getIdToken(/* forceRefresh */ true);
-              // Create a per-user Coinbase charge for $19.99/month and open the hosted checkout immediately
-              const chargeRes = await ipcRenderer.invoke('create-coinbase-charge', { idToken, amount: 19.99, currency: 'USD' }).catch((err) => ({ success: false, error: String(err) }));
-
-              // Success from create-coinbase-charge -> open hosted checkout
-              if (chargeRes && chargeRes.success && chargeRes.url) {
-                lastPaymentUrl = chargeRes.url;
-                if (paymentOpenInProgress) { try { enterWaitingOnlyState(); } catch (e) {} try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) {} try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {} return; }
-                paymentOpenInProgress = true;
-                try { enterWaitingOnlyState(); } catch (e) {}
-                try { console.debug('[payments] opening payment window (charge):', lastPaymentUrl); } catch (e) {}
-                try { await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null); } catch (e) {}
-                try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) { console.error('waitForSubscriptionConfirmation failed', e); }
-                return;
-              }
-
-              // Fallback to older open-subscription-payment or static crypto link
-              console.error('create-coinbase-charge failed:', chargeRes);
-              // Helpful message if server side isn't configured
-              try {
-                if (chargeRes && chargeRes.error && String(chargeRes.error).toLowerCase().includes('coinbase_api_key')) {
-                  showSubMessage('Payments are not configured on the server. Please set COINBASE_API_KEY and restart the payments server.');
-                }
-              } catch (e) {}
-
-              try {
-                const res2 = await ipcRenderer.invoke('open-subscription-payment', { idToken, priceId: selectedPriceId }).catch(() => null);
-                if (res2 && res2.success && res2.url) {
-                  lastPaymentUrl = res2.url;
-                  if (paymentOpenInProgress) { try { enterWaitingOnlyState(); } catch (e) {} try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) {} try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {} return; }
-                  paymentOpenInProgress = true;
-                  try { enterWaitingOnlyState(); } catch (e) {}
-                  try { console.debug('[payments] opening payment window (legacy):', lastPaymentUrl); } catch (e) {}
-                  try { await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null); } catch (e) {}
-                  try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) { console.error('waitForSubscriptionConfirmation failed', e); }
-                  try { if (confirmPayBtn) confirmPayBtn.textContent = 'Reopen payment'; } catch (e) {}
-                  try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {}
-                  return; 
-                }
-
-                const pl = await ipcRenderer.invoke('get-crypto-payment-link').catch(() => null);
-                const link = pl && pl.success && pl.url ? pl.url : (pl && pl.url ? pl.url : null);
-                if (link && auth.currentUser && auth.currentUser.email) {
-                  const url = link + (link.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(auth.currentUser.email);
-                  await ipcRenderer.invoke('open-payment-window', { url }).catch(() => null);
-                  lastPaymentUrl = url;
-                  try { enterWaitingOnlyState(); } catch (e) {}
-                  try { waitForSubscriptionConfirmation(auth.currentUser.uid); } catch (e) { console.error('waitForSubscriptionConfirmation failed', e); }
-                  try { if (confirmPayBtn) confirmPayBtn.textContent = 'Reopen payment'; } catch (e) {}
-                  try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {}
-                  return; 
-                }
-
-              } catch (e) {
-                console.error('Payment fallback failed:', e);
-                showSubMessage('Payment failed to open: ' + (chargeRes && chargeRes.error ? chargeRes.error : 'Unknown error'));
-              }
-
-              const detail = chargeRes && chargeRes.error ? chargeRes.error : 'Unknown error';
-              showSubMessage('Payment failed: ' + detail + '. Crypto payment link not configured.');
-
-            } catch (err) {
-              console.error('Failed to get ID token for payment:', err);
-              showSubMessage('Payment not available.');
-            }
-          } catch (e) {
-            console.warn('Payment handler failed:', e);
-            showSubMessage('Payment not available.');
+              await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null);
+              showSubMessage('Reopened payment window...');
+            } catch (e) { console.error('Reopen failed', e); showSubMessage('Unable to reopen payment.'); }
+            return;
           }
-        });
 
-        // Listen for payment window close to re-enable Pay button and reset UI
-        ipcRenderer.on('payment-window-closed', () => {
-          try {
+          const email = auth.currentUser.email || '';
+          const uid = auth.currentUser.uid || '';
+          showSubMessage('Opening card checkout...', { persistent: true, spinner: true });
+          const res = await ipcRenderer.invoke('get-paddle-checkout-url', { email, uid }).catch((err) => ({ success: false, error: String(err) }));
+          if (!res || !res.success || !res.url) {
+            showSubMessage((res && res.error) ? res.error : 'Could not start card checkout. Restart the app and try again.');
+            return;
+          }
+
+          lastPaymentUrl = res.url;
+          if (paymentOpenInProgress && lastPaymentUrl) {
+            try {
+              await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null);
+              showSubMessage('Reopened checkout...');
+            } catch (e) { showSubMessage('Unable to reopen checkout.'); }
+            return;
+          }
+
+          paymentOpenInProgress = true;
+          const openRes = await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null);
+          if (!openRes || !openRes.success) {
             paymentOpenInProgress = false;
-            // Remove waiting classes from overlay
-            const ov = document.getElementById('subscription-overlay');
-            if (ov) {
-              ov.classList.remove('waiting');
-              ov.classList.remove('waiting-only');
-            }
-            // Enable all relevant buttons
-            if (confirmPayBtn) {
-              confirmPayBtn.disabled = false;
-              confirmPayBtn.textContent = 'Pay $19.99';
-            }
-            const cancelBtn = document.getElementById('subCancelBtn');
-            if (cancelBtn) cancelBtn.disabled = false;
-            const trialBtn = document.getElementById('subTrialBtn');
-            if (trialBtn) trialBtn.disabled = false;
-            const logoutBtn = document.getElementById('subLogoutBtn');
-            if (logoutBtn) logoutBtn.disabled = false;
-            // Exit waiting state if present
-            try { exitWaitingOnlyState && exitWaitingOnlyState(); } catch (e) {}
-            // Show payment section again so user can retry
-            try {
-              document.getElementById('sub-main-section').style.display = 'none';
-              document.getElementById('sub-payment-section').style.display = '';
-            } catch (e) {}
-            showSubMessage('Payment window closed. You can try again.');
-          } catch (e) {}
-        });
-      }
-      // Cancel button: return to main section
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-          // If we were waiting on payment confirmation, fully reset state so Subscribe works again.
-          try { cancelWaitForConfirmation(); } catch (e) {}
-
-          const mainSection = document.getElementById('sub-main-section');
-          const paymentSection = document.getElementById('sub-payment-section');
-          if (mainSection && paymentSection) {
-            paymentSection.style.transition = 'opacity 320ms cubic-bezier(.22,1,.36,1), transform 320ms cubic-bezier(.22,1,.36,1)';
-            mainSection.style.transition = 'opacity 320ms cubic-bezier(.22,1,.36,1), transform 320ms cubic-bezier(.22,1,.36,1)';
-            paymentSection.style.opacity = '1';
-            paymentSection.style.transform = 'scale(1)';
-            mainSection.style.opacity = '0';
-            mainSection.style.transform = 'scale(0.97)';
-            // Animate out payment section
-            setTimeout(() => {
-              paymentSection.style.opacity = '0';
-              paymentSection.style.transform = 'scale(0.97)';
-              setTimeout(() => {
-                paymentSection.style.display = 'none';
-                mainSection.style.display = '';
-                // Animate in main section
-                setTimeout(() => {
-                  mainSection.style.opacity = '1';
-                  mainSection.style.transform = 'scale(1)';
-                }, 20);
-              }, 320);
-            }, 20);
-            // Restore overlay alignment to default (center)
-            const ov = document.getElementById('subscription-overlay');
-            if (ov) ov.style.alignItems = '';
-          } else {
-            // fallback
-            document.getElementById('sub-main-section').style.display = '';
-            document.getElementById('sub-payment-section').style.display = 'none';
-            const ov = document.getElementById('subscription-overlay');
-            if (ov) ov.style.alignItems = '';
+            showSubMessage('Could not open checkout.');
+            return;
           }
-        });
+
+          waitForSubscriptionConfirmation(auth.currentUser.uid);
+          enterWaitingOnlyState();
+          if (openRes.external) {
+            showSubMessage('Checkout is in your browser. Use Cancel below if you closed it without paying.', { persistent: true, spinner: false });
+          } else {
+            showSubMessage('Waiting for payment confirmation...', { persistent: true, spinner: true });
+          }
+        } catch (e) {
+          console.warn('Card payment handler failed:', e);
+          showSubMessage('Payment not available.');
+        }
       }
+
+      if (payBtn) payBtn.addEventListener('click', () => { startPaddleCardCheckout(); });
 
       // Simulate button (dev) - call server to mark user as paid
 
@@ -1933,24 +2298,22 @@ function ensureSubscriptionOverlay() {
       // Waiting-for-confirmation state
       let waitingListenerUnsub = null;
       let waitingTimeout = null;
-      let lastPaymentUrl = null; // remember last opened checkout URL so user can re-open if needed
-      // Prevent duplicate opens while a payment window is already being opened
-      let paymentOpenInProgress = false;
-      function cancelWaitForConfirmation() {
+
+      function clearPaymentWaitTimers() {
         try { if (waitingListenerUnsub) { try { waitingListenerUnsub(); } catch (e) {} waitingListenerUnsub = null; } } catch (e) {}
         try { if (waitingTimeout) { clearTimeout(waitingTimeout); waitingTimeout = null; } } catch (e) {}
         try { if (shortWaitTimeout) { clearTimeout(shortWaitTimeout); shortWaitTimeout = null; } } catch (e) {}
-        try { const ov = document.getElementById('subscription-overlay'); if (ov) { ov.classList.remove('waiting'); ov.classList.remove('waiting-only'); } } catch (e) {}
-        try { const el = document.getElementById('subMessage'); if (el) { el.classList.remove('spinner'); el.style.opacity = '0'; } } catch (e) {}
+      }
+
+      function cancelWaitForConfirmation() {
+        clearPaymentWaitTimers();
         try { lastPaymentUrl = null; } catch (e) {}
         try { paymentOpenInProgress = false; } catch (e) {}
-        try { if (payBtn) payBtn.textContent = 'Subscribe'; } catch (e) {}
+        try { const el = document.getElementById('subMessage'); if (el) { el.classList.remove('spinner'); el.style.opacity = '0'; } } catch (e) {}
+        try { if (payBtn) payBtn.textContent = SUB_PAY_LABEL; } catch (e) {}
         try { if (payBtn) payBtn.disabled = false; } catch (e) {}
         try { if (trialBtn) trialBtn.disabled = false; } catch (e) {}
         try { if (logoutBtn) logoutBtn.disabled = false; } catch (e) {}
-        try { if (confirmPayBtn) { confirmPayBtn.disabled = false; confirmPayBtn.textContent = 'Pay $19.99'; } } catch (e) {}
-        try { const cb = document.getElementById('subCancelBtn'); if (cb) cb.disabled = false; } catch (e) {}
-        try { exitWaitingOnlyState(); } catch (e) {}
       }
 
       // Show subscription message, supports persistent display and optional spinner
@@ -1964,7 +2327,7 @@ function ensureSubscriptionOverlay() {
       let shortWaitTimeout = null;
       function waitForSubscriptionConfirmation(uid, timeoutMs = 1000 * 60 * 5) {
         try {
-          cancelWaitForConfirmation();
+          clearPaymentWaitTimers();
           const uref = doc(db, 'users', uid);
           waitingListenerUnsub = onSnapshot(uref, (snap) => {
             try {
@@ -1992,7 +2355,7 @@ function ensureSubscriptionOverlay() {
               try { paymentOpenInProgress = false; } catch (e) {}
               try { exitWaitingOnlyState(); } catch (e) {}
               try { showSubMessage('Payment not confirmed. Please try again.', {}); } catch (e) {}
-              try { if (payBtn) { payBtn.disabled = false; payBtn.textContent = 'Subscribe'; } if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '1 hour trial'; } if (logoutBtn) logoutBtn.disabled = false; } catch (e) {}
+              try { if (payBtn) { payBtn.disabled = false; payBtn.textContent = SUB_PAY_LABEL; } if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '1 hour trial'; } if (logoutBtn) logoutBtn.disabled = false; } catch (e) {}
             } catch (e) {}
           }, timeoutMs);
 
@@ -2003,6 +2366,126 @@ function ensureSubscriptionOverlay() {
           // Add waiting UI state and disable buttons
           try { const ov = document.getElementById('subscription-overlay'); if (ov) ov.classList.add('waiting'); if (payBtn) payBtn.disabled = true; if (trialBtn) trialBtn.disabled = true; if (logoutBtn) logoutBtn.disabled = true; showSubMessage('Waiting for payment confirmation...', { persistent: true, spinner: true }); } catch (e) {}
         } catch (e) {}
+      }
+
+      function restoreSubscriptionOverlayView(view = 'main') {
+        try {
+          const ov = document.getElementById('subscription-overlay');
+          if (!ov) return;
+          ov.classList.remove('waiting', 'waiting-only');
+          ov._waitingHidden = [];
+
+          const content = ov.querySelector('.sub-content');
+          if (content) {
+            Array.from(content.children).forEach((child) => {
+              try {
+                if (child.id === 'waiting-only') {
+                  child.style.setProperty('display', 'none', 'important');
+                  child.style.removeProperty('visibility');
+                  return;
+                }
+                child.style.removeProperty('display');
+                child.style.removeProperty('visibility');
+                child.style.removeProperty('opacity');
+              } catch (e) {}
+            });
+          }
+
+          const mainSection = document.getElementById('sub-main-section');
+          if (mainSection) {
+            mainSection.style.display = 'block';
+            mainSection.style.opacity = '1';
+            mainSection.style.transform = 'scale(1)';
+          }
+          if (payBtn) {
+            payBtn.disabled = false;
+            payBtn.textContent = SUB_PAY_LABEL;
+          }
+          if (trialBtn) trialBtn.disabled = false;
+          if (logoutBtn) logoutBtn.disabled = false;
+        } catch (e) {}
+      }
+
+      function enterWaitingOnlyState() {
+        try {
+          const ov = document.getElementById('subscription-overlay');
+          if (!ov) return;
+          try { ov.classList.add('active'); ov.style.pointerEvents = 'auto'; ov.style.opacity = '1'; } catch (e) {}
+
+          ov._waitingHidden = ov._waitingHidden || [];
+          const content = ov.querySelector('.sub-content');
+          if (content) {
+            Array.from(content.children).forEach((child) => {
+              try {
+                if (child && child.id === 'waiting-only') {
+                  child.style.setProperty('display', 'flex', 'important');
+                  child.style.flexDirection = 'column';
+                  child.style.alignItems = 'center';
+                  child.style.gap = '12px';
+                  child.style.zIndex = '9999';
+                  child.style.visibility = 'visible';
+                  Array.from(content.children).forEach((sib) => {
+                    if (sib !== child) {
+                      sib.style.setProperty('display', 'none', 'important');
+                      sib.style.setProperty('visibility', 'hidden', 'important');
+                    }
+                  });
+                  return;
+                }
+                const prev = child.style.getPropertyValue('display') || '';
+                ov._waitingHidden.push({ el: child, prev });
+                child.style.setProperty('display', 'none', 'important');
+              } catch (e) {}
+            });
+          }
+
+          try { ov.classList.add('waiting-only'); ov.classList.remove('waiting'); } catch (e) {}
+
+          try {
+            const reopenBtn = document.getElementById('waitingReopenBtn');
+            if (reopenBtn) {
+              reopenBtn.onclick = async () => {
+                try {
+                  if (!lastPaymentUrl) return;
+                  await ipcRenderer.invoke('open-payment-window', { url: lastPaymentUrl }).catch(() => null);
+                  showSubMessage('Reopened checkout...');
+                } catch (e) {
+                  showSubMessage('Unable to reopen checkout.');
+                }
+              };
+            }
+            const waitingCancelBtn = document.getElementById('waitingCancelBtn');
+            if (waitingCancelBtn) {
+              waitingCancelBtn.onclick = () => {
+                try { clearPaymentWaitTimers(); } catch (e) {}
+                try { paymentOpenInProgress = false; } catch (e) {}
+                try { lastPaymentUrl = null; } catch (e) {}
+                try { restoreSubscriptionOverlayView('main'); } catch (e) {}
+                try {
+                  const el = document.getElementById('subMessage');
+                  if (el) { el.classList.remove('spinner'); el.textContent = 'Payment cancelled'; el.style.opacity = '1'; }
+                  setTimeout(() => { try { if (el) el.style.opacity = '0'; } catch (e) {} }, 2500);
+                } catch (e) {}
+              };
+            }
+          } catch (e) {}
+        } catch (e) {}
+      }
+
+      function exitWaitingOnlyState() {
+        restoreSubscriptionOverlayView('main');
+      }
+
+      if (!window.__utkPaymentWindowClosedListener) {
+        window.__utkPaymentWindowClosedListener = true;
+        ipcRenderer.on('payment-window-closed', () => {
+          try {
+            clearPaymentWaitTimers();
+            paymentOpenInProgress = false;
+            try { exitWaitingOnlyState(); } catch (e) {}
+            showSubMessage('Payment window closed. You can try again.');
+          } catch (e) {}
+        });
       }
 
       // Plan selector and price fetch
@@ -2017,132 +2500,13 @@ function ensureSubscriptionOverlay() {
       async function loadPlans() {
         try {
           if (planSelectorEl) planSelectorEl.textContent = 'Loading plans...';
-      // Helper to toggle waiting-only UI
-      function enterWaitingOnlyState() {
-        try {
-          const ov = document.getElementById('subscription-overlay');
-          if (!ov) return;
-          // Ensure overlay visible and interactive
-          try { ov.classList.add('active'); ov.style.pointerEvents = 'auto'; ov.style.opacity = '1'; } catch (e) {}
-
-          // store previous styles so we can restore them
-          ov._waitingHidden = ov._waitingHidden || [];
-
-          // hide everything inside .sub-content except the #waiting-only block (force with !important)
-          const content = ov.querySelector('.sub-content');
-          if (content) {
-            Array.from(content.children).forEach((child) => {
-              try {
-                if (child && child.id === 'waiting-only') {
-                  console.log('[DEBUG] Showing waiting-only block');
-                  child.style.setProperty('display', 'flex', 'important');
-                  child.style.flexDirection = 'column';
-                  child.style.alignItems = 'center';
-                  child.style.gap = '12px';
-                  child.style.zIndex = '9999';
-                  child.style.visibility = 'visible';
-                  // Show cancel button row always in waiting state
-                  const cancelRow = document.getElementById('cancel-payment-row');
-                  if (cancelRow) {
-                    cancelRow.style.display = 'block';
-                  }
-                  // Hide all siblings
-                  Array.from(content.children).forEach((sib) => {
-                    if (sib !== child) {
-                      sib.style.setProperty('display', 'none', 'important');
-                      sib.style.setProperty('visibility', 'hidden', 'important');
-                    }
-                  });
-                  return;
-                }
-                // Hide all other blocks (including trial ended, subscribe, etc)
-                const prev = child.style.getPropertyValue('display') || '';
-                ov._waitingHidden.push({ el: child, prev });
-                child.style.setProperty('display', 'none', 'important');
-              } catch (e) {}
-            });
-          }
-
-          // Mark waiting and show message (add waiting-only class to force-hide everything else)
-          try { ov.classList.add('waiting'); ov.classList.add('waiting-only'); } catch (e) {}
-          try { console.log('[payments] enterWaitingOnlyState'); } catch (e) {}
-          try { showSubMessage('Continue in your browser — waiting for confirmation...', { persistent: true, spinner: true }); } catch (e) {}
-
-          // Ensure Cancel button exists and works (create if missing)
-          try {
-            let cancelBtn = document.getElementById('subCancelBtn');
-            const waitingBlock = document.getElementById('waiting-only');
-            if (waitingBlock && !cancelBtn) {
-              try {
-                cancelBtn = document.createElement('button');
-                cancelBtn.id = 'subCancelBtn';
-                cancelBtn.textContent = 'Cancel payment';
-                cancelBtn.style.background = 'transparent';
-                cancelBtn.style.border = '1px solid #ffd27a';
-                cancelBtn.style.padding = '8px 12px';
-                cancelBtn.style.borderRadius = '8px';
-                cancelBtn.style.color = '#ffd27a';
-                cancelBtn.style.fontWeight = '700';
-                cancelBtn.style.cursor = 'pointer';
-                try { waitingBlock.appendChild(cancelBtn); } catch (e) {}
-              } catch (e) {}
-            }
-
-            if (cancelBtn) {
-              try { cancelBtn.style.display = 'inline-block'; } catch (e) {}
-              // Remove any previous listener then attach fresh
-              try { cancelBtn.replaceWith(cancelBtn.cloneNode(true)); } catch (e) {}
-              try {
-                const nb = document.getElementById('subCancelBtn');
-                if (nb) nb.addEventListener('click', async () => {
-                  try { console.log('[payments] Cancel clicked'); } catch (e) {}
-                  try { cancelWaitForConfirmation(); } catch (e) {}
-                  try { paymentOpenInProgress = false; } catch (e) {}
-                  try { exitWaitingOnlyState(); } catch (e) {}
-                  try { showSubMessage('Payment cancelled'); } catch (e) {}
-                });
-              } catch(e) {}
-            }
-          } catch (e) {}
-        } catch (e) {}
-      }
-
-      function exitWaitingOnlyState() {
-        try {
-          const ov = document.getElementById('subscription-overlay'); if (!ov) return;
-          // restore previously hidden elements
-          try {
-            if (ov._waitingHidden && Array.isArray(ov._waitingHidden)) {
-              ov._waitingHidden.forEach((rec) => {
-                try {
-                  if (rec && rec.el) {
-                    try { rec.el.style.removeProperty('display'); } catch (e) {}
-                    try { if (rec.prev && rec.prev !== '') rec.el.style.setProperty('display', rec.prev); } catch (e) {}
-                  }
-                } catch (e) {}
-              });
-            }
-            ov._waitingHidden = [];
-            // Hide cancel button row when not waiting
-            const cancelRow = document.getElementById('cancel-payment-row');
-            if (cancelRow) cancelRow.style.display = 'none';
-          } catch (e) {}
-
-          // hide waiting block
-          try { const ws = ov.querySelector('#waiting-only'); if (ws) ws.style.display = 'none'; } catch (e) {}
-
-          try { ov.classList.remove('waiting'); ov.classList.remove('waiting-only'); } catch (e) {}
-          try { console.log('[payments] exitWaitingOnlyState'); } catch (e) {}
-          try { showSubMessage(''); } catch (e) {}
-        } catch (e) {}
-      }
           const res = await ipcRenderer.invoke('fetch-allowed-prices').catch(() => null);
           if (!res || !res.success || !Array.isArray(res.prices) || res.prices.length === 0) {
             // Fallback to a single default price. Use hardcoded price id if available for quick testing.
             const FALLBACK_PRICE_ID = 'price_1SuKpdQjiGVziimZ8JLiULXt';
             if (planSelectorEl) planSelectorEl.innerHTML = `<div class="plan-card selected" data-price="${FALLBACK_PRICE_ID}">Monthly</div>`;
             selectedPriceId = FALLBACK_PRICE_ID;
-            if (payBtn) payBtn.textContent = 'Subscribe — $19.99 / month';
+            if (payBtn) payBtn.textContent = SUB_PAY_LABEL;
             return;
           }
 
@@ -2160,11 +2524,11 @@ function ensureSubscriptionOverlay() {
               // toggle selected
               Array.from(planSelectorEl.children).forEach(c => c.classList.remove('selected'));
               el.classList.add('selected');
-              if (payBtn) payBtn.textContent = `Subscribe — ${p.unit_amount ? '$' + (p.unit_amount/100).toFixed(2) : ''} ${p.interval || ''}`.trim();
+              if (payBtn) payBtn.textContent = SUB_PAY_LABEL;
             });
             if (planSelectorEl) planSelectorEl.appendChild(el);
             if (idx === 0) selectedPriceId = p.id;
-            if (idx === 0 && payBtn) payBtn.textContent = `Subscribe — ${p.unit_amount ? '$' + (p.unit_amount/100).toFixed(2) : ''} ${p.interval || ''}`.trim();
+            if (idx === 0 && payBtn) payBtn.textContent = SUB_PAY_LABEL;
           });
         } catch (e) {
           if (planSelectorEl) planSelectorEl.textContent = 'Plans unavailable';
@@ -2217,8 +2581,10 @@ function ensureSubscriptionOverlay() {
               paidUntilMs: paidUntil || null,
               trialExpiresAtRaw,
               trialExpiresAtMs: trialExpiresAt || null,
-              paidActive: !!paidActive,
-              trialActive: !!trialActive
+              paidActive: !!paidActive || !!(data && (data.role === 'owner' || data.isOwner)),
+              trialActive: !!trialActive,
+              betaTester: !!(data && data.betaTester),
+              isOwner: !!(data && (data.role === 'owner' || data.isOwner))
             });
           } catch (e) {}
 
@@ -2269,7 +2635,7 @@ function ensureSubscriptionOverlay() {
 
       if (trialBtn) trialBtn.addEventListener('click', async () => {
         try {
-          console.log('[DEBUG] enterWaitingOnlyState called');
+
           const user = auth.currentUser;
           if (!user) throw new Error('No user');
 
@@ -2299,25 +2665,12 @@ function ensureSubscriptionOverlay() {
         }
       });
 
-      if (logoutBtn) logoutBtn.addEventListener('click', async () => {
-        let originalText = logoutBtn.textContent;
-        try {
-          logoutBtn.disabled = true;
-          logoutBtn.textContent = 'Logging out...';
-          try { cancelWaitForConfirmation(); } catch (e) {}
-          try { await releasePresenceLock(); } catch (e) {}
-          try { await signOut(auth); } catch (e) {}
-          try { hideSubscriptionOverlay(); } catch (e) {}
-          try {
-            const authModal = document.getElementById('auth-modal');
-            const mainApp = document.querySelector('.app-container');
-            if (mainApp) mainApp.style.display = 'none';
-            if (authModal) { authModal.style.display = 'flex'; authModal.classList.remove('hidden'); document.body.classList.add('auth-visible'); }
-          } catch (e) {}
-        } finally {
-          try { logoutBtn.disabled = false; logoutBtn.textContent = originalText; } catch (e) {}
-        }
-      });
+      // Logout removed from subscribe scene — use profile logout instead.
+
+      try {
+        window.__utkCancelPaymentWait = cancelWaitForConfirmation;
+        window.__utkRestoreSubscriptionOverlayView = restoreSubscriptionOverlayView;
+      } catch (e) {}
 
       // Expose update function for when overlay is shown
       try { overlay._updateSubscriptionUI = updateSubscriptionUI; } catch (e) {}
@@ -2334,52 +2687,99 @@ function ensureSubscriptionOverlay() {
   }
 }
 
-async function showSubscriptionOverlay() {
+async function showSubscriptionOverlay(opts) {
   try {
-    if (!canShowSubscriptionOverlayNow()) return;
-    ensureSubscriptionOverlay();
+    if (opts && typeof opts === 'object') {
+      try {
+        window.__utkSubscribeReason = opts.reason || window.__utkSubscribeReason || '';
+        window.__utkSubscribeCopy = {
+          reason: opts.reason || '',
+          title: opts.title || '',
+          subtitle: opts.subtitle || ''
+        };
+      } catch (e) {}
+    }
+    window.__utkForceSubscribe = true;
+    await refreshSubscriptionGate();
+  } catch (e) {}
+}
+try { window.showSubscriptionOverlay = showSubscriptionOverlay; } catch (e) {}
+
+function hideSubscriptionOverlay(immediate = false) {
+  try {
+    try {
+      if (typeof window.__utkCancelPaymentWait === 'function') window.__utkCancelPaymentWait();
+    } catch (e) {}
+
     const ov = document.getElementById('subscription-overlay');
-    const content = ov ? ov.querySelector('.sub-content') : null;
-    if (ov && typeof ov._updateSubscriptionUI === 'function') {
-      try {
-        const allowed = await ov._updateSubscriptionUI();
-        if (!allowed) return;
-      } catch (e) {}
-    }
-    if (ov) {
-      ov.classList.remove('closing');
-      ov.classList.add('active', 'opening');
-      // small entrance flourish
-      try { if (content) { content.classList.add('pulse'); setTimeout(() => { try { content.classList.remove('pulse'); } catch (e) {} }, 520); } } catch (e) {}
+    if (!ov) return;
 
-      // reveal pay card and animate pay button
-      try {
-        const payCard = ov.querySelector('.pay-card');
-        const payBtn = document.getElementById('subPayBtn');
-        if (payCard) { payCard.style.transform = 'translateY(8px)'; payCard.style.opacity = '0'; setTimeout(() => { try { payCard.style.transition = 'transform 420ms cubic-bezier(.2,.9,.2,1), opacity 360ms ease'; payCard.style.transform = 'translateY(0)'; payCard.style.opacity = '1'; } catch (e) {} }, 80); }
-        if (payBtn) { setTimeout(() => { try { payBtn.classList.add('pop'); setTimeout(() => { try { payBtn.classList.remove('pop'); } catch (e) {} }, 480); } catch (e) {} }, 260); }
-      } catch (e) {}
+    ov.classList.remove('waiting', 'waiting-only', 'active', 'opening', 'closing');
 
-      // remove opening after animation
-      setTimeout(() => { try { ov.classList.remove('opening'); } catch (e) {} }, 520);
-    }
+    try {
+      const ws = ov.querySelector('#waiting-only');
+      if (ws) {
+        ws.style.display = 'none';
+        ws.style.removeProperty('visibility');
+      }
+    } catch (e) {}
+
+    try {
+      if (typeof window.__utkRestoreSubscriptionOverlayView === 'function') {
+        window.__utkRestoreSubscriptionOverlayView('main');
+      }
+    } catch (e) {}
+
+    const finishHide = () => {
+      try {
+        ov.style.display = 'none';
+        ov.style.removeProperty('opacity');
+        ov.style.removeProperty('pointer-events');
+      } catch (e) {}
+    };
+
+    if (immediate) finishHide();
+    else setTimeout(finishHide, 300);
+
+    try { const payBtn = document.getElementById('subPayBtn'); if (payBtn) payBtn.textContent = SUB_PAY_LABEL; } catch (e) {}
   } catch (e) {}
 }
 
-function hideSubscriptionOverlay() {
+function showAuthScreenAfterSignOut() {
+  try { hideSubscriptionOverlay(true); } catch (e) {}
+
+  const authModal = document.getElementById('auth-modal');
+  const mainApp = document.querySelector('.app-container');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const verifyCodeForm = document.getElementById('verifyCodeForm');
+  const loginError = document.getElementById('loginErrorMessage');
+  const registerError = document.getElementById('registerErrorMessage');
+  const codeErrorMessage = document.getElementById('codeErrorMessage');
+
+  if (registerForm) registerForm.style.display = 'none';
+  if (verifyCodeForm) verifyCodeForm.style.display = 'none';
+  if (loginForm) loginForm.style.display = 'flex';
+  setAuthHeader('login');
+  if (loginError) loginError.textContent = '';
+  if (registerError) registerError.textContent = '';
+  if (codeErrorMessage) codeErrorMessage.textContent = '';
+
+  if (mainApp) mainApp.style.display = 'none';
+  if (authModal) {
+    authModal.style.display = 'flex';
+    authModal.style.removeProperty('z-index');
+    authModal.classList.remove('hidden', 'closing');
+  }
+
+  document.body.classList.add('auth-visible');
+  try { window.__utkWelcomeBackShown = false; } catch (e) {}
   try {
-    // Ensure any pending payment listeners/timeouts are cancelled
-    try { cancelWaitForConfirmation(); } catch (e) {}
-    const ov = document.getElementById('subscription-overlay');
-    if (!ov) return;
-    ov.classList.add('closing');
-    ov.classList.remove('opening');
-    setTimeout(() => {
-      try { ov.classList.remove('active', 'closing'); } catch (e) {}
-    }, 420);
-    try { const payBtn = document.getElementById('subPayBtn'); if (payBtn) payBtn.textContent = 'Subscribe'; } catch (e) {}
+    if (window.musicVisualizer && typeof window.musicVisualizer.refresh === 'function') {
+      window.musicVisualizer.refresh();
+    }
   } catch (e) {}
-} 
+}
 
 // duplicate hideSubscriptionOverlay removed (consolidated above) 
 
@@ -2620,7 +3020,7 @@ try {
 
   // Re-evaluate when auth state changes so admin gets immediate visibility of toggle effects
   let firstAuthEventSeen = false;
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(async (user) => {
     // mark auth initialized
     try { authInitialized = true; } catch (e) {}
 
@@ -2629,6 +3029,20 @@ try {
       // Initial auth event: start listener only if user exists; otherwise keep overlay hidden to avoid startup flash
       if (user) {
         startMaintenanceListener();
+        // Restore / cold start: claim single-session lock (or kick if phone already owns a live session)
+        try {
+          await acquirePresenceLock(user.uid, user.email || '');
+        } catch (lockErr) {
+          if (isActiveElsewhereError(lockErr)) {
+            try {
+              await forceLogout('This account is already active on another device.');
+            } catch (e) {}
+            return;
+          }
+        }
+        try { await loadUserProfile(user); } catch (e) {}
+        try { await showWelcomeBackNotification(user); } catch (e) {}
+        scheduleSubscriptionGateRefresh(650);
         // If maintenance is currently enabled, apply immediately to avoid flashes during sign-in
         if (maintenanceState && maintenanceState.enabled) {
           applyMaintenance(maintenanceState);
@@ -2645,6 +3059,10 @@ try {
     if (user) {
       // user signed in: start listener and evaluate
       startMaintenanceListener();
+      try { await loadUserProfile(user); } catch (e) {}
+      try { await showWelcomeBackNotification(user); } catch (e) {}
+      // Re-evaluate trial/subscription gate after every sign-in (covers logout → login)
+      scheduleSubscriptionGateRefresh(650);
       // If maintenance is enabled, apply immediately to avoid UI flash
       if (maintenanceState && maintenanceState.enabled) {
         applyMaintenance(maintenanceState);
@@ -2652,7 +3070,9 @@ try {
         setTimeout(() => applyMaintenance(maintenanceState), 350);
       }
     } else {
-      // user signed out: stop listener, clear trial countdown, unsubscribe user doc, and show maintenance if enabled for unauthenticated users
+      // user signed out: always free the device lock so phone/PC can take over
+      try { await releasePresenceLock(); } catch (e) {}
+      // user signed out: stop listener, clear trial countdown, unsubscribe user doc, and show login
       try {
         stopMaintenanceListener();
         try { clearTrialCountdown(); } catch (e) {}
@@ -2661,6 +3081,7 @@ try {
           applyMaintenance(maintenanceState);
         } else {
           setOverlay(false, (maintenanceState && maintenanceState.message) || '');
+          try { showAuthScreenAfterSignOut(); } catch (e) {}
         }
       } catch (e) {}
     }
@@ -2669,4 +3090,11 @@ try {
   // console.warn('[Maintenance] init failed:', e);
 }
 
-module.exports = { auth, db };
+try {
+  if (typeof window !== 'undefined') {
+    window.auth = auth;
+    window.db = db;
+  }
+} catch (e) {}
+
+module.exports = { auth, db, releasePresenceLock, acquirePresenceLock };

@@ -1,0 +1,65 @@
+/* boot-splash.css — cold-start loading veil */
+
+#utkBootSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 18px;
+  background:
+    radial-gradient(90% 70% at 50% 30%, rgba(40, 70, 60, 0.22), transparent 55%),
+    #0b0b10;
+  color: rgba(240, 244, 242, 0.92);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 320ms ease, visibility 0s linear 320ms;
+  pointer-events: all;
+}
+
+html.utk-boot-ready #utkBootSplash {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.utk-boot-ring {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(170, 220, 200, 0.95);
+  border-right-color: rgba(170, 220, 200, 0.45);
+  animation: utkBootSpin 0.85s linear infinite;
+  box-sizing: border-box;
+}
+
+.utk-boot-copy {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(220, 230, 226, 0.72);
+}
+
+.utk-boot-copy span {
+  display: inline-block;
+  min-width: 1.2em;
+  text-align: left;
+}
+
+@keyframes utkBootSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .utk-boot-ring {
+    animation: none;
+    border-color: rgba(170, 220, 200, 0.55);
+  }
+  #utkBootSplash {
+    transition: none;
+  }
+}

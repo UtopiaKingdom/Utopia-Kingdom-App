@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function marksMap(data) {
+      return data.keys().hasAll(['marks']) ? data.marks : {};
+    }
+
+    // Clients may never raise Marks balance / daily earn / citizen redeems.
+    // Grants and Citizen week land via Admin SDK (Cloud Functions).
+    function marksClientSafe() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return !affected.hasAny(['marks']) || (
+        marksMap(request.resource.data).get('balance', 0)
+          <= marksMap(resource.data).get('balance', 0)
+        && marksMap(request.resource.data).get('earnedToday', 0)
+          <= marksMap(resource.data).get('earnedToday', 0)
+        && marksMap(request.resource.data).get('citizenWeekRedeems', 0)
+          <= marksMap(resource.data).get('citizenWeekRedeems', 0)
+      );
+    }
+
+    match /trades/{tradeId} {
+      allow read, write: if signedIn();
+    }
+
+    match /activeSignals/{botKey} {
+      allow read, write: if signedIn();
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) && marksClientSafe();
+      allow delete: if false;
+    }
+
+    match /userSessions/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid);
+    }
+
+    match /config/maintenance {
+      allow read: if true;
+      allow write: if signedIn() && request.auth.token.admin == true;
+    }
+  }
+}

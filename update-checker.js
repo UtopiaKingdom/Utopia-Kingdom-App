@@ -22,11 +22,21 @@ async function checkForUpdates() {
     if (result && result.disabled) {
       return { disabled: true, currentVersion };
     }
-    if (result && result.hasUpdate) {
+    let hasUpdate = false;
+    let latestVersion = '';
+    if (result && result.version) {
+      latestVersion = result.version;
+      // use semantic comparison to avoid false positives like matching current version
+      if (isNewerVersion(latestVersion, currentVersion)) {
+        hasUpdate = true;
+      }
+    }
+    if (hasUpdate) {
       return {
         hasUpdate: true,
-        latestVersion: result.version || '',
+        latestVersion,
         currentVersion,
+        installerUrl: result.installerUrl || ''
       };
     }
     return { hasUpdate: false, currentVersion };
@@ -52,7 +62,34 @@ function isNewerVersion(latest, current) {
 }
 
 function showUpdateModal() {
-  // No-op: forced update flow does not present a dismissible modal
+  try {
+    const updateInfo = arguments && arguments.length ? arguments[0] : null;
+    if (window.__utkUpdateUi && typeof window.__utkUpdateUi.showUpdateModal === 'function') {
+      window.__utkUpdateUi.showUpdateModal(updateInfo);
+      return;
+    }
+  } catch (e) {}
+
+  // Fallback if update-ui.js is not loaded yet
+  try {
+    const updateInfo = arguments && arguments.length ? arguments[0] : null;
+    if (!updateInfo || updateInfo.disabled || !updateInfo.hasUpdate) return;
+
+    const latest = String(updateInfo.latestVersion || updateInfo.version || '').trim();
+    const vText = latest ? `v${latest.replace(/^v/i, '')}` : '';
+    const status = document.getElementById('updateStatus');
+    if (status) {
+      status.style.display = 'block';
+      status.textContent = `Update ${vText || ''} downloading in the background.`.trim();
+      status.style.color = '#23d18b';
+    }
+    try {
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.invoke('download-update').catch(() => {});
+    } catch (e) {}
+  } catch (e) {
+    // ignore
+  }
 }
 
 // Export for use in renderer

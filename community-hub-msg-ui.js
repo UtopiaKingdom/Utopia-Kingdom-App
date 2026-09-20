@@ -132,12 +132,21 @@
       (m.isHost ? '<span class="hub-host-tag">Host</span>' : '') +
       (owner ? '<span class="hub-owner-tag" title="Owner">Owner</span>' : '') +
       (member ? '<span class="hub-member-tag" title="Citizen">Citizen</span>' : '');
+    let marksName = false;
+    try {
+      const me = yourName();
+      const isSelf = !!(m.isYou || (me && String(m.name || '').trim() === me));
+      if (isSelf && window.utkMarks && typeof window.utkMarks.has === 'function' && window.utkMarks.has('hub-title')) {
+        marksName = true;
+      }
+    } catch (e) {}
+    const nameCls = 'hub-msg-name' + (marksName ? ' hub-msg-name--marks' : '');
     if (!tags) {
-      return '<span class="hub-msg-name">' + name + '</span>';
+      return '<span class="' + nameCls + '">' + name + '</span>';
     }
     return (
       '<div class="hub-msg-identity">' +
-        '<span class="hub-msg-name">' + hostBit + name + '</span>' +
+        '<span class="' + nameCls + '">' + hostBit + name + '</span>' +
         tags +
       '</div>'
     );
