@@ -22,7 +22,7 @@ jobs:
           node-version: 20
 
       - name: Install npm deps
-        run: npm ci
+        run: npm install --no-fund --no-audit
 
       - name: Bundle relocatable Python for macOS
         run: node scripts/prepare_mac_python.js
