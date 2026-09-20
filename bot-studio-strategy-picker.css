@@ -1,0 +1,205 @@
+/* Strategy picker — chart art + detail panel */
+
+#section-studio .studio-strat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  min-height: calc(168px * var(--scale-factor, 1));
+  padding: 0;
+  overflow: hidden;
+}
+
+#section-studio .studio-strat-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(72px * var(--scale-factor, 1));
+  padding: 10px 12px 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+#section-studio .studio-strat-svg {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  display: block;
+  color: inherit;
+}
+
+#section-studio .studio-strat-card .studio-strat-family,
+#section-studio .studio-strat-card .studio-strat-name,
+#section-studio .studio-strat-card .studio-strat-blurb,
+#section-studio .studio-strat-card .studio-strat-hold {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+#section-studio .studio-strat-card .studio-strat-family {
+  padding-top: 10px;
+}
+
+#section-studio .studio-strat-card .studio-strat-hold {
+  padding-bottom: 12px;
+}
+
+#section-studio .studio-strat-card.is-on .studio-strat-art {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, transparent 100%);
+}
+
+#section-studio .studio-strat-card.is-on .studio-strat-hold {
+  color: currentColor;
+  opacity: 0.75;
+}
+
+.studio-strat-detail {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.studio-strat-detail .studio-picked {
+  margin-top: 0;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.studio-strat-detail .studio-picked .studio-strat-art {
+  min-height: 88px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+}
+
+.studio-strat-detail .studio-picked .studio-strat-svg {
+  max-width: 200px;
+}
+
+.studio-picked-copy {
+  padding: 12px 14px 14px;
+  min-width: 0;
+}
+
+.studio-picked-lead {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.studio-picked-when,
+.studio-picked-filters {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.studio-picked-when span,
+.studio-picked-filters span {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.studio-strat-detail .studio-strat-hint {
+  margin: 0;
+}
+
+/* Filter groups — friendlier tweak step */
+.studio-filter-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.studio-filter-group {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.studio-filter-group-head {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.studio-filter-group-head strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.studio-filter-group-head em {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.studio-filter-group .studio-toggles {
+  padding: 6px 8px 8px;
+  gap: 6px;
+}
+
+.studio-filter-group .studio-toggle {
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+}
+
+.studio-filter-group .studio-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.studio-filter-rec {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: currentColor;
+  background: rgba(255, 255, 255, 0.08);
+  vertical-align: middle;
+}
+
+.studio-filter-lead {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.studio-filter-lead strong {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 600;
+}
+
+.studio-numbers-lead {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.48);
+}

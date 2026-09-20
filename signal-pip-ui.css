@@ -1,0 +1,96 @@
+/* YouTube-style pop-out control on bot signal areas */
+.bot-signal-area {
+  position: relative;
+}
+
+.signal-pip-chrome {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.signal-pip-chrome[hidden] {
+  display: none !important;
+}
+
+.signal-pip-btn {
+  pointer-events: auto;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 24, 0.72);
+  color: rgba(233, 236, 241, 0.85);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  backdrop-filter: blur(8px);
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.signal-pip-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.signal-pip-btn:disabled,
+.signal-pip-btn.is-active {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.signal-pip-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: min(100%, 440px);
+  margin: 8px auto 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  box-sizing: border-box;
+}
+
+.signal-pip-dock[hidden] {
+  display: none !important;
+}
+
+.signal-pip-dock-label {
+  font-size: 13px;
+  color: rgba(233, 236, 241, 0.7);
+  font-weight: 600;
+}
+
+.signal-pip-dock-restore {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9ecf1;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signal-pip-dock-restore:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bot-signal-area.signal-pip-active .signal-display,
+.bot-signal-area.signal-pip-active .signal-empty {
+  display: none !important;
+}

@@ -1,0 +1,129 @@
+/* ========================================
+   APP POLISH · match clean login language
+   Late-loaded overrides (keep style.css lean)
+   ======================================== */
+
+:root {
+  --bg-primary: #0b0b10;
+}
+
+.app-container {
+  background: #0b0b10 !important;
+}
+
+.sidebar {
+  background: rgba(12, 12, 16, 0.96) !important;
+  border-right-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.main-content {
+  background: transparent;
+}
+
+/* Quiet glass cards — solid composite (no live blur = smooth resize) */
+.card {
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    rgba(16, 16, 20, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 14px 32px rgba(0, 0, 0, 0.34) !important;
+  transform: translateY(-1px) !important;
+}
+
+.bot-panels .card:hover,
+.bot-panels .trade-card:hover,
+.bot-panels .signal-card:hover {
+  transform: none !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--accent-rgb), 0.16),
+    0 12px 28px rgba(0, 0, 0, 0.32) !important;
+}
+
+/* Glass modals — opaque composite, still premium */
+.confirm-modal-content {
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.06), transparent 42%),
+    rgba(14, 14, 18, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 24px 64px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Kill expiry star / gold flash */
+.bot-expiry {
+  padding-right: 0 !important;
+  animation: none !important;
+  background-image: none !important;
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+.bot-expiry::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
+
+/* Streak badge: static heat, no flicker overlays */
+.card.stats-card .win-streak-badge::before,
+.card.stats-card .win-streak-badge::after {
+  display: none !important;
+  animation: none !important;
+}
+
+.card.stats-card .win-streak-badge.is-hot {
+  filter: none !important;
+}
+
+.stat-value {
+  text-shadow: none !important;
+}
+
+/* Switch phase rings: border tint only */
+.bot-switch-btn.is-active.switch-glow-preparing,
+.bot-switch-btn.switch-glow-preparing {
+  box-shadow: 0 0 0 1px rgba(160, 168, 180, 0.35) !important;
+}
+.bot-switch-btn.is-active.switch-glow-buy,
+.bot-switch-btn.switch-glow-buy {
+  box-shadow: 0 0 0 1px rgba(46, 213, 115, 0.4) !important;
+}
+.bot-switch-btn.is-active.switch-glow-sell,
+.bot-switch-btn.switch-glow-sell {
+  box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.4) !important;
+}
+.bot-switch-btn.is-active.switch-glow-win,
+.bot-switch-btn.switch-glow-win {
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.45) !important;
+}
+.bot-switch-btn.is-active.switch-glow-loss,
+.bot-switch-btn.switch-glow-loss {
+  box-shadow: 0 0 0 1px rgba(192, 192, 192, 0.35) !important;
+}
+.bot-switch-btn.is-active.switch-glow-cancelled,
+.bot-switch-btn.switch-glow-cancelled {
+  box-shadow: 0 0 0 1px rgba(255, 159, 67, 0.38) !important;
+}
+
+html.utk-low-fx .card,
+html.utk-low-fx .confirm-modal-content {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

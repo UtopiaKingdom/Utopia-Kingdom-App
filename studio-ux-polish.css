@@ -1,0 +1,88 @@
+/* Studio landing — center only true empty/onboarding states */
+
+#section-studio.is-studio-landing .studio-page,
+#section-studio .studio-page.is-studio-landing {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+#section-studio.is-studio-landing .studio-rail,
+#section-studio .studio-page.is-studio-landing .studio-rail {
+  display: none;
+}
+
+#section-studio .studio-room-empty,
+#section-studio .studio-empty.studio-stage,
+#section-studio .studio-hub-empty {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 18px 36px;
+  box-sizing: border-box;
+}
+
+#section-studio .studio-room-empty .studio-room-list {
+  width: 100%;
+  max-width: 360px;
+  margin: 8px auto 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+#section-studio .studio-room-empty .studio-room-list li {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+#section-studio .studio-room-empty .studio-room-list b {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 650;
+}
+
+#section-studio .studio-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+#section-studio .studio-check-bar-fill {
+  transition: width 0.45s ease;
+}
+
+#section-studio .studio-check-bar-fill.is-wait {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb, 90, 106, 255), 0.35),
+    rgba(var(--accent-rgb, 90, 106, 255), 0.7),
+    rgba(var(--accent-rgb, 90, 106, 255), 0.35)
+  );
+  background-size: 200% 100%;
+  animation: studioCheckShimmer 1.4s ease infinite;
+}
+
+@keyframes studioCheckShimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+#section-studio .studio-tab-body,
+#section-studio .studio-bot-detail,
+#section-studio .studio-desk-root {
+  transition: opacity 0.18s ease;
+}

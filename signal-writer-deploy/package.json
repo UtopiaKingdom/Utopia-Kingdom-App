@@ -1,0 +1,13 @@
+{
+  "name": "utk-signal-writer",
+  "version": "3.2.19",
+  "private": true,
+  "main": "signal-writer-server.js",
+  "scripts": {
+    "start": "node signal-writer-server.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "ws": "^8.18.3"
+  }
+}

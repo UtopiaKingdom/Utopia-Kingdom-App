@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UtK — Minimal Red Concepts</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: #101010;
+      --line: rgba(255,255,255,0.08);
+      --text: #ececec;
+      --muted: #8a8a8a;
+      --red: #d32f2f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 28px;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; font-weight: 600; }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 16px;
+    }
+    .card.pick {
+      border-color: rgba(211, 47, 47, 0.45);
+    }
+    .card h2 { margin: 0 0 4px; font-size: 15px; }
+    .card p { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 190px;
+      background: #000;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .hero img { width: 160px; height: 160px; image-rendering: auto; }
+    .sizes { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; }
+    .size { text-align: center; }
+    .size img {
+      display: block;
+      background: #000;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .size span { display: block; margin-top: 5px; font-size: 10px; color: var(--muted); }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 10px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #bbb;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .mock {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0b1220;
+    }
+    .mock-label {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+    }
+    .titlebar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #0d1524;
+    }
+    .titlebar img { width: 24px; height: 24px; border-radius: 6px; }
+    .titlebar strong { font-size: 13px; font-weight: 600; }
+    .titlebar .dot {
+      margin-left: auto;
+      font-size: 10px;
+      color: #2ed573;
+      background: rgba(46,213,115,0.12);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    h3 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+    .note {
+      margin-top: 20px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      max-width: 760px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Minimal red concepts (original vibe)</h1>
+  <p class="lead">
+    Hand-drawn flat marks — same red/gray/black as your current logo, fewer layers, no gradients, no AI gloss.
+    Stripped the robot face, extra bars, and metallic noise. Check the 24px row; that is titlebar size.
+  </p>
+
+  <div class="grid">
+    <article class="card">
+      <h2>Current</h2>
+      <p>Your original — busy but distinctive.</p>
+      <div class="hero"><img src="current-logo.png" alt="Current" /></div>
+      <div class="sizes">
+        <div class="size"><img src="current-logo.png" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="current-logo.png" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="current-logo.png" width="48" height="48" alt="" /><span>48</span></div>
+      </div>
+    </article>
+
+    <article class="card pick">
+      <h2>A — Crown bars</h2>
+      <p>Closest to yours: crown base + 3 ascending bars + arrow. Still reads “growth”.</p>
+      <div class="hero"><img src="v2-crown-bars.svg" alt="Crown bars" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v2-crown-bars.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v2-crown-bars.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v2-crown-bars.svg" width="48" height="48" alt="" /><span>48</span></div>
+      </div>
+      <span class="tag">Best “keep my logo, clean it up”</span>
+    </article>
+
+    <article class="card pick">
+      <h2>B — Crown arrow</h2>
+      <p>One strong upward arrow from the crown. Clearest at tiny sizes.</p>
+      <div class="hero"><img src="v2-crown-arrow.svg" alt="Crown arrow" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v2-crown-arrow.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v2-crown-arrow.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v2-crown-arrow.svg" width="48" height="48" alt="" /><span>48</span></div>
+      </div>
+      <span class="tag">Most minimal + readable</span>
+    </article>
+
+    <article class="card">
+      <h2>C — Trend crown</h2>
+      <p>Keeps the chart line from your original, one red arrow at the end.</p>
+      <div class="hero"><img src="v2-trend-crown.svg" alt="Trend crown" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v2-trend-crown.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v2-trend-crown.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v2-trend-crown.svg" width="48" height="48" alt="" /><span>48</span></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2>D — Flat mark</h2>
+      <p>Ultra stripped: crown + single bar. Almost icon-font simple.</p>
+      <div class="hero"><img src="v2-flat-mark.svg" alt="Flat mark" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v2-flat-mark.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v2-flat-mark.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v2-flat-mark.svg" width="48" height="48" alt="" /><span>48</span></div>
+      </div>
+    </article>
+  </div>
+
+  <h3>Titlebar check</h3>
+  <div class="mock-grid">
+    <div class="mock">
+      <div class="mock-label">Current</div>
+      <div class="titlebar">
+        <img src="current-logo.png" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-label">A — Crown bars</div>
+      <div class="titlebar">
+        <img src="v2-crown-bars.svg" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-label">B — Crown arrow</div>
+      <div class="titlebar">
+        <img src="v2-crown-arrow.svg" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    All v2 marks are plain SVG geometry (editable, no AI render). Pick A to stay closest to your original,
+    or B if you want the cleanest small icon. Say the letter and I will swap it into <code>logo.png</code>.
+  </p>
+</body>
+</html>

@@ -1,0 +1,334 @@
+/* ========================================
+   PERF · sharp + smooth defaults
+   Keep effects cheap without freezing UI.
+   ======================================== */
+
+html {
+  perspective: none !important;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  transform: none !important;
+  backface-visibility: visible !important;
+  image-rendering: auto !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Soft layout containment only — NEVER paint (clips popovers / fixed UI). */
+.app-container {
+  contain: style;
+}
+
+.sidebar {
+  contain: style;
+}
+
+.main-content {
+  /* contain:layout on the scroller made main-section wheel feel sticky */
+  contain: none;
+}
+
+.app-container,
+.sidebar,
+.bot-auto-trade-panel,
+.nav-label,
+.menu-item .nav-icon {
+  will-change: auto !important;
+}
+
+.titlebar {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
+  overflow: visible !important;
+}
+
+html.utk-smooth,
+html.utk-smooth body,
+html.utk-smooth .titlebar,
+html.utk-smooth .sidebar,
+html.utk-smooth .main-content,
+html.utk-smooth .app-container {
+  /* Shell only — keep micro-interactions on cards/buttons */
+  transition: background-color 0ms, color 0ms, border-color 0ms !important;
+}
+
+/* Fast, smooth micro-motion (liked animations, cheaper timing) */
+html.utk-smooth .menu-item,
+html.utk-smooth .card,
+html.utk-smooth .trade-card,
+html.utk-smooth .stat-card,
+html.utk-smooth .signal-card,
+html.utk-smooth .home-dest,
+html.utk-smooth .home-mover,
+html.utk-smooth .strategy-card,
+html.utk-smooth .bot-switch-btn,
+html.utk-smooth .btn-primary,
+html.utk-smooth .btn-secondary,
+html.utk-smooth .btn-ghost,
+html.utk-smooth .btn-auth,
+html.utk-smooth .hub-room-btn,
+html.utk-smooth .theme-option {
+  transition:
+    background-color 110ms ease,
+    border-color 110ms ease,
+    box-shadow 120ms ease,
+    color 110ms ease,
+    opacity 110ms ease,
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html.utk-smooth.theme-animating,
+html.utk-smooth.theme-animating body,
+html.utk-smooth.theme-animating .titlebar,
+html.utk-smooth.theme-animating .sidebar,
+html.utk-smooth.theme-animating .main-content,
+html.utk-smooth.theme-animating .app-container {
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease !important;
+}
+
+html.utk-smooth input[type="email"],
+html.utk-smooth input[type="password"],
+html.utk-smooth input[type="text"],
+html.utk-smooth input[type="number"],
+html.utk-smooth .btn-auth,
+html.utk-smooth .confirm-icon,
+html.utk-smooth .menu-item,
+html.utk-smooth .card,
+html.utk-smooth .signal-card {
+  will-change: auto !important;
+}
+
+/* ---- LIVE RESIZE: cheap chrome only — do NOT pause all animations ---- */
+html.resizing,
+html.resizing body,
+body.app-resizing {
+  cursor: default;
+}
+
+html.resizing .app-container,
+html.resizing .titlebar,
+html.resizing .sidebar,
+html.resizing .main-content,
+html.resizing .card,
+html.resizing .trade-card,
+html.resizing .signal-card,
+html.resizing .stat-card,
+html.resizing .menu-item,
+html.resizing .bot-switch-btn,
+body.app-resizing .app-container,
+body.app-resizing .card {
+  transition: none !important;
+}
+
+html.resizing .card,
+html.resizing .confirm-modal-content,
+html.resizing .titlebar,
+html.resizing .sidebar,
+html.resizing .theme-menu,
+html.resizing .notify-menu,
+html.resizing .profile-card,
+html.resizing .signal-card,
+html.resizing .trade-card,
+html.resizing .stat-card,
+body.app-resizing .card,
+body.app-resizing .confirm-modal-content {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* Decorative motion only — never freeze Studio / theme / dialogs at opacity 0 */
+html.resizing .neon-sweep,
+html.resizing .neon-pulse,
+html.resizing .home-hello-line,
+html.resizing .bot-expiry-shimmer,
+html.resizing .music-visualizer,
+html.utk-bg-idle .neon-sweep,
+html.utk-bg-idle .neon-pulse,
+html.utk-bg-idle .home-hello-line,
+html.utk-bg-idle .music-visualizer,
+html.utk-bg-idle [class*="Glow"],
+html.utk-bg-idle [class*="glow"]:not(.spinner):not(.ssid-spinner) {
+  animation-play-state: paused !important;
+}
+
+/* Low FX: CSS aurora only */
+html.utk-low-fx #auth-modal .music-visualizer {
+  display: none !important;
+}
+html.utk-low-fx #auth-modal .auth-atmosphere::before,
+html.utk-low-fx #auth-modal .auth-atmosphere::after {
+  opacity: 0.55 !important;
+  filter: blur(72px);
+}
+html.utk-low-fx #auth-modal .auth-card,
+html.utk-low-fx #auth-modal .auth-form-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.utk-reduced-motion .music-visualizer {
+  display: none !important;
+  animation: none !important;
+}
+
+html.utk-low-fx .auth-card,
+html.utk-low-fx .auth-form-container,
+html.utk-low-fx .theme-menu,
+html.utk-low-fx .notify-menu,
+html.utk-low-fx .profile-card,
+html.utk-low-fx .signal-card,
+html.utk-low-fx .card,
+html.utk-low-fx .confirm-modal-content,
+html.utk-low-fx .titlebar,
+html.utk-low-fx .ui-toggle-arrow,
+html.utk-low-fx .bot-studio-life,
+html.utk-low-fx .app-toast {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.utk-low-fx .card,
+html.utk-low-fx .history-item,
+html.utk-low-fx .menu-item,
+html.utk-low-fx .home-dest,
+html.utk-low-fx .home-price-chip,
+html.utk-low-fx .home-mover,
+html.utk-low-fx .strategy-card {
+  filter: none !important;
+}
+
+html.utk-low-fx .window-btn,
+html.utk-low-fx .theme-option,
+html.utk-low-fx .home-dest,
+html.utk-low-fx .btn-auth,
+html.utk-low-fx .menu-item {
+  transition: background-color 80ms ease, color 80ms ease, border-color 80ms ease !important;
+}
+
+html.utk-low-fx .home-hello-line,
+html.utk-low-fx .neon-sweep,
+html.utk-low-fx .neon-pulse,
+html.utk-low-fx .utk-streak,
+html.utk-low-fx .bot-expiry-shimmer,
+html.utk-low-fx [class*="Glow"],
+html.utk-low-fx [class*="glow"]:not(.spinner):not(.ssid-spinner),
+html.utk-low-fx .signal-empty {
+  animation: none !important;
+  filter: none !important;
+}
+
+html.utk-mid-fx #auth-modal .auth-card,
+html.utk-mid-fx #auth-modal .auth-form-container,
+html.utk-mid-fx .card,
+html.utk-mid-fx .confirm-modal-content,
+html.utk-mid-fx .titlebar {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.utk-mid-fx .neon-sweep,
+html.utk-mid-fx .neon-pulse,
+html.utk-mid-fx .bot-expiry-shimmer {
+  animation: none !important;
+}
+
+/* Studio / theme / dialogs must always paint */
+#section-studio,
+#section-studio.section,
+#section-studio .studio-tab-body,
+#section-studio .studio-page,
+.titlebar .theme-menu,
+.titlebar .notify-menu,
+.confirm-modal,
+.confirm-modal-content {
+  content-visibility: visible !important;
+  contain: none !important;
+  animation-play-state: running !important;
+}
+
+/* Inactive sections: cheap when tagged by app-perf (display:none still applies) */
+.section.utk-section-idle:not(.active) {
+  content-visibility: hidden;
+  contain: layout style paint;
+}
+
+.section.active,
+.section.utk-section-warming {
+  content-visibility: visible !important;
+  contain: none;
+}
+
+/* One-shot offscreen warm must not flash into the scrollport */
+.section.utk-section-warming {
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* ---- SCROLL: native Chromium only (no JS wheel hijack) ---- */
+html,
+body,
+.main-content,
+.bot-signal-area,
+.bot-panels,
+.studio-hub-mount,
+.studio-tab-body,
+#hubMessages,
+.history-list,
+.cook-body,
+.sidebar-nav,
+.hub-rail {
+  scroll-behavior: auto;
+}
+
+.main-content {
+  transform: none;
+  backface-visibility: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  will-change: auto;
+  transition: none !important;
+}
+
+.bot-signal-area,
+.bot-panels,
+.studio-hub-mount,
+#hubMessages,
+.history-list,
+.cook-body,
+.hub-rail {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  transform: none;
+  backface-visibility: visible;
+}
+
+/* List virtualization where height is stable */
+.history-item,
+.studio-hub-card,
+.studio-strat-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 80px 140px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.utk-smooth .home-hello-line,
+  html.utk-smooth .theme-menu.show,
+  html.utk-smooth .auth-form-section,
+  html.utk-smooth .auth-form {
+    animation: none !important;
+  }
+
+  #section-studio .studio-tab-body {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

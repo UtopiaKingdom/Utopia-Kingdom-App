@@ -1,0 +1,34 @@
+/* Studio signal card — win/loss text matches house history + glow border (bot-minimal.css) */
+
+.signal-row .value.win {
+  color: #e8c96a;
+  font-weight: 800;
+  text-shadow: 0 0 14px rgba(255, 215, 0, 0.35);
+}
+
+.signal-row .value.loss {
+  color: rgba(192, 192, 192, 0.88);
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(192, 192, 192, 0.2);
+}
+
+.studio-feed-house .bot-signal-area,
+.studio-house-desk .bot-signal-area {
+  transition: border-color 160ms ease, box-shadow 180ms ease;
+  /* Keep glow bloom visible inside overflow parents */
+  box-sizing: border-box;
+}
+
+.studio-feed-house,
+.studio-house-desk,
+.studio-bot-desk,
+.studio-desk-shell {
+  overflow: visible;
+}
+
+.studio-feed-house .bot-container,
+.studio-house-desk .bot-container {
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}

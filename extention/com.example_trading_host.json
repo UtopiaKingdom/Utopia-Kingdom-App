@@ -1,0 +1,9 @@
+{
+  "name": "com.example_trading_host",
+  "description": "Native messaging host for Trading Selector extension",
+  "path": "C:\\Users\\Kainfe\\Documents\\Visual Studio Projects\\Bot app\\extention\\native_host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://pjgnpchpknbokjgppphhhkbonfedoaim/"
+  ]
+}

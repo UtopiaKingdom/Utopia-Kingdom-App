@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sound Player</title>
+</head>
+<body>
+<script>
+  (function () {
+    const src = decodeURIComponent(String(window.location.hash || '').replace(/^#/, ''));
+    if (!src) {
+      window.close();
+      return;
+    }
+
+    const audio = new Audio(src);
+    audio.volume = 1;
+    audio.play().catch(function () {
+      setTimeout(function () { window.close(); }, 50);
+    });
+    audio.addEventListener('ended', function () {
+      setTimeout(function () { window.close(); }, 50);
+    });
+    audio.addEventListener('error', function () {
+      setTimeout(function () { window.close(); }, 50);
+    });
+    setTimeout(function () { window.close(); }, 20000);
+  })();
+</script>
+</body>
+</html>

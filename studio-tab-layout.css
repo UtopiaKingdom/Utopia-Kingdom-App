@@ -1,0 +1,199 @@
+/**
+ * studio-tab-layout.css — Community / My bot tab shell + hub grid layout
+ */
+
+/* Editor shell: tabs pinned top-left, body fills below */
+#section-studio .studio-editor {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 !important;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#section-studio .studio-tabs {
+  flex-shrink: 0;
+  width: 100%;
+  margin: 0 !important;
+  padding: 10px 20px 0;
+  box-sizing: border-box;
+  justify-content: flex-start;
+  border-bottom: 1px solid var(--studio-border, rgba(255, 255, 255, 0.08));
+}
+
+#section-studio .studio-tab-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Bot detail / cook / live desk: child pane scrolls — don't trap wheel here */
+#section-studio .studio-tab-body:has(.studio-bot-detail),
+#section-studio .studio-tab-body:has(.is-live-desk),
+#section-studio .studio-tab-body:has(.cook-flow) {
+  overflow: hidden;
+}
+
+/* —— My bot hub —— */
+#section-studio .studio-hub-mount {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 20px 20px 28px;
+  box-sizing: border-box;
+}
+
+.studio-hub {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.studio-hub-head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+  margin-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.studio-hub-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.studio-hub-head .studio-stage-kicker {
+  display: none;
+}
+
+.studio-hub-head h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--studio-text, rgba(255, 255, 255, 0.94));
+}
+
+.studio-hub-head .studio-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--studio-muted, rgba(255, 255, 255, 0.52));
+}
+
+.studio-hub-head .studio-primary {
+  flex-shrink: 0;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.studio-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.studio-hub-card {
+  min-height: 88px;
+  text-align: left;
+}
+
+.studio-hub-card-head {
+  margin-bottom: 2px;
+}
+
+.studio-hub-card-meta {
+  margin-top: auto;
+}
+
+/* —— Community pane —— */
+#section-studio .studio-global-pane {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 20px 28px;
+  box-sizing: border-box;
+}
+
+.studio-global-pane-head {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.studio-global-pane-head .studio-section-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.studio-global-pane-head .studio-stage-kicker {
+  display: none;
+}
+
+.studio-global-pane-head h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.studio-global-pane-head .studio-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.studio-global-pane-head .studio-ghost {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+#section-studio .studio-global-list {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* Empty / onboarding — centered content only */
+#section-studio.is-studio-landing .studio-tab-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px 40px;
+}
+
+@media (max-width: 640px) {
+  .studio-hub-head,
+  .studio-global-pane-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .studio-hub-head .studio-primary,
+  .studio-global-pane-head .studio-ghost {
+    width: 100%;
+    align-self: stretch;
+  }
+}

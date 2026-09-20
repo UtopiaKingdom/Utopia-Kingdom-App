@@ -1,0 +1,24 @@
+/**
+ * studio-scroll-fix.css — keep Studio wheel chaining working.
+ * Nested panels with overscroll-behavior:contain were eating the wheel
+ * when hovered (even with nothing left to scroll).
+ */
+
+#section-studio .cook-body,
+#section-studio .studio-hub-mount,
+#section-studio .studio-yours-pane,
+#section-studio .studio-bot-detail,
+#section-studio .bot-signal-area,
+#section-studio .bot-panels,
+#section-studio .studio-tab-body {
+  overscroll-behavior: auto;
+}
+
+/* Strategy cards / tip anchors: never create their own scrollport */
+#section-studio .studio-strat-card,
+#section-studio .studio-family,
+#section-studio .cook-chip,
+#section-studio [data-tip] {
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+}

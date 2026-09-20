@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Utopia Kingdom - Auto Trade",
+  "version": "1.0.0",
+  "description": "Auto-trading extension for Utopia Kingdom app on PocketOption",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://pocketoption.com/*",
+    "*://*.pocketoption.com/*"
+  ],
+  "action": {
+    "default_popup": "popup-websocket.html",
+    "default_title": "Utopia Kingdom Auto Trade",
+    "default_icon": {
+      "16": "logo.png",
+      "32": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "background": {
+    "service_worker": "background-websocket.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://pocketoption.com/*", "*://*.pocketoption.com/*"],
+      "js": ["content-script-pocketoption.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

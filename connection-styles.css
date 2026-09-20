@@ -1,0 +1,331 @@
+/* ========================================
+   AUTO TRADING SETUP SECTION STYLES
+   ======================================== */
+
+#section-autotrading {
+  padding: calc(32px * var(--spacing-scale)) calc(24px * var(--spacing-scale));
+}
+
+#section-autotrading .content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: calc(24px * var(--spacing-scale));
+}
+
+#section-autotrading .card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: calc(12px * var(--scale-factor));
+  padding: calc(24px * var(--spacing-scale));
+  transition: all 0.3s ease;
+}
+
+#section-autotrading .card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(90, 106, 255, 0.1);
+}
+
+#section-autotrading .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(20px * var(--spacing-scale));
+  padding-bottom: calc(16px * var(--spacing-scale));
+  border-bottom: 1px solid var(--border-color);
+}
+
+#section-autotrading .card-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 600;
+}
+
+#section-autotrading .card-body {
+  color: var(--text-secondary);
+  font-size: calc(14px * var(--font-scale));
+  line-height: 1.6;
+}
+
+/* Code Display Box */
+#section-autotrading code {
+  background: rgba(90, 106, 255, 0.1);
+  border: 1px solid rgba(90, 106, 255, 0.3);
+  padding: calc(4px * var(--spacing-scale)) calc(8px * var(--spacing-scale));
+  border-radius: calc(4px * var(--scale-factor));
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: calc(13px * var(--font-scale));
+  color: #5a6aff;
+  word-break: break-all;
+}
+
+#connectionCodeDisplay {
+  display: block;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(90, 106, 255, 0.2);
+  padding: calc(12px * var(--spacing-scale));
+  border-radius: calc(6px * var(--scale-factor));
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: calc(14px * var(--font-scale));
+  color: #5a6aff;
+  word-break: break-all;
+  white-space: pre-wrap;
+  min-height: calc(44px * var(--scale-factor));
+  display: flex;
+  align-items: center;
+  margin-bottom: calc(12px * var(--spacing-scale));
+}
+
+/* Buttons */
+#section-autotrading .btn-primary,
+#section-autotrading .btn-secondary {
+  width: 100%;
+  padding: calc(12px * var(--spacing-scale)) calc(16px * var(--spacing-scale));
+  border: none;
+  border-radius: calc(8px * var(--scale-factor));
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: calc(12px * var(--spacing-scale));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--spacing-scale));
+}
+
+#section-autotrading .btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+#section-autotrading .btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(90, 106, 255, 0.3);
+}
+
+#section-autotrading .btn-primary.code-generated {
+  background: rgba(46, 213, 115, 0.1);
+  color: #2ed573;
+  border: 1px solid #2ed573;
+}
+
+#section-autotrading .btn-secondary {
+  background: rgba(90, 106, 255, 0.1);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+#section-autotrading .btn-secondary:hover {
+  background: rgba(90, 106, 255, 0.2);
+}
+
+/* Copy Button */
+#copyConnectionCode {
+  padding: 10px 16px !important;
+  white-space: nowrap;
+  width: auto !important;
+  margin-top: 0 !important;
+}
+
+/* Connection Status */
+#connectionStatus {
+  display: block;
+  font-size: calc(13px * var(--font-scale));
+  color: #9aa0a6;
+  margin-bottom: calc(16px * var(--spacing-scale));
+  min-height: 20px;
+}
+
+/* Info Boxes */
+#section-autotrading div[style*="background:rgba"] {
+  border-radius: calc(8px * var(--scale-factor));
+  padding: calc(12px * var(--spacing-scale)) calc(16px * var(--spacing-scale));
+  margin-top: calc(16px * var(--spacing-scale));
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.5;
+}
+
+#section-autotrading div[style*="background:rgba(46,213,115"] {
+  background: rgba(46, 213, 115, 0.1) !important;
+  border-left: 3px solid #2ed573 !important;
+  color: #2ed573 !important;
+}
+
+#section-autotrading div[style*="background:rgba(255,145,0"] {
+  background: rgba(255, 145, 0, 0.1) !important;
+  border-left: 3px solid #ff9100 !important;
+  color: #ff9100 !important;
+}
+
+#section-autotrading div[style*="background:rgba(255,107,129"] {
+  background: rgba(255, 107, 129, 0.1) !important;
+  border-left: 3px solid #ff6b81 !important;
+  color: #ff6b81 !important;
+}
+
+#section-autotrading p strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Status Overview Grid */
+#section-autotrading > .content-grid > .card:last-child {
+  grid-column: 1 / -1;
+}
+
+#section-autotrading > .content-grid > .card:last-child .card-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: calc(16px * var(--spacing-scale));
+}
+
+#section-autotrading > .content-grid > .card:last-child .card-body > div {
+  padding: calc(16px * var(--spacing-scale));
+  background: rgba(90, 106, 255, 0.05);
+  border: 1px solid rgba(90, 106, 255, 0.2);
+  border-radius: calc(8px * var(--scale-factor));
+  text-align: center;
+}
+
+#section-autotrading > .content-grid > .card:last-child .card-body > div p:first-child {
+  color: #9aa0a6;
+  font-size: calc(12px * var(--font-scale));
+  margin: 0 0 calc(8px * var(--spacing-scale)) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#section-autotrading > .content-grid > .card:last-child .card-body > div p:last-child {
+  color: var(--text-primary);
+  font-size: calc(18px * var(--font-scale));
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Installation Guide Modal */
+#connection-guide-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+#connection-guide-modal .confirm-modal-content {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: calc(12px * var(--scale-factor));
+  padding: calc(32px * var(--spacing-scale));
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.guide-content {
+  margin: calc(20px * var(--spacing-scale)) 0;
+}
+
+.guide-content h4 {
+  color: var(--text-primary);
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 600;
+  margin-bottom: calc(8px * var(--spacing-scale));
+  margin-top: calc(20px * var(--spacing-scale));
+}
+
+.guide-content h4:first-child {
+  margin-top: 0;
+}
+
+.guide-content ul {
+  color: #9aa0a6;
+  margin: 0;
+  padding-left: calc(20px * var(--spacing-scale));
+}
+
+.guide-content ul li {
+  margin-bottom: calc(8px * var(--spacing-scale));
+}
+
+.guide-content p {
+  color: #9aa0a6;
+  margin: 0 0 calc(12px * var(--spacing-scale)) 0;
+}
+
+.guide-content div[style*="padding:12px"] {
+  border-radius: calc(4px * var(--scale-factor));
+  margin: calc(16px * var(--spacing-scale)) 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #section-autotrading .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #section-autotrading > .content-grid > .card:last-child .card-body {
+    grid-template-columns: 1fr;
+  }
+
+  #connection-guide-modal .confirm-modal-content {
+    max-width: 95%;
+    padding: calc(20px * var(--spacing-scale));
+  }
+}
+
+/* Toast Notification */
+.toast-notification {
+  animation: slideIn 0.3s ease-out forwards !important;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Connected banner for bot sections */
+.connected-banner {
+  display: flex;
+  align-items: center;
+  gap: calc(10px * var(--spacing-scale));
+  background: rgba(46, 213, 115, 0.08);
+  border: 1px solid rgba(46, 213, 115, 0.5);
+  padding: calc(10px * var(--spacing-scale)) calc(12px * var(--spacing-scale));
+  border-radius: calc(8px * var(--scale-factor));
+  margin: calc(8px * var(--spacing-scale)) 0 calc(16px * var(--spacing-scale)) 0;
+  color: #2ed573;
+  font-size: calc(13px * var(--font-scale));
+}
+.connected-dot {
+  width: calc(8px * var(--scale-factor));
+  height: calc(8px * var(--scale-factor));
+  border-radius: 50%;
+  background: #2ed573;
+  box-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}

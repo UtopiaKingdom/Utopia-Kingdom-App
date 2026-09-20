@@ -1,0 +1,111 @@
+/* Studio clarity — checklist + honest waiting copy */
+
+.studio-clarity-check {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin: 0 0 10px;
+  align-items: center;
+}
+
+.studio-clarity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.studio-clarity-chip.is-ok {
+  color: rgba(180, 230, 190, 0.95);
+  border-color: rgba(90, 180, 110, 0.35);
+  background: rgba(60, 140, 80, 0.12);
+}
+
+.studio-clarity-chip.is-off {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.studio-wait-panel {
+  width: min(420px, 92%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.studio-wait-panel .studio-wait-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.studio-wait-panel .studio-wait-detail,
+.studio-wait-panel .studio-wait-abandon,
+.studio-wait-panel .studio-wait-pace {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.studio-wait-panel .studio-wait-abandon {
+  color: rgba(240, 200, 120, 0.9);
+}
+
+.studio-backtest-tile.is-pace-honest em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0.75;
+}
+
+.studio-options-bullets.studio-golive-bullets li.is-warn {
+  color: rgba(240, 200, 120, 0.95);
+}
+
+.studio-saving-hint {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.studio-chart-mode-btn[data-chart-mode="combined"] .studio-adv-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.bot-mind-studio {
+  text-align: left;
+}
+
+.bot-mind-studio .studio-clarity-check {
+  margin-bottom: 8px;
+}
+
+.bot-mind-studio .studio-live-health-compact {
+  margin: 0 0 10px;
+}
+
+.bot-mind-studio .studio-wait-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.bot-mind-studio .studio-wait-detail,
+.bot-mind-studio .studio-wait-abandon,
+.bot-mind-studio .studio-wait-pace {
+  text-align: left;
+}

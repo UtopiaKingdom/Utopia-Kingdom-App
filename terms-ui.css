@@ -1,0 +1,153 @@
+/* Minimal one-time Risk & Terms popup */
+#terms-modal.terms-modal {
+  background: rgba(8, 10, 14, 0.72);
+  z-index: 100040;
+  animation: none;
+}
+
+#terms-modal .terms-modal-card {
+  width: min(400px, calc(100% - 40px));
+  max-width: 400px;
+  max-height: min(86vh, 560px);
+  padding: 24px 22px 18px;
+  border-radius: 14px;
+  background: #14161c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: termsModalIn 180ms ease;
+  overflow: hidden;
+}
+
+@keyframes termsModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#terms-modal .terms-modal-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 179, 71, 0.9);
+}
+
+#terms-modal .terms-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f2f4f7;
+  line-height: 1.25;
+}
+
+#terms-modal .terms-modal-lead {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+#terms-modal .terms-modal-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#terms-modal .terms-modal-list li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+#terms-modal .terms-modal-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+#terms-modal .terms-modal-list strong {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 560;
+}
+
+#terms-modal .terms-modal-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+#terms-modal .terms-modal-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+#terms-modal .terms-modal-check:hover {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+#terms-modal .terms-modal-check input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+  accent-color: #3ecf8e;
+  cursor: pointer;
+}
+
+#terms-modal .terms-modal-actions {
+  margin-top: 16px;
+  display: flex;
+}
+
+#terms-modal .terms-modal-btn {
+  flex: 1;
+  border: none;
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 560;
+  cursor: pointer;
+  background: #3ecf8e;
+  color: #0b1210;
+  transition: opacity 140ms ease, background 140ms ease;
+}
+
+#terms-modal .terms-modal-btn:hover:not(:disabled) {
+  background: #4ad99a;
+}
+
+#terms-modal .terms-modal-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

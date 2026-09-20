@@ -1,0 +1,297 @@
+/* Minimal update UI — bottom banner + profile panel + sidebar chip */
+
+#update-modal.update-modal {
+  display: none !important;
+}
+
+.utk-update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 99990;
+  width: min(520px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.utk-update-banner[hidden] {
+  display: none !important;
+}
+
+.utk-update-banner-inner {
+  pointer-events: auto;
+  padding: 14px 16px 12px;
+  border-radius: 14px;
+  background: rgba(10, 14, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+.utk-update-banner-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.utk-update-banner-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b95a1;
+}
+
+.utk-update-banner.is-busy .utk-update-banner-label {
+  color: #d4a574;
+}
+
+.utk-update-banner.is-ready .utk-update-banner-label {
+  color: #7fd4a8;
+}
+
+.utk-update-banner.is-error .utk-update-banner-label {
+  color: #ff9a9a;
+}
+
+.utk-update-banner-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #eef2f6;
+}
+
+.utk-update-banner-track {
+  margin-top: 10px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.utk-update-banner-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c9a066, #6ecf9a);
+  transition: width 260ms ease;
+}
+
+.utk-update-banner-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.utk-update-btn-ghost,
+.utk-update-btn-primary {
+  flex: 1;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.utk-update-btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #c8d0d8;
+}
+
+.utk-update-btn-primary {
+  background: #3ecf8e;
+  color: #07140e;
+}
+
+.utk-update-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.user-update-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.user-update-chip.is-busy {
+  color: #d4a574;
+  background: rgba(212, 165, 116, 0.12);
+  border-color: rgba(212, 165, 116, 0.22);
+}
+
+.user-update-chip.is-ready {
+  color: #9fdab4;
+  background: rgba(62, 207, 142, 0.12);
+  border-color: rgba(62, 207, 142, 0.28);
+}
+
+.user-update-chip.is-error {
+  color: #ff9a9a;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.25);
+}
+
+.profile-update-card .card-body {
+  padding: 14px 16px 16px;
+}
+
+.profile-update-lead {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9aa0a6;
+}
+
+.profile-app-version {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #c8d0d8;
+}
+
+.profile-update-status {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #9aa0a6;
+  display: none;
+}
+
+.profile-update-progress {
+  display: block;
+  opacity: 0.28;
+  transition: opacity 220ms ease;
+  margin-top: 10px;
+}
+
+.profile-update-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.profile-update-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #c9a066, #6ecf9a);
+  transition: width 260ms ease;
+}
+
+.profile-update-progress-text {
+  font-size: 11px;
+  color: #8b95a1;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.profile-update-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.profile-update-actions[hidden] {
+  display: none !important;
+}
+
+.profile-update-actions .btn-primary,
+.profile-update-actions .btn-secondary {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+#retryUpdateBtn {
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Welcome after update — minimal */
+.welcome-update-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.welcome-update-modal.is-open {
+  display: flex;
+}
+
+.welcome-update-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 12, 0.72);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.welcome-update-modal.is-open .welcome-update-backdrop {
+  opacity: 1;
+}
+
+.welcome-update-card {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 24px 22px 20px;
+  border-radius: 16px;
+  background: rgba(12, 16, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  transform: translateY(12px);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.35s ease;
+}
+
+.welcome-update-modal.is-open .welcome-update-card {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.welcome-update-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7fd4a8;
+}
+
+.welcome-update-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #f3f6f9;
+}
+
+.welcome-update-message {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #b8c0c8;
+}
+
+.welcome-update-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.welcome-update-actions .btn-primary {
+  flex: 1;
+}

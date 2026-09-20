@@ -1,0 +1,243 @@
+/**
+ * signal-notifications-ui.css — Notification bell menu polish
+ */
+.titlebar .notify-btn.is-active::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary, #5a6aff);
+  box-shadow: 0 0 0 2px rgba(14, 14, 20, 0.9);
+}
+
+.titlebar .notify-menu {
+  width: 292px;
+  max-width: min(292px, calc(100vw - 20px));
+}
+
+.titlebar .notify-menu.show {
+  animation: notifyMenuIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes notifyMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notify-master-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.notify-master-row:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notify-master-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-primary, #5a6aff);
+}
+
+.notify-scope {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+
+.notify-menu.is-off .notify-scope {
+  opacity: 0.38;
+  filter: grayscale(0.15);
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(2px);
+}
+
+.notify-mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.notify-mode-opt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.notify-mode-opt:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notify-mode-opt:has(input:checked) {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.5);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.notify-mode-opt input {
+  accent-color: var(--accent-primary, #5a6aff);
+}
+
+.notify-pick-block {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease;
+}
+
+.notify-pick-block.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.notify-pick-block > .notify-pick-inner,
+.notify-pick-block:not(:has(.notify-pick-inner)) {
+  min-height: 0;
+}
+
+.notify-pick-block.is-open:not(:has(.notify-pick-inner)) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notify-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  padding: 2px 2px 0;
+}
+
+.notify-bot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notify-bot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.notify-bot-row:hover:not(.is-locked) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notify-bot-row.is-locked {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.notify-bot-row input {
+  accent-color: var(--accent-primary, #5a6aff);
+}
+
+.notify-bot-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.notify-bot-lock,
+.notify-bot-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.notify-bot-tag {
+  color: rgba(var(--accent-rgb, 90, 106, 255), 0.85);
+}
+
+.notify-studio-note,
+.notify-sub-note {
+  margin: 2px 2px 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.notify-preview-btn {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.82);
+  font: 650 12px/1 Inter, system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.notify-preview-btn:hover {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.45);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.12);
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.titlebar .notify-btn.is-active::after {
+  animation: notifyDotPulse 2.4s ease infinite;
+}
+
+@keyframes notifyDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.82; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titlebar .notify-menu.show,
+  .notify-pick-block,
+  .notify-mode-opt,
+  .titlebar .notify-btn.is-active::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

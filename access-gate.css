@@ -1,0 +1,46 @@
+/* Quiet member / owner marks — cinema UI retired */
+
+.hub-avatar.is-member {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 0 10px rgba(255, 255, 255, 0.12);
+}
+
+.hub-avatar.is-owner {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 14px rgba(255, 255, 255, 0.18);
+}
+
+.hub-member-tag,
+.hub-owner-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.hub-member-tag {
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hub-owner-tag {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.hub-msg-identity {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}

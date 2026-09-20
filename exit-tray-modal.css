@@ -1,0 +1,312 @@
+/* Exit tray modal — keyframe appear / disappear (Electron-reliable) */
+
+@keyframes utkExitOverlayIn {
+  from {
+    opacity: 0;
+    background: rgba(5, 5, 8, 0);
+  }
+  to {
+    opacity: 1;
+    background: rgba(5, 5, 8, 0.62);
+  }
+}
+
+@keyframes utkExitOverlayOut {
+  from {
+    opacity: 1;
+    background: rgba(5, 5, 8, 0.62);
+  }
+  to {
+    opacity: 0;
+    background: rgba(5, 5, 8, 0);
+  }
+}
+
+@keyframes utkExitCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes utkExitCardOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes utkExitItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.utk-exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 5, 8, 0);
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.utk-exit-overlay.is-open {
+  pointer-events: auto;
+  animation: utkExitOverlayIn 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.utk-exit-overlay.is-closing {
+  pointer-events: none;
+  animation: utkExitOverlayOut 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.utk-exit-card {
+  position: relative;
+  width: min(380px, 100%);
+  padding: 28px 24px 18px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 42%),
+    rgba(14, 14, 18, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 28px 80px rgba(0, 0, 0, 0.55);
+  color: #f4f4f7;
+  opacity: 0;
+  transform: translateY(22px) scale(0.94);
+}
+
+.utk-exit-overlay.is-open .utk-exit-card {
+  animation: utkExitCardIn 380ms cubic-bezier(0.22, 1, 0.36, 1) 40ms forwards;
+}
+
+.utk-exit-overlay.is-closing .utk-exit-card {
+  animation: utkExitCardOut 280ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.utk-exit-dismiss {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.utk-exit-dismiss:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.utk-exit-copy {
+  padding-right: 28px;
+  margin-bottom: 18px;
+  opacity: 0;
+}
+
+.utk-exit-overlay.is-open .utk-exit-copy {
+  animation: utkExitItemIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 90ms forwards;
+}
+
+.utk-exit-overlay.is-closing .utk-exit-copy {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.utk-exit-copy h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-transform: none;
+}
+
+.utk-exit-copy p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.utk-exit-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.utk-exit-choice {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.utk-exit-overlay.is-open .utk-exit-choice:nth-child(1) {
+  animation: utkExitItemIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 140ms forwards;
+}
+
+.utk-exit-overlay.is-open .utk-exit-choice:nth-child(2) {
+  animation: utkExitItemIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 190ms forwards;
+}
+
+.utk-exit-overlay.is-closing .utk-exit-choice {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.utk-exit-choice:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.utk-exit-choice:focus-visible {
+  outline: none;
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.55);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 90, 106, 255), 0.16);
+}
+
+.utk-exit-choice.is-preferred {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.35);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.08);
+}
+
+.utk-exit-choice.is-preferred:hover {
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.12);
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.5);
+}
+
+.utk-exit-choice.is-danger:hover {
+  border-color: rgba(255, 110, 110, 0.35);
+  background: rgba(255, 90, 90, 0.06);
+}
+
+.utk-exit-choice-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+}
+
+.utk-exit-choice.is-preferred .utk-exit-choice-icon {
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.16);
+  color: rgb(var(--accent-rgb, 90, 106, 255));
+}
+
+.utk-exit-choice.is-danger .utk-exit-choice-icon {
+  color: rgba(255, 150, 150, 0.9);
+}
+
+.utk-exit-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.utk-exit-choice-text strong {
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #f7f7fa;
+}
+
+.utk-exit-choice-text small {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.48);
+  line-height: 1.35;
+}
+
+.utk-exit-choice-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(var(--accent-rgb, 90, 106, 255), 0.95);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.12);
+  border-radius: 999px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.utk-exit-cancel {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 10px;
+  opacity: 0;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.utk-exit-overlay.is-open .utk-exit-cancel {
+  animation: utkExitItemIn 360ms cubic-bezier(0.22, 1, 0.36, 1) 230ms forwards;
+}
+
+.utk-exit-overlay.is-closing .utk-exit-cancel {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.utk-exit-cancel:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Keep exit motion even if OS reduced-motion is on — this dialog is intentional UX */
+html.utk-reduced-motion .utk-exit-overlay.is-open,
+html.utk-reduced-motion .utk-exit-overlay.is-closing,
+html.utk-reduced-motion .utk-exit-overlay.is-open .utk-exit-card,
+html.utk-reduced-motion .utk-exit-overlay.is-closing .utk-exit-card,
+html.utk-reduced-motion .utk-exit-overlay.is-open .utk-exit-copy,
+html.utk-reduced-motion .utk-exit-overlay.is-open .utk-exit-choice,
+html.utk-reduced-motion .utk-exit-overlay.is-open .utk-exit-cancel {
+  animation-duration: 180ms !important;
+}

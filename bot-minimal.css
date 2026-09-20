@@ -1,0 +1,364 @@
+/* ========================================
+   Bot UI — minimal, fast (overrides)
+   ======================================== */
+
+.bot-container .card,
+.bot-auto-trade-panel .card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  border-radius: calc(10px * var(--scale-factor));
+}
+
+.bot-signal-area {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: calc(10px * var(--scale-factor));
+  padding: calc(12px * var(--spacing-scale));
+  transition: border-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.signal-empty svg {
+  animation: none !important;
+  opacity: 0.28;
+}
+
+.signal-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation: none;
+  transition: border-color 180ms ease, opacity 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  border-radius: calc(8px * var(--scale-factor)) !important;
+  max-width: min(100%, 420px);
+}
+
+.signal-card.utk-sig-card-enter {
+  animation: signalSoftIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.signal-card.utk-sig-card-swap {
+  animation: signalPhaseSwap 220ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes signalSoftIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes signalPhaseSwap {
+  0% { opacity: 0; transform: translateY(6px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.signal-row .value.up,
+.signal-row .value.down {
+  text-shadow: none !important;
+}
+
+.saving-signal-banner {
+  background: rgba(255, 165, 2, 0.1) !important;
+  border: 1px solid rgba(255, 165, 2, 0.35) !important;
+  border-radius: calc(6px * var(--scale-factor)) !important;
+  padding: calc(6px * var(--spacing-scale)) calc(10px * var(--spacing-scale)) !important;
+  text-shadow: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+}
+
+.saving-signal-message {
+  background: rgba(255, 107, 107, 0.08) !important;
+  border: 1px solid rgba(255, 107, 107, 0.22) !important;
+  font-style: normal !important;
+}
+
+.signal-row .value.saving-signal {
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+/* Hairline ring + soft outer bloom — NO full-bleed ::before overlay. */
+.bot-signal-area::before {
+  content: none !important;
+  display: none !important;
+}
+
+.bot-signal-area.glow-preparing,
+.bot-signal-area.glow-buy,
+.bot-signal-area.glow-sell,
+.bot-signal-area.glow-win,
+.bot-signal-area.glow-loss,
+.bot-signal-area.glow-cancelled {
+  transition: border-color 160ms ease, box-shadow 180ms ease;
+}
+
+.bot-signal-area.glow-preparing {
+  border-color: rgba(190, 198, 210, 0.55);
+  box-shadow:
+    0 0 5px rgba(180, 188, 200, 0.4),
+    0 0 16px rgba(170, 178, 190, 0.22);
+}
+.bot-signal-area.glow-buy {
+  border-color: rgba(46, 213, 115, 0.65);
+  box-shadow:
+    0 0 6px rgba(46, 213, 115, 0.55),
+    0 0 18px rgba(46, 213, 115, 0.28);
+}
+.bot-signal-area.glow-sell {
+  border-color: rgba(255, 107, 107, 0.65);
+  box-shadow:
+    0 0 6px rgba(255, 107, 107, 0.55),
+    0 0 18px rgba(255, 107, 107, 0.28);
+}
+.bot-signal-area.glow-win {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow:
+    0 0 6px rgba(255, 215, 0, 0.58),
+    0 0 20px rgba(255, 215, 0, 0.3);
+}
+.bot-signal-area.glow-loss {
+  border-color: rgba(200, 200, 200, 0.5);
+  box-shadow:
+    0 0 5px rgba(200, 200, 200, 0.38),
+    0 0 14px rgba(192, 192, 192, 0.18);
+}
+.bot-signal-area.glow-cancelled {
+  border-color: rgba(255, 159, 67, 0.65);
+  box-shadow:
+    0 0 6px rgba(255, 159, 67, 0.5),
+    0 0 16px rgba(255, 159, 67, 0.24);
+}
+
+/* Signal cards always above chrome */
+.bot-signal-area > .signal-empty,
+.bot-signal-area > .signal-display {
+  position: relative;
+  z-index: 5 !important;
+}
+
+/* Saving Signals strategy UI lives in bot-styles.css (.saving-signal-options) */
+
+.saving-signal-mode {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.saving-signal-mode > span {
+  min-width: 1.6em;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.bet-size-btn {
+  min-width: calc(36px * var(--scale-factor));
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* History modal — clean list + SVG close */
+#history-modal .confirm-modal-content {
+  position: relative;
+  max-width: 640px;
+  padding: calc(20px * var(--spacing-scale)) calc(22px * var(--spacing-scale)) calc(16px * var(--spacing-scale));
+  text-align: left;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  animation: none;
+  will-change: auto;
+  transform: none;
+  backface-visibility: visible;
+  perspective: none;
+}
+
+#history-modal .confirm-title {
+  margin: 0 28px 0 0;
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+#history-modal .confirm-actions {
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.modal-icon-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.modal-icon-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.modal-icon-close svg {
+  display: block;
+}
+
+#history-modal .history-list {
+  margin: 14px 0 8px !important;
+  gap: 8px;
+  will-change: auto;
+  -webkit-overflow-scrolling: auto;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.history-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px 0;
+  margin: 0;
+  font-size: calc(13px * var(--font-scale));
+}
+
+.history-modal-content {
+  max-width: 640px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#history-modal .history-item {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px 14px;
+  will-change: auto;
+  transform: none;
+  backface-visibility: visible;
+}
+
+#history-modal .history-item-header {
+  margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#history-modal .signal-timestamp {
+  margin-left: auto;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#history-modal .history-signal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#history-modal .history-signal-body .signal-row {
+  padding: 5px 0;
+}
+
+#history-modal .history-item .signal-data {
+  display: none;
+}
+
+.saving-signal-badge {
+  background: rgba(255, 165, 2, 0.15);
+  color: #ffa502;
+  border: 1px solid rgba(255, 165, 2, 0.3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.otc-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+#info-modal .confirm-modal-content {
+  position: relative;
+  animation: none;
+  will-change: auto;
+  transform: none;
+}
+
+#info-modal .confirm-title {
+  text-align: left;
+  margin-right: 28px;
+}
+
+/* Kill forced compositor layers on bot chrome */
+.section,
+.bot-auto-trade-panel,
+.history-list,
+.history-item {
+  will-change: auto !important;
+  backface-visibility: visible !important;
+}
+
+.cinema-preenter,
+.cinema-enter,
+.cinema-leave {
+  filter: none !important;
+}
+
+.bot-expiry {
+  animation: none !important;
+  will-change: auto !important;
+  background: none !important;
+  color: var(--text-secondary) !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+}
+
+.bot-expiry::after {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .bot-container {
+    gap: 12px;
+  }
+
+  .bot-signal-area {
+    min-height: 200px;
+  }
+
+  #history-modal .confirm-modal-content {
+    width: calc(100% - 24px);
+    max-height: 85vh;
+    padding: 16px;
+  }
+}

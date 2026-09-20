@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal</title>
+  <link rel="stylesheet" href="signal-pip.css" />
+</head>
+<body>
+  <div class="pip-shell" id="pipShell" data-bot="">
+    <div class="pip-chrome" id="pipChrome">
+      <div class="pip-drag" id="pipDrag" aria-hidden="true">
+        <span class="pip-bot" id="pipBotLabel">Signal</span>
+      </div>
+      <div class="pip-tools">
+        <button type="button" class="pip-btn" id="pipTextMinus" title="Smaller" aria-label="Smaller text">−</button>
+        <button type="button" class="pip-btn" id="pipTextPlus" title="Larger" aria-label="Larger text">+</button>
+        <button type="button" class="pip-btn pip-btn-close" id="pipCloseBtn" title="Close" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+            <path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="pip-body" id="pipBody">
+      <div class="pip-card is-wait" id="pipCard">
+        <div class="pip-wait">Waiting for next signal</div>
+      </div>
+    </div>
+    <div class="pip-resize n" data-edge="n"></div>
+    <div class="pip-resize s" data-edge="s"></div>
+    <div class="pip-resize e" data-edge="e"></div>
+    <div class="pip-resize w" data-edge="w"></div>
+    <div class="pip-resize ne" data-edge="ne"></div>
+    <div class="pip-resize nw" data-edge="nw"></div>
+    <div class="pip-resize se" data-edge="se"></div>
+    <div class="pip-resize sw" data-edge="sw"></div>
+  </div>
+  <script src="signal-pip-page.js"></script>
+</body>
+</html>

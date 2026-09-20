@@ -1,0 +1,109 @@
+/* Studio options modal — backtest + go-live */
+
+.studio-options-modal .studio-options-card {
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(88vh, 640px);
+  overflow: auto;
+  text-align: left;
+}
+
+.studio-options-modal .studio-options-note {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.studio-options-modal .studio-options-section {
+  margin-bottom: 14px;
+}
+
+.studio-options-modal .studio-options-section:last-of-type {
+  margin-bottom: 4px;
+}
+
+.studio-options-modal .studio-options-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.studio-options-modal .studio-options-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.studio-options-modal .studio-options-chip {
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  -webkit-app-region: no-drag;
+}
+
+.studio-options-modal .studio-options-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.studio-options-modal .studio-options-chip.is-on {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.55);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.18);
+  color: #fff;
+}
+
+.studio-options-modal .studio-options-bullets {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.studio-options-modal .studio-options-bullets li {
+  margin-bottom: 6px;
+}
+
+.studio-dialog-field textarea {
+  width: 100%;
+  min-height: 88px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.studio-live-notice {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(110, 231, 197, 0.22);
+  background: rgba(110, 231, 197, 0.07);
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.studio-live-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #9ef0d4;
+}

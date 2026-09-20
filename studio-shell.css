@@ -1,0 +1,515 @@
+/* studio-shell.css — final Studio skin: dark, minimal, one scale. Load last. */
+
+#section-studio {
+  --studio-bg: #070709;
+  --studio-panel: rgba(255, 255, 255, 0.025);
+  --studio-border: rgba(255, 255, 255, 0.06);
+  --studio-border-strong: rgba(255, 255, 255, 0.1);
+  --studio-text: rgba(255, 255, 255, 0.92);
+  --studio-muted: rgba(255, 255, 255, 0.48);
+  --studio-kicker: rgba(255, 255, 255, 0.36);
+  --studio-radius: 12px;
+  --studio-radius-sm: 9px;
+  --studio-gap: 14px;
+  --studio-font: 13px;
+  --studio-font-sm: 12px;
+  --studio-font-xs: 10px;
+  --studio-title: 17px;
+  --studio-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#section-studio.section.active {
+  padding: 0;
+}
+
+.main-content:has(#section-studio.active) {
+  padding: 10px 12px 12px;
+}
+
+#section-studio .studio-page {
+  border-radius: var(--studio-radius);
+  border: 1px solid var(--studio-border);
+  background:
+    radial-gradient(900px 320px at 0% -20%, rgba(var(--accent-rgb, 90, 106, 255), 0.11), transparent 55%),
+    radial-gradient(700px 280px at 100% 110%, rgba(110, 231, 197, 0.04), transparent 50%),
+    var(--studio-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+#section-studio .studio-rail {
+  width: 168px;
+  min-width: 168px;
+  max-width: 168px;
+  background: rgba(0, 0, 0, 0.35);
+  border-right: 1px solid var(--studio-border);
+}
+
+#section-studio .studio-rail-head {
+  padding: 14px 12px 10px;
+  border-bottom: none;
+}
+
+#section-studio .studio-rail-head h1 {
+  margin: 0;
+  font-size: var(--studio-font-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--studio-kicker);
+}
+
+#section-studio .studio-bot-list {
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+#section-studio .studio-bot-btn {
+  padding: 8px 9px;
+  border-radius: var(--studio-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 180ms var(--studio-ease), border-color 180ms var(--studio-ease), transform 180ms var(--studio-ease);
+}
+
+#section-studio .studio-bot-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#section-studio .studio-bot-btn.is-on {
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.12);
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.28);
+}
+
+#section-studio .studio-bot-name {
+  font-size: var(--studio-font);
+  font-weight: 600;
+}
+
+#section-studio .studio-bot-meta {
+  font-size: 11px;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+#section-studio .studio-new-btn {
+  margin: 6px 8px 10px;
+  min-height: 34px;
+  font-size: var(--studio-font-sm);
+  border-radius: var(--studio-radius-sm);
+  border: 1px dashed var(--studio-border-strong);
+  background: transparent;
+  color: var(--studio-muted);
+  transition: border-color 180ms var(--studio-ease), color 180ms var(--studio-ease), background 180ms var(--studio-ease);
+}
+
+#section-studio .studio-new-btn:hover {
+  color: var(--studio-text);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+#section-studio .studio-editor {
+  padding: 0;
+  min-height: 0;
+}
+
+#section-studio .studio-tabs {
+  padding: 12px 16px 0;
+  gap: 6px;
+  border-bottom: 1px solid var(--studio-border);
+}
+
+#section-studio .studio-tab {
+  min-height: 32px;
+  padding: 6px 14px;
+  font-size: var(--studio-font);
+  font-weight: 600;
+  border-radius: var(--studio-radius-sm) var(--studio-radius-sm) 0 0;
+  color: var(--studio-muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  transform: none !important;
+  transition: color 160ms var(--studio-ease), background 160ms var(--studio-ease);
+}
+
+#section-studio .studio-tab.is-on {
+  color: var(--studio-text);
+  background: var(--studio-panel);
+  border-color: var(--studio-border);
+}
+
+#section-studio .studio-tab-body {
+  min-height: 0;
+  animation: studioPaneIn 240ms var(--studio-ease);
+  opacity: 1;
+}
+
+@keyframes studioPaneIn {
+  from { opacity: 0.01; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* —— Your bot layout —— */
+.studio-yours-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--studio-gap);
+  padding: 14px 16px 18px;
+}
+
+.studio-zone {
+  border-radius: var(--studio-radius);
+  border: 1px solid var(--studio-border);
+  background: var(--studio-panel);
+}
+
+.studio-zone-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+}
+
+.studio-zone-head .studio-name-row {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.studio-zone-desk {
+  padding: 0;
+  overflow: hidden;
+  min-height: 200px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.studio-zone-desk .studio-desk-empty,
+.studio-zone-desk .studio-desk-root {
+  min-height: 200px;
+}
+
+.studio-zone-actions {
+  padding: 10px 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.studio-zone-path {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.studio-zone-recipe {
+  padding: 0 12px 8px;
+  border: 1px solid var(--studio-border);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.studio-zone-recipe > summary {
+  padding: 12px 0;
+  font-size: var(--studio-font);
+  font-weight: 600;
+  color: var(--studio-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.studio-zone-recipe > summary::-webkit-details-marker {
+  display: none;
+}
+
+.studio-status-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--studio-border);
+  color: var(--studio-muted);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.studio-status-chip.is-live {
+  border-color: rgba(110, 231, 197, 0.35);
+  color: #9ef0d4;
+  background: rgba(110, 231, 197, 0.08);
+}
+
+.studio-status-chip.is-checking {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.35);
+  color: #b8c4ff;
+}
+
+/* Name chip */
+#section-studio .studio-name-open {
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: var(--studio-radius-sm);
+  border: 1px solid var(--studio-border);
+  background: rgba(0, 0, 0, 0.25);
+  transition: border-color 160ms var(--studio-ease), background 160ms var(--studio-ease);
+}
+
+#section-studio .studio-name-open:hover {
+  border-color: var(--studio-border-strong);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+#section-studio .studio-name-kicker {
+  font-size: var(--studio-font-xs);
+  color: var(--studio-kicker);
+}
+
+#section-studio .studio-name-value {
+  font-size: var(--studio-font);
+  font-weight: 650;
+  color: var(--studio-text);
+}
+
+/* Actions */
+.studio-actions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#section-studio .studio-actions-plain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#section-studio .studio-primary,
+#section-studio .cook-btn-primary {
+  min-height: 34px;
+  padding: 7px 14px;
+  font-size: var(--studio-font);
+  font-weight: 650;
+  border-radius: var(--studio-radius-sm);
+}
+
+#section-studio .studio-ghost,
+#section-studio .cook-btn-ghost,
+#section-studio .cook-edit {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: var(--studio-font-sm);
+  border-radius: var(--studio-radius-sm);
+}
+
+#section-studio .studio-ghost.is-danger {
+  color: #f5a8a8;
+  border-color: rgba(232, 80, 80, 0.25);
+}
+
+#section-studio .studio-ghost.is-danger:hover {
+  background: rgba(232, 80, 80, 0.12);
+  border-color: rgba(232, 80, 80, 0.4);
+}
+
+/* Path steps */
+.studio-path-plain {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio-path-plain li {
+  padding: 10px 11px;
+  border-radius: var(--studio-radius-sm);
+  border: 1px solid var(--studio-border);
+  background: rgba(0, 0, 0, 0.18);
+  transition: border-color 180ms var(--studio-ease), background 180ms var(--studio-ease);
+}
+
+.studio-path-plain li.is-now {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.32);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.08);
+}
+
+.studio-path-plain b {
+  font-size: var(--studio-font-sm);
+  margin-bottom: 3px;
+}
+
+.studio-path-plain span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--studio-muted);
+}
+
+/* Cook wizard — one scale */
+#section-studio .cook-flow {
+  max-width: min(640px, 100%);
+}
+
+#section-studio .cook-title {
+  font-size: var(--studio-title);
+}
+
+#section-studio .cook-hint,
+#section-studio .studio-note {
+  font-size: var(--studio-font-sm);
+  color: var(--studio-muted);
+}
+
+#section-studio .cook-chip,
+#section-studio .studio-family {
+  min-height: 30px;
+  font-size: var(--studio-font-sm);
+}
+
+#section-studio .studio-strat-card {
+  min-height: 88px;
+  padding: 11px 12px;
+  border-radius: var(--studio-radius);
+}
+
+#section-studio .studio-strat-name {
+  font-size: var(--studio-font);
+}
+
+#section-studio .studio-strat-blurb {
+  font-size: var(--studio-font-sm);
+}
+
+#section-studio .studio-toggle {
+  padding: 9px 11px;
+  border-radius: var(--studio-radius-sm);
+}
+
+#section-studio .studio-toggle strong {
+  font-size: var(--studio-font);
+}
+
+#section-studio .studio-toggle em {
+  font-size: var(--studio-font-sm);
+}
+
+/* Empty + community */
+.studio-room-empty {
+  text-align: center;
+  padding: 28px 20px 32px;
+}
+
+.studio-room-empty h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+#section-studio .studio-global-pane {
+  padding: 14px 16px 18px;
+}
+
+#section-studio .studio-global-pane-head h2 {
+  font-size: var(--studio-title);
+}
+
+/* Dialog — dark cinematic */
+.studio-dialog {
+  z-index: 50000;
+  /* Solid overlay — live backdrop-filter makes scroll/paint laggy on weak GPUs */
+  background: rgba(4, 5, 8, 0.92);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.studio-dialog.active .studio-dialog-card {
+  animation: studioDialogIn 220ms var(--studio-ease);
+}
+
+@keyframes studioDialogIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.studio-dialog-card {
+  text-align: left;
+  max-width: 400px;
+  width: calc(100% - 32px);
+  padding: 22px 22px 18px;
+  border-radius: 14px;
+  background: #0c0d12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 28px 80px rgba(0, 0, 0, 0.65);
+}
+
+.studio-dialog-card.is-danger .confirm-title {
+  color: #ffb4b4;
+}
+
+.studio-dialog-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(232, 80, 80, 0.12);
+  border: 1px solid rgba(232, 80, 80, 0.22);
+}
+
+.studio-dialog-card .confirm-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.studio-dialog-card .btn-primary.is-danger {
+  background: linear-gradient(180deg, rgba(232, 90, 90, 0.95), rgba(200, 55, 55, 0.95));
+  border-color: rgba(255, 120, 120, 0.35);
+}
+
+.studio-stage.is-stage-in,
+.cook-flow.is-stage-in,
+.studio-global-pane.is-stage-in {
+  animation: studioPaneIn 280ms var(--studio-ease);
+}
+
+@media (max-width: 820px) {
+  .studio-path-plain {
+    grid-template-columns: 1fr;
+  }
+
+  #section-studio .studio-page {
+    grid-template-columns: 1fr;
+  }
+
+  #section-studio .studio-rail {
+    width: 100%;
+    max-width: none;
+    border-right: none;
+    border-bottom: 1px solid var(--studio-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-tab-body,
+  .studio-stage.is-stage-in,
+  .studio-dialog.active .studio-dialog-card {
+    animation: none;
+  }
+}

@@ -1,0 +1,336 @@
+/* Studio skin — one dark scale, same language as the rest of the app */
+
+#section-studio.section.active {
+  padding: 0;
+}
+
+#section-studio .studio-page {
+  border-radius: 12px;
+  border-color: rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(720px 280px at 12% -30%, rgba(var(--accent-rgb, 90, 106, 255), 0.08), transparent 62%),
+    #09090c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+#section-studio .studio-page.is-cook-wizard {
+  background:
+    radial-gradient(640px 260px at 50% -40%, rgba(var(--accent-rgb, 90, 106, 255), 0.1), transparent 58%),
+    #09090c;
+}
+
+#section-studio .studio-rail {
+  background: rgba(0, 0, 0, 0.28);
+  border-right-color: rgba(255, 255, 255, 0.05);
+}
+
+#section-studio .studio-rail-head {
+  padding: 14px 14px 12px;
+}
+
+#section-studio .studio-rail-head h1 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+#section-studio .studio-tabs {
+  padding: 12px 18px 0;
+  gap: 4px;
+}
+
+#section-studio .studio-tab {
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 160ms ease, background 160ms ease;
+}
+
+#section-studio .studio-tab small {
+  display: none;
+}
+
+#section-studio .studio-tab.is-on {
+  transform: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+#section-studio .studio-editor {
+  padding: 0 4px 8px;
+}
+
+#section-studio .studio-stage,
+#section-studio .studio-global-pane,
+#section-studio .studio-empty {
+  gap: 12px;
+  padding: 8px 14px 18px;
+}
+
+#section-studio .studio-stage-kicker,
+#section-studio .cook-step-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+#section-studio .studio-empty h2,
+#section-studio .studio-global-pane-head h2,
+#section-studio .cook-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+#section-studio .studio-note,
+#section-studio .cook-hint,
+#section-studio .studio-empty p,
+#section-studio .studio-desk-empty p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#section-studio .studio-primary,
+#section-studio .cook-btn-primary {
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+
+#section-studio .studio-ghost,
+#section-studio .cook-btn-ghost,
+#section-studio .cook-edit {
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+
+#section-studio .studio-bot-btn {
+  padding: 8px 10px;
+  border-radius: 9px;
+  transition: background 140ms ease, border-color 160ms ease;
+}
+
+#section-studio .studio-strat-card {
+  min-height: 92px;
+  padding: 12px 12px 11px;
+  border-radius: 12px;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+#section-studio .studio-strat-card:hover {
+  transform: translateY(-1px);
+}
+
+#section-studio .studio-strat-name {
+  font-size: 13px;
+}
+
+#section-studio .studio-strat-blurb {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+#section-studio .studio-strat-hold {
+  font-size: 10px;
+  opacity: 0.45;
+}
+
+#section-studio .cook-flow {
+  max-width: min(680px, 100%);
+}
+
+#section-studio .cook-head {
+  padding: 16px 20px 12px;
+}
+
+#section-studio .cook-body {
+  padding: 16px 20px 20px;
+  gap: 14px;
+}
+
+#section-studio .cook-foot {
+  padding: 12px 20px 14px;
+  background: rgba(9, 9, 12, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+#section-studio .cook-btn {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+#section-studio .cook-chip {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+}
+
+#section-studio .studio-name-row {
+  max-width: 280px;
+  margin: 0;
+}
+
+#section-studio .studio-name-open {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+#section-studio .studio-name-open:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+#section-studio .studio-name-kicker {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+#section-studio .studio-name-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#section-studio .studio-toggle {
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+#section-studio .studio-toggle strong {
+  font-size: 13px;
+}
+
+#section-studio .studio-toggle em {
+  font-size: 12px;
+}
+
+#section-studio .studio-path-plain {
+  gap: 8px;
+}
+
+#section-studio .studio-path-plain li {
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+#section-studio .studio-actions-plain {
+  gap: 10px;
+}
+
+#section-studio .studio-yours-edit {
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.studio-dialog {
+  z-index: 50000;
+  background: rgba(6, 8, 12, 0.78);
+}
+
+.studio-dialog-card {
+  text-align: left;
+  background: #101218;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.studio-dialog-kicker {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.studio-dialog-card .confirm-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.studio-dialog-card .confirm-message {
+  margin: 0 0 18px;
+  font-size: 13px;
+}
+
+.studio-dialog-field {
+  display: block;
+  margin: 0 0 18px;
+  text-align: left;
+}
+
+.studio-dialog-field[hidden] {
+  display: none !important;
+}
+
+.studio-dialog-field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.studio-dialog-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+.studio-dialog-card .confirm-actions {
+  justify-content: flex-end;
+}
+
+.studio-dialog-card .btn-primary.is-danger {
+  background: rgba(232, 80, 80, 0.9);
+  border-color: rgba(232, 80, 80, 0.5);
+}
+
+.studio-stage.is-stage-in,
+.studio-empty.studio-stage.is-stage-in,
+.studio-global-pane.is-stage-in,
+.cook-flow.is-stage-in {
+  animation: studioSkinIn 280ms ease;
+}
+
+@keyframes studioSkinIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-stage.is-stage-in,
+  .cook-flow.is-stage-in,
+  .studio-dialog {
+    animation: none;
+  }
+}

@@ -1,0 +1,60 @@
+# Node/Electron
+node_modules/
+dist/
+build/utopia-dev/
+*.asar
+*.map
+
+# Python venv and caches
+.venv/
+.cache/
+__pycache__/
+*.pyc
+
+# IDE/editor
+.vscode/
+*.code-workspace
+
+# Local env/config
+.env
+.env.example
+*.local
+.wrangler/
+BotsHub/hub/local.env
+
+# Local Cloudflare R2 creds helper (PowerShell)
+scripts/.env.r2.ps1
+
+# Service account keys (do not commit)
+serviceAccountKey.json
+
+# Local credentials (do not commit)
+email-credentials.json
+wallet-credentials.json
+
+config.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Backups and extracted bundles
+app-extracted/
+BACKUP_FULL_RESTORE_*/
+untracked-backup-*/
+debug_crops/
+Discord Things/
+
+# Logs and temp
+logs/
+*.log
+*.tmp
+*.swp
+
+# Headless PO browser profiles (contain session cookies — never commit)
+BotsHub/Prices/meta/chrome_profile_po/
+BotsHub/Prices/meta/edge_profile_po/
+BotsHub/Prices/meta/edge_debug_po/
+
+# Build/coverage
+coverage/

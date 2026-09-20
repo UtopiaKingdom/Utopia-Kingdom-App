@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Utopia Kingdom — Launcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="../logo.png" />
+  <meta name="theme-color" content="#0b0a0d">
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="container nav">
+        <div class="brand"><img class="brand-logo" src="../logo.png" alt="Utopia Kingdom logo"/><span class="brand-text">Utopia Kingdom</span></div>
+        <nav class="nav-actions">
+          <a class="btn btn-ghost" href="#features">Features</a>
+          <a class="btn btn-discord" href="https://discord.gg/pW47Ptsp" target="_blank" rel="noopener" aria-label="Join our Discord">
+            <img class="discord-icon" src="discord.png" alt="Discord" />
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="kicker">Automated Trading • Secure • Fast</span>
+          <h1 class="title">Utopia Kingdom</h1>
+          <p class="lead">A polished, lightweight launcher for automated trading — LUMIX, MIRAX and ARVION integrations, secure login, and one-click updates.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="https://www.utkingdom.com/releases/">Download Launcher</a>
+            <a class="btn btn-ghost" href="#features">Learn More</a>
+          </div>
+
+          <!-- Large animated preview under CTAs -->
+          <div class="preview-large">
+            <div class="carousel" aria-label="Screenshots carousel">
+              <div class="carousel-viewport">
+                <div class="track">
+                    <div class="slide">
+                      <picture>
+                        <source type="image/webp" srcset="login.webp 1x, login@2x.webp 2x, login@4k.webp 4x">
+                        <img decoding="async" loading="lazy" data-src="login.png" src="login.png"
+                          srcset="login.png 1x, login@2x.png 2x, login@4k.png 4x"
+                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
+                          alt="Login"/>
+                      </picture>
+                    </div>
+                    <div class="slide">
+                      <picture>
+                        <source type="image/webp" srcset="main.webp 1x, main@2x.webp 2x, main@4k.webp 4x">
+                        <img decoding="async" loading="lazy" data-src="main.png" src="main.png"
+                          srcset="main.png 1x, main@2x.png 2x, main@4k.png 4x"
+                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
+                          alt="Main"/>
+                      </picture>
+                    </div>
+                    <div class="slide">
+                      <picture>
+                        <source type="image/webp" srcset="LUMIX.webp 1x, LUMIX@2x.webp 2x, LUMIX@4k.webp 4x">
+                        <img decoding="async" loading="lazy" data-src="LUMIX.png" src="LUMIX.png"
+                          srcset="LUMIX.png 1x, LUMIX@2x.png 2x, LUMIX@4k.png 4x"
+                          sizes="(max-width:420px) 92vw, (max-width:700px) 86vw, 580px"
+                          alt="LUMIX"/>
+                      </picture>
+                    </div>
+                </div>
+              </div>
+              <button class="chev prev" aria-label="Previous">‹</button>
+              <button class="chev next" aria-label="Next">›</button>
+            </div>
+            <!-- thumbnails removed (swipe/carousel handles navigation) -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Promo banner: short, scrollable content to invite users to explore -->
+    <section class="promo">
+      <div class="container promo-inner">
+        <div class="promo-content">
+          <h2>Why Utopia Kingdom?</h2>
+          <p class="lead muted">A lightweight, secure launcher that syncs live signals, connects to a browser extension for execution, and keeps your tools up to date.</p>
+
+          <div class="promo-features">
+            <div class="promo-item card">
+              <h4>Real-time Signals</h4>
+              <p>Preparing → Signal → Result phases are synchronized across users so you never miss the correct timing.</p>
+            </div>
+            <div class="promo-item card">
+              <h4>Extension Integration</h4>
+              <p>Send signals to the extension for one‑click execution or enable the auto‑trade bridge when you want hands‑free operation.</p>
+            </div>
+            <div class="promo-item card">
+              <h4>Secure Updates</h4>
+              <p>One‑click updates and a verified releases channel keep your launcher stable and safe.</p>
+            </div>
+          </div>
+
+          
+        </div>
+      </div>
+    </section>
+
+    
+
+    
+
+    <section id="features" class="container features">
+      <div class="grid">
+        <div class="card">
+          <h3>LUMIX</h3>
+          <p>Fast scalping bridge using 1‑minute candles; emits short signals with a typical 5‑minute expiry and can route signals to the extension for one‑click or automated execution.</p>
+        </div>
+        <div class="card">
+          <h3>MIRAX</h3>
+          <p>Heuristic market scanner that evaluates setups and applies quality/payout gates. MIRAX issues short 1‑minute signals (≈60s expiry) and schedules retries/locks when configured.</p>
+        </div>
+        <div class="card">
+          <h3>ARVION</h3>
+          <p>Longer‑horizon strategy focused on 15‑minute expiry signals. ARVION watches multi‑frame candles (1m/5m/15m), manages trade lifecycle, and integrates with the WebSocket/extension.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container stats">
+      <div class="live-stats">
+        <div class="stat"><div class="num" id="stat-users">—</div><div class="label">Users online</div></div>
+        <div class="stat"><div class="num" id="stat-bots">3</div><div class="label">Active bots</div></div>
+        <div class="stat"><div class="num" id="stat-signals">—</div><div class="label">Signals / min</div></div>
+      </div>
+    </section>
+
+    <footer class="container footer">
+      <div class="foot-inner">© Utopia Kingdom — Built with Electron</div>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utopia Kingdom — Logo Concepts</title>
+  <style>
+    :root {
+      --bg: #071017;
+      --panel: #0b1220;
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #eef4ff;
+      --muted: #9aa8bd;
+      --green: #2ed573;
+      --gold: #f5c842;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(circle at top, #0f1a2b, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.3px;
+    }
+
+    .lead {
+      margin: 0 0 28px;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+    }
+
+    .card p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      border-radius: 14px;
+      background: #050a10;
+      border: 1px solid rgba(46, 213, 115, 0.08);
+      margin-bottom: 14px;
+    }
+
+    .hero img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      border-radius: 24px;
+    }
+
+    .sizes {
+      display: flex;
+      align-items: end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .size {
+      text-align: center;
+    }
+
+    .size span {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .size img {
+      display: block;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #050a10;
+    }
+
+    .mock-section {
+      margin-top: 34px;
+    }
+
+    .mock-section h3 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .mock {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+    }
+
+    .mock-label {
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #0d1524;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .titlebar img {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+    }
+
+    .titlebar .name {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+
+    .titlebar .pill {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(46, 213, 115, 0.12);
+      color: var(--green);
+    }
+
+    .auth {
+      padding: 22px;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auth-brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .auth-brand strong {
+      font-size: 14px;
+    }
+
+    .auth-field {
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 10px;
+    }
+
+    .auth-btn {
+      height: 38px;
+      border-radius: 10px;
+      background: var(--green);
+      opacity: 0.85;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(245, 200, 66, 0.12);
+      color: var(--gold);
+    }
+
+    .current {
+      border-color: rgba(255, 80, 80, 0.25);
+    }
+
+    .recommended {
+      border-color: rgba(46, 213, 115, 0.35);
+      box-shadow: 0 0 0 1px rgba(46, 213, 115, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <h1>Utopia Kingdom logo concepts</h1>
+  <p class="lead">
+    Three directions aligned to your UI green (<code>#2ed573</code>) and kingdom gold.
+    Compare large marks and real in-app sizes (24px titlebar, 32px auth).
+  </p>
+
+  <div class="grid">
+    <article class="card current">
+      <h2>Current</h2>
+      <p>Red chart/crown — strong trading vibe, but clashes with app accent color.</p>
+      <div class="hero"><img src="current-logo.png" alt="Current logo" /></div>
+      <div class="sizes">
+        <div class="size"><img src="current-logo.png" width="24" height="24" alt="" /><span>24px</span></div>
+        <div class="size"><img src="current-logo.png" width="32" height="32" alt="" /><span>32px</span></div>
+        <div class="size"><img src="current-logo.png" width="64" height="64" alt="" /><span>64px</span></div>
+      </div>
+    </article>
+
+    <article class="card recommended">
+      <h2>A — Green crown chart</h2>
+      <p>Evolution of your current idea: crown base + rising bars, recolored and simplified.</p>
+      <div class="hero"><img src="concept-a-green-crown.png" alt="Concept A" /></div>
+      <div class="sizes">
+        <div class="size"><img src="concept-a-green-crown.png" width="24" height="24" alt="" /><span>24px</span></div>
+        <div class="size"><img src="concept-a-green-crown.png" width="32" height="32" alt="" /><span>32px</span></div>
+        <div class="size"><img src="concept-a-green-crown.png" width="64" height="64" alt="" /><span>64px</span></div>
+      </div>
+      <span class="tag">Recommended if you keep the chart story</span>
+    </article>
+
+    <article class="card">
+      <h2>B — UtK monogram</h2>
+      <p>Most readable at tiny sizes. Name connection is immediate.</p>
+      <div class="hero"><img src="concept-b-utk-monogram.png" alt="Concept B" /></div>
+      <div class="sizes">
+        <div class="size"><img src="concept-b-utk-monogram.png" width="24" height="24" alt="" /><span>24px</span></div>
+        <div class="size"><img src="concept-b-utk-monogram.png" width="32" height="32" alt="" /><span>32px</span></div>
+        <div class="size"><img src="concept-b-utk-monogram.png" width="64" height="64" alt="" /><span>64px</span></div>
+      </div>
+      <span class="tag">Best for UtK recognition</span>
+    </article>
+
+    <article class="card">
+      <h2>C — Minimal U + crown</h2>
+      <p>Clean app-icon mark: U-shaped valley, crown peak, subtle trend hint.</p>
+      <div class="hero"><img src="concept-c-minimal-u.png" alt="Concept C" /></div>
+      <div class="sizes">
+        <div class="size"><img src="concept-c-minimal-u.png" width="24" height="24" alt="" /><span>24px</span></div>
+        <div class="size"><img src="concept-c-minimal-u.png" width="32" height="32" alt="" /><span>32px</span></div>
+        <div class="size"><img src="concept-c-minimal-u.png" width="64" height="64" alt="" /><span>64px</span></div>
+      </div>
+      <span class="tag">Best balance of simple + brand</span>
+    </article>
+  </div>
+
+  <section class="mock-section">
+    <h3>In-app mockups (Concept A vs current)</h3>
+    <div class="mock-grid">
+      <div class="mock">
+        <div class="mock-label">Titlebar — current</div>
+        <div class="titlebar">
+          <img src="current-logo.png" alt="" />
+          <span class="name">Utopia Kingdom</span>
+          <span class="pill">Online</span>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mock-label">Titlebar — Concept A</div>
+        <div class="titlebar">
+          <img src="concept-a-green-crown.png" alt="" />
+          <span class="name">Utopia Kingdom</span>
+          <span class="pill">Online</span>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mock-label">Auth card — current</div>
+        <div class="auth">
+          <div class="auth-brand">
+            <img src="current-logo.png" alt="" />
+            <strong>Utopia Kingdom</strong>
+          </div>
+          <div class="auth-field"></div>
+          <div class="auth-field"></div>
+          <div class="auth-btn"></div>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mock-label">Auth card — Concept B (UtK)</div>
+        <div class="auth">
+          <div class="auth-brand">
+            <img src="concept-b-utk-monogram.png" alt="" />
+            <strong>Utopia Kingdom</strong>
+          </div>
+          <div class="auth-field"></div>
+          <div class="auth-field"></div>
+          <div class="auth-btn"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

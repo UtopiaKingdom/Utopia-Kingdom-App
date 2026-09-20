@@ -1,0 +1,245 @@
+/* Copied from test of site/styles.css - lightweight launcher homepage styles */
+#bgVideo{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+:root{
+  --bg:#07060a;
+  --accent-halo-1:#ffd97a;
+  --accent-halo-2:#fff6e0;
+  --accent-halo-glow:rgba(255,210,120,0.18);
+  --muted:#bfb8b8;
+  --bg-brightness:0.48;
+  --bg-scale:1.00;
+}
+*{box-sizing:border-box}
+html{height:100%;background:linear-gradient(180deg,#05040a,#08060b);scroll-behavior:smooth}
+body{height:100%;margin:0;font-family:Inter,Segoe UI,system-ui,Arial,sans-serif;background:transparent;color:#fff}
+.container{width:min(1400px,94%);margin:0 auto;padding:18px}
+
+.topbar{display:flex;align-items:center;justify-content:flex-start;padding:18px 0}
+.nav{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:800;font-size:18px}
+
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:36px;height:36px;object-fit:contain;border-radius:8px;display:inline-block}
+.brand-text{font-weight:800;font-size:18px}
+
+.nav-actions{display:flex;gap:12px;align-items:center}
+.btn{padding:8px 12px;border-radius:8px;border:1px solid transparent;text-decoration:none;color:inherit;display:inline-block}
+.btn-primary{background:linear-gradient(90deg,var(--accent-halo-1),var(--accent-halo-2));color:#000;font-weight:700;box-shadow:0 8px 30px var(--accent-halo-glow);filter:drop-shadow(0 6px 18px rgba(255,200,70,0.08))}
+.btn-ghost{background:transparent;border-color:rgba(255,255,255,0.06);color:var(--muted)}
+
+/* Discord button styles (icon only) */
+.btn-discord{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:transparent;color:var(--muted);padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);} 
+.btn-discord img.discord-icon{display:block;width:20px;height:20px;object-fit:cover;border-radius:4px;filter:grayscale(100%) brightness(0.85);} 
+
+.hero{padding:72px 0}
+.hero-inner{display:flex;gap:36px;align-items:center;justify-content:space-between}
+.hero-copy{flex:1 1 56%;text-align:left}
+.kicker{display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,var(--accent-halo-1),var(--accent-halo-2));color:#000;font-weight:700;font-size:12px;box-shadow:0 6px 18px var(--accent-halo-glow)}
+.title{font-size:48px;margin:12px 0 14px;font-weight:900;letter-spacing:-0.02em;text-shadow:0 10px 40px rgba(255,200,90,0.08)}
+.lead{color:var(--muted);font-size:17px;margin-bottom:12px}
+.hero-ctas{display:flex;gap:12px;margin-top:14px}
+.muted{color:var(--muted);font-size:13px}
+
+.panel{width:380px;flex-shrink:0}
+.preview{width:100%;height:240px;border-radius:12px;overflow:hidden;background:#0b0b0f;border:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center}
+.preview img{max-width:100%;max-height:100%;display:block}
+
+/* Large animated preview under CTAs */
+.preview-large{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.preview-animated{width:740px;height:420px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.preview-animated img{width:120%;height:auto;transform:translateX(-10%);will-change:transform}
+
+/* horizontal pan animation */
+@keyframes panX{0%{transform:translateX(-10%)}50%{transform:translateX(6%)}100%{transform:translateX(-10%)}}
+.preview-animated.playing img{animation:panX 18s ease-in-out infinite}
+.thumbs-inline{display:flex;gap:10px}
+
+/* Reveal animations */
+.hero-copy, .card {opacity:0; transform:translateY(12px); transition:opacity 420ms ease, transform 420ms ease}
+.show{opacity:1; transform:none}
+
+/* Slide transition smoothing */
+.slide{transition:transform 420ms cubic-bezier(.22,.9,.31,1), opacity 360ms ease, filter 360ms ease}
+.slide.center{box-shadow:0 18px 50px rgba(0,0,0,0.6);filter:brightness(1) saturate(1)}
+.slide.adj{filter:brightness(0.88) saturate(0.9) blur(0)}
+
+/* Carousel styles */
+.carousel{position:relative;width:920px}
+.carousel-top{width:100%;text-align:center;margin-bottom:6px}
+.carousel-top-inner{display:inline-block;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg,var(--accent-halo-1),var(--accent-halo-2));color:#000;font-weight:700;box-shadow:0 10px 30px var(--accent-halo-glow);position:relative}
+.carousel-top-inner::after{content:'';position:absolute;inset:0;border-radius:999px;filter:blur(14px);opacity:0.22;background:linear-gradient(90deg,var(--accent-halo-1),var(--accent-halo-2));z-index:-1}
+.carousel-title{margin:0;font-size:13px}
+.carousel-sub{font-size:12px;color:#000;margin-top:4px;font-weight:600}
+.carousel{padding-top:18px}
+.carousel-viewport{width:820px;margin:0 auto;overflow:visible}
+.track{display:flex;gap:28px;transition:transform 420ms cubic-bezier(.22,.9,.31,1);align-items:center}
+.track{will-change:transform}
+.slide{flex:0 0 760px;height:440px;border-radius:12px;overflow:hidden;background:#05040a;border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;aspect-ratio:16/9}
+.slide img{width:100%;height:100%;object-fit:cover;display:block;image-rendering:auto;transform:translateZ(0);will-change:transform,opacity}
+
+/* Keep image-rendering auto (browsers pick best). Avoid forcing crisp-edges which
+  can introduce artifacts on some engines. */
+.slide.adj{transform:scale(0.88);opacity:0.9;filter:grayscale(0.06) contrast(0.95);transition:transform 320ms cubic-bezier(.2,.9,.3,1),opacity 280ms}
+.slide.center{transform:scale(1);opacity:1;transition:transform 360ms cubic-bezier(.2,.9,.3,1),opacity 300ms}
+.chev{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);color:#fff;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;z-index:5}
+.chev.prev{left:6px}
+.chev.next{right:6px}
+.thumbs{display:flex;gap:8px;margin-top:10px}
+.thumb{width:88px;height:56px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.04);cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover}
+
+.features{padding:36px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:rgba(255,255,255,0.02);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+.card h3{margin:0 0 8px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+
+.live-stats{margin-top:18px;display:flex;gap:18px;align-items:center}
+.stat{display:flex;flex-direction:column}
+.stat .num{font-weight:800;font-size:20px}
+.stat .label{color:var(--muted);font-size:13px}
+
+.footer{padding:30px 0;color:var(--muted);font-size:13px}
+
+/* Promo banner + features under hero to invite scrolling */
+.promo{padding:40px 0;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));}
+.promo-inner{max-width:1100px;margin:0 auto;text-align:center}
+.promo-content{display:flex;flex-direction:column;align-items:center;gap:16px}
+
+/* Decorative spacer with animated trading candlestick */
+.promo-features{display:flex;gap:16px;margin-top:10px}
+.promo-features{display:flex;gap:16px;margin-top:10px}
+.promo-item{flex:1;min-width:200px;padding:16px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);text-align:left}
+.promo-item h4{margin:0 0 8px;font-size:16px}
+.promo-item p{margin:0;color:var(--muted);font-size:14px}
+.promo-cta{margin-top:14px}
+
+@media (max-width:900px){
+  .promo-features{flex-direction:column;gap:12px}
+  .promo-item{min-width:auto}
+}
+
+/* Featured strip (full-width card scroller) */
+ 
+
+@media (max-width:900px){
+  .hero-inner{flex-direction:column-reverse;align-items:center;text-align:center}
+  .hero-copy{text-align:center}
+  .panel{width:92%}
+  .grid{grid-template-columns:1fr}
+}
+
+/* Smaller screens (tablets) */
+@media (max-width:700px){
+  .container{padding:14px}
+  .title{font-size:32px}
+  .hero{padding:40px 0}
+  .preview-animated{width:100%;height:auto}
+  .carousel{width:100%}
+  .carousel-viewport{width:100%;margin:0}
+  .track{gap:12px}
+  .slide{flex:0 0 86vw;height:56vw;border-radius:10px}
+  .slide img{object-fit:cover}
+  .chev{padding:8px}
+  .brand-logo{width:28px;height:28px}
+}
+
+/* Phones and very small screens */
+@media (max-width:420px){
+  .container{padding:12px}
+  .brand-text{display:none}
+  .title{font-size:26px}
+  .lead{font-size:15px}
+  .hero-ctas{flex-direction:column;align-items:center}
+  .btn{width:100%;text-align:center}
+  .btn-primary{padding:12px}
+  .carousel-viewport{width:100%;overflow:hidden}
+  .track{gap:10px}
+  .slide{flex:0 0 92vw;height:52vw}
+  .chev.prev{left:4px}
+  .chev.next{right:4px}
+  .chev{padding:10px;border-radius:8px}
+  .promo-features{flex-direction:column}
+  .promo-item{width:100%}
+  .nav-actions{gap:8px}
+  .btn-discord{width:34px;height:34px;padding:4px}
+}
+
+/* Large screens and 4K monitors: scale up hero, preview, and carousel */
+@media (min-width:1400px){
+  .container{width:1400px}
+  .title{font-size:60px}
+  .lead{font-size:18px}
+  .preview-animated{width:920px;height:520px}
+  .preview-animated img{width:100%;height:100%;object-fit:cover}
+  .carousel{width:1040px}
+  .carousel-viewport{width:900px}
+  .track{gap:30px}
+  .slide{flex:0 0 860px;height:480px;border-radius:14px}
+  .slide img{image-rendering:optimizeQuality}
+  .panel{width:420px}
+  .brand-logo{width:44px;height:44px}
+}
+
+/* Ultra-wide monitors: add extra padding and optional scaling for readability */
+@media (min-width:2000px){
+  body{font-size:1.02rem}
+  .container{width:1600px}
+  .title{font-size:72px}
+  .preview-animated{width:1080px;height:620px}
+  .carousel-viewport{width:1040px}
+  .slide{flex:0 0 980px;height:560px}
+}
+
+/* Top spacing adjustments for larger screens (more breathing room at top only) */
+@media (min-width:900px){
+  .page{padding-top:44px}
+  .topbar{padding:26px 0}
+  .hero{padding-top:96px}
+}
+@media (min-width:1400px){
+  .page{padding-top:64px}
+  .hero{padding-top:120px}
+}
+
+/* Mobile stacked gallery: show slides in flow, full width, hide chevrons */
+@media (max-width:420px){
+  .carousel-viewport{overflow:visible}
+  .track{display:block;transform:none;transition:none}
+  .slide{flex:none;width:100%;height:auto;border-radius:10px;margin-bottom:12px}
+  .slide img{width:100%;height:auto;object-fit:cover}
+  .chev{display:none}
+}
+
+/* Ensure images scale nicely and avoid overflow */
+img{max-width:100%;height:auto}
+
+
+/* Background canvas + video sit behind everything */
+body{position:relative;overflow-x:hidden}
+.container{position:relative;z-index:2}
+#page{ }
+.page{padding-top:28px}
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+#bgVideo{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;transform:scale(var(--bg-scale));filter:brightness(var(--bg-brightness)) saturate(0.92);transition:filter 240ms ease,transform 300ms ease}
+
+/* reduce jank by hinting at GPU compositing and smoother scrolling for transforms */
+*{backface-visibility:hidden}
+
+.slide img{image-rendering:optimizeQuality; width:100%; height:100%; object-fit:cover; object-position:center center; display:block; transform:translateZ(0); will-change:transform,opacity; backface-visibility:hidden}
+.overlay-dim{position:fixed;inset:0;pointer-events:none;background:linear-gradient(to bottom, rgba(0,0,0,0.18), rgba(0,0,0,0.45));z-index:1}
+.show{opacity:1;transform:none}
+
+/* Professional adjustments */
+.preview-panel{width:420px}
+.hero-copy .kicker{margin-bottom:8px}
+.title {line-height:1}
+.thumb{width:88px;height:56px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.04);cursor:pointer}
+
+@media (max-width:900px){
+  .hero{padding:40px 0}
+  .hero-inner{flex-direction:column-reverse;align-items:center;text-align:center}
+  .hero-copy{text-align:center}
+  .panel{width:92%}
+  .grid{grid-template-columns:1fr}
+}

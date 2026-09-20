@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utopia Kingdom — Trading Platform</title>
+  <meta name="description" content="Utopia Kingdom delivers live signals, automation, and a premium desktop experience for traders.">
+  <meta property="og:title" content="Utopia Kingdom — Trading Platform">
+  <meta property="og:description" content="Live signals, automation, and a polished desktop app. Download for Windows.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-vignette"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-blobs">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <header class="site-nav">
+    <div class="nav-inner container">
+      <div class="brand">
+        <img src="logo.png" alt="Utopia Kingdom" class="brand-logo"/>
+        <span class="brand-name">Utopia Kingdom</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-content">
+        <h1 class="hero-title reveal">Trade Smarter. Stay Ahead.</h1>
+        <p class="hero-sub reveal" style="--d:1">Live signals, automation, and a premium desktop experience.</p>
+        <div class="hero-ctas reveal" style="--d:2" id="download">
+          <a href="#" id="downloadBtn" class="btn btn-primary" aria-label="Download Windows installer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download for Windows
+          </a>
+        </div>
+        <div class="hero-meta reveal" style="--d:3">
+          <span class="badge">v2.0.0</span>
+          <span class="dot"></span>
+          <span class="muted">Windows 10/11</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="features container" id="features">
+      <div class="feature-card reveal" style="--d:0">
+        <div class="f-icon">📊</div>
+        <h3>Live Trading Signals</h3>
+        <p>Real-time market analysis and timely trade recommendations.</p>
+      </div>
+      <div class="feature-card reveal" style="--d:1">
+        <div class="f-icon">🤖</div>
+        <h3>Automated Bots</h3>
+        <p>Deploy multiple strategies with a click and manage easily.</p>
+      </div>
+      <div class="feature-card reveal" style="--d:2">
+        <div class="f-icon">⚡</div>
+        <h3>Low-Latency Engine</h3>
+        <p>Optimized WebSocket connectivity for instant signal delivery.</p>
+      </div>
+      <div class="feature-card reveal" style="--d:3">
+        <div class="f-icon">🛡️</div>
+        <h3>Account Safety</h3>
+        <p>Secure authentication and strict separation of credentials.</p>
+      </div>
+      <div class="feature-card reveal" style="--d:4">
+        <div class="f-icon">🎨</div>
+        <h3>Theme System</h3>
+        <p>Curated themes and custom colors to match your style.</p>
+      </div>
+      <div class="feature-card reveal" style="--d:5">
+        <div class="f-icon">📈</div>
+        <h3>Dashboard Insights</h3>
+        <p>Track trades, win rates, and signals in a single view.</p>
+      </div>
+    </section>
+
+    <section class="highlight container">
+      <div class="panel reveal">
+        <div class="panel-inner">
+          <h2>Designed for Focus</h2>
+          <p>Minimal visual noise, smooth animations, and a polished experience that feels fast and effortless.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="copyright">&copy; 2025 Utopia Kingdom. All rights reserved.</p>
+      <div class="links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Progressive enhancement: point to latest releases page (simple + reliable)
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.href = 'https://utkingdom.com/releases/v2.0.0/Utopia-Kingdom-Setup-2.0.0.exe';
+
+    // Optional: respect reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.style.setProperty('--motion-scale', '0');
+    }
+
+    // Scroll reveal animations
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const toReveal = document.querySelectorAll('.reveal');
+    if (!prefersReduced && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            io.unobserve(e.target);
+          }
+        }
+      }, { threshold: 0.12 });
+      toReveal.forEach((el) => io.observe(el));
+    } else {
+      toReveal.forEach((el) => el.classList.add('in'));
+    }
+
+    // Initial load state for subtle nav/hero polish
+    window.addEventListener('load', () => document.body.classList.add('page-loaded'));
+  </script>
+</body>
+</html>

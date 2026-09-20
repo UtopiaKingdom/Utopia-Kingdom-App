@@ -1,0 +1,52 @@
+/* Auto Trade chain gate modal */
+.autotrade-chain-modal-content {
+  max-width: 360px;
+  text-align: left;
+  padding: 24px 22px 18px !important;
+}
+
+.autotrade-chain-modal-content .confirm-title {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.autotrade-chain-modal-content .confirm-message {
+  text-align: left;
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: calc(13px * var(--font-scale, 1));
+  line-height: 1.45;
+}
+
+.autotrade-chain-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.autotrade-chain-actions .btn-primary,
+.autotrade-chain-actions .btn-secondary,
+.autotrade-chain-actions .btn-ghost {
+  width: 100%;
+  justify-content: center;
+  border-radius: 10px;
+  min-height: 42px;
+  font-weight: 600;
+}
+
+.autotrade-chain-actions .btn-ghost,
+.autotrade-chain-cancel {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  box-shadow: none;
+  min-height: 36px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.autotrade-chain-actions .btn-ghost:hover,
+.autotrade-chain-cancel:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+}

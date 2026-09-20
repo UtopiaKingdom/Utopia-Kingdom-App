@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "title": "Bots Hub",
+  "paths": {
+    "python": "C:\\Users\\Kainfe\\Documents\\Visual Studio Projects\\Bot app\\.venv\\Scripts\\python.exe",
+    "mitmdump": "mitmdump"
+  },
+  "jobs": [
+    {
+      "key": "1",
+      "name": "Mitmproxy (WS capture)",
+      "command": "{mitmdump} -q -s \"C:\\Users\\Kainfe\\Documents\\App Bot\\from mitmproxy import ctx, http.py\"",
+      "cwd": "C:\\Users\\Kainfe\\Documents\\App Bot",
+      "enabled": true,
+      "auto_restart": false
+    },
+    {
+      "key": "2",
+      "name": "Selenium (payout scanner)",
+      "command": "{python} \"C:\\Users\\Kainfe\\Documents\\App Bot\\from selenium import webdriver.py\"",
+      "cwd": "C:\\Users\\Kainfe\\Documents\\App Bot",
+      "enabled": true,
+      "auto_restart": false
+    },
+    {
+      "key": "3",
+      "name": "PA builder (downsample + OHLC)",
+      "command": "{python} \"C:\\Users\\Kainfe\\Documents\\App Bot\\Vytvaranie PA.py\"",
+      "cwd": "C:\\Users\\Kainfe\\Documents\\App Bot",
+      "enabled": true,
+      "auto_restart": true
+    },
+    {
+      "key": "4",
+      "name": "SMA Trend",
+      "command": "{python} \"C:\\Users\\Kainfe\\Documents\\App Bot\\SMA Trend.py\"",
+      "cwd": "C:\\Users\\Kainfe\\Documents\\App Bot",
+      "enabled": true,
+      "auto_restart": true
+    },
+    {
+      "key": "5",
+      "name": "Payout matcher (riesenie payouts)",
+      "command": "{python} \"C:\\Users\\Kainfe\\Documents\\App Bot\\riesenie payouts.py\"",
+      "cwd": "C:\\Users\\Kainfe\\Documents\\App Bot",
+      "enabled": true,
+      "auto_restart": true,
+      "restart_delay_sec": 2.0
+    }
+  ],
+  "ui": {
+    "refresh_hz": 6,
+    "show_logs_per_job": 30
+  },
+  "monitor": {
+    "enabled": true,
+    "folder": "C:\\Users\\Kainfe\\Documents\\App Bot\\Prices\\data",
+    "stale_seconds": 10,
+    "max_rows": 200
+  }
+}

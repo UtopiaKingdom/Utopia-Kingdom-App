@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UtK — Soul Refinements</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --panel: #0c0c0c;
+      --line: rgba(255,255,255,0.07);
+      --text: #f2f2f2;
+      --muted: #888;
+      --red: #e53935;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1a0808 0%, var(--bg) 55%);
+      color: var(--text);
+      padding: 28px;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .lead {
+      margin: 0 0 22px;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 16px;
+    }
+    .card.hero-card {
+      border-color: rgba(229, 57, 53, 0.35);
+      background: linear-gradient(180deg, rgba(229,57,53,0.06), rgba(0,0,0,0));
+    }
+    .card h2 { margin: 0 0 4px; font-size: 15px; }
+    .card p { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 210px;
+      background: #000;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .hero img { width: 170px; height: 170px; }
+    .sizes { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; }
+    .size { text-align: center; }
+    .size img {
+      display: block;
+      background: #000;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .size span { display: block; margin-top: 5px; font-size: 10px; color: var(--muted); }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #ccc;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+    .compare-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    .compare-label {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+    }
+    .compare-body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+      min-height: 200px;
+    }
+    .compare-body img { width: 140px; height: 140px; }
+    h3 { margin: 0 0 12px; font-size: 16px; }
+    .mock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .mock {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0b1220;
+    }
+    .mock-label { padding: 8px 12px; font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--line); }
+    .titlebar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #0d1524; }
+    .titlebar img { width: 24px; height: 24px; border-radius: 6px; }
+    .titlebar strong { font-size: 13px; }
+    .titlebar .dot { margin-left: auto; font-size: 10px; color: #2ed573; background: rgba(46,213,115,0.12); padding: 3px 8px; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <h1>Refined with soul — not flat, not AI</h1>
+  <p class="lead">
+    These keep what makes your original work: metallic depth, red gem eyes, crown fortress, chart energy, upward blaze.
+    Less clutter than the current logo, but not stripped dead like the flat v2 set.
+  </p>
+
+  <div class="compare">
+    <div class="compare-box">
+      <div class="compare-label">Your original</div>
+      <div class="compare-body">
+        <img src="current-logo.png" alt="Original" />
+      </div>
+    </div>
+    <div class="compare-box">
+      <div class="compare-label">Best refinement — Emblem (v3)</div>
+      <div class="compare-body">
+        <img src="v3-emblem.svg" alt="V3 Emblem" />
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:18px">
+    <article class="card hero-card">
+      <h2>Emblem — refined original</h2>
+      <p>Crown helm + living eyes + trend slash + rising bars. Closest upgrade path from what you have now.</p>
+      <div class="hero"><img src="v3-emblem.svg" alt="Emblem" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v3-emblem.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v3-emblem.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v3-emblem.svg" width="64" height="64" alt="" /><span>64</span></div>
+      </div>
+      <span class="tag">Recommended upgrade</span>
+    </article>
+
+    <article class="card">
+      <h2>Regal — kingdom crest</h2>
+      <p>More heraldic: crown peaks, central blade-arrow, single crown jewel. Feels like a kingdom sigil.</p>
+      <div class="hero"><img src="v3-regal.svg" alt="Regal" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v3-regal.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v3-regal.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v3-regal.svg" width="64" height="64" alt="" /><span>64</span></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2>Blaze — hottest energy</h2>
+      <p>Strongest glow and fire gradients. Most aggressive / alive — trading warrior king vibe.</p>
+      <div class="hero"><img src="v3-blaze.svg" alt="Blaze" /></div>
+      <div class="sizes">
+        <div class="size"><img src="v3-blaze.svg" width="24" height="24" alt="" /><span>24</span></div>
+        <div class="size"><img src="v3-blaze.svg" width="32" height="32" alt="" /><span>32</span></div>
+        <div class="size"><img src="v3-blaze.svg" width="64" height="64" alt="" /><span>64</span></div>
+      </div>
+      <span class="tag">Most soul / energy</span>
+    </article>
+  </div>
+
+  <h3>Titlebar at 24px</h3>
+  <div class="mock-grid">
+    <div class="mock">
+      <div class="mock-label">Original</div>
+      <div class="titlebar">
+        <img src="current-logo.png" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-label">Emblem v3</div>
+      <div class="titlebar">
+        <img src="v3-emblem.svg" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-label">Blaze v3</div>
+      <div class="titlebar">
+        <img src="v3-blaze.svg" alt="" />
+        <strong>Utopia Kingdom</strong>
+        <span class="dot">Online</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

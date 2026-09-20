@@ -1,0 +1,227 @@
+{
+  "generated_at": 1773949826,
+  "expiries": {
+    "3": [
+      {
+        "expiry": 3,
+        "trades": 6838,
+        "wins": 3419,
+        "losses": 3352,
+        "draws": 67,
+        "win_rate": 0.5,
+        "decisive_win_rate": 0.504948,
+        "profit": -548.42,
+        "avg_profit_per_trade": -0.080202,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 5e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 3,
+        "trades": 6838,
+        "wins": 3419,
+        "losses": 3352,
+        "draws": 67,
+        "win_rate": 0.5,
+        "decisive_win_rate": 0.504948,
+        "profit": -548.42,
+        "avg_profit_per_trade": -0.080202,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 8e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 3,
+        "trades": 6838,
+        "wins": 3419,
+        "losses": 3352,
+        "draws": 67,
+        "win_rate": 0.5,
+        "decisive_win_rate": 0.504948,
+        "profit": -548.42,
+        "avg_profit_per_trade": -0.080202,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 0.0001,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      }
+    ],
+    "5": [
+      {
+        "expiry": 5,
+        "trades": 6838,
+        "wins": 3405,
+        "losses": 3389,
+        "draws": 44,
+        "win_rate": 0.497953,
+        "decisive_win_rate": 0.501178,
+        "profit": -596.9,
+        "avg_profit_per_trade": -0.087292,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 5e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 5,
+        "trades": 6838,
+        "wins": 3405,
+        "losses": 3389,
+        "draws": 44,
+        "win_rate": 0.497953,
+        "decisive_win_rate": 0.501178,
+        "profit": -596.9,
+        "avg_profit_per_trade": -0.087292,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 8e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 5,
+        "trades": 6838,
+        "wins": 3405,
+        "losses": 3389,
+        "draws": 44,
+        "win_rate": 0.497953,
+        "decisive_win_rate": 0.501178,
+        "profit": -596.9,
+        "avg_profit_per_trade": -0.087292,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 0.0001,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      }
+    ],
+    "10": [
+      {
+        "expiry": 10,
+        "trades": 6837,
+        "wins": 3435,
+        "losses": 3369,
+        "draws": 33,
+        "win_rate": 0.502413,
+        "decisive_win_rate": 0.50485,
+        "profit": -552.3,
+        "avg_profit_per_trade": -0.080781,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 5e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 10,
+        "trades": 6837,
+        "wins": 3435,
+        "losses": 3369,
+        "draws": 33,
+        "win_rate": 0.502413,
+        "decisive_win_rate": 0.50485,
+        "profit": -552.3,
+        "avg_profit_per_trade": -0.080781,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 8e-05,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      },
+      {
+        "expiry": 10,
+        "trades": 6837,
+        "wins": 3435,
+        "losses": 3369,
+        "draws": 33,
+        "win_rate": 0.502413,
+        "decisive_win_rate": 0.50485,
+        "profit": -552.3,
+        "avg_profit_per_trade": -0.080781,
+        "config": {
+          "fast_sma": 5,
+          "slow_sma": 21,
+          "rsi_period": 7,
+          "rsi_buy": 28.0,
+          "rsi_sell": 60.0,
+          "momentum_lookback": 3,
+          "min_body": 0.0,
+          "atr_period": 10,
+          "min_atr": 0.0001,
+          "slope_lookback": 8,
+          "votes_required": 2
+        }
+      }
+    ]
+  }
+}

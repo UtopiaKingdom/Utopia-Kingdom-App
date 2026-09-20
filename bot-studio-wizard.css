@@ -1,0 +1,654 @@
+/* Cook wizard — scales with app, roomy layout */
+
+.studio-page.is-cook-wizard {
+  grid-template-columns: 1fr;
+  border: none;
+  border-radius: calc(12px * var(--scale-factor, 1));
+  background: transparent;
+}
+
+.studio-page.is-cook-wizard .studio-rail {
+  display: none;
+}
+
+.studio-editor.is-cook-immersive {
+  padding: 0;
+  overflow: hidden;
+}
+
+.studio-editor.is-cook-immersive .studio-tab-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.cook-flow {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: min(calc(760px * var(--scale-factor, 1)), 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cook-head {
+  flex-shrink: 0;
+  padding: calc(20px * var(--scale-factor, 1)) calc(24px * var(--scale-factor, 1)) calc(16px * var(--scale-factor, 1));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cook-flow-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cook-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(14px * var(--scale-factor, 1));
+  margin-bottom: calc(12px * var(--scale-factor, 1));
+  flex-wrap: wrap;
+}
+
+.cook-cancel-x {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.cook-cancel-x:hover {
+  opacity: 1;
+}
+
+.studio-name-row {
+  display: flex;
+  align-items: flex-end;
+  gap: calc(8px * var(--scale-factor, 1));
+  flex: 1 1 220px;
+  min-width: calc(200px * var(--scale-factor, 1));
+  max-width: calc(420px * var(--scale-factor, 1));
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 8;
+}
+
+.studio-name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  font-size: calc(11px * var(--scale-factor, 1));
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.studio-name-wrap input,
+#studioName {
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-primary, #fff);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: calc(14px * var(--scale-factor, 1));
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.studio-name-wrap input:focus,
+#studioName:focus {
+  outline: 2px solid rgba(var(--accent-rgb, 90, 106, 255), 0.55);
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.7);
+}
+
+.studio-name-save {
+  flex: 0 0 auto;
+  height: calc(36px * var(--scale-factor, 1));
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 231, 197, 0.35);
+  background: rgba(110, 231, 197, 0.16);
+  color: #b7f7e2;
+  font-size: calc(13px * var(--scale-factor, 1));
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.studio-name-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.studio-name-kicker {
+  margin: 0;
+  font-size: calc(11px * var(--scale-factor, 1));
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.studio-name-value {
+  font-size: calc(14px * var(--scale-factor, 1));
+  font-weight: 650;
+  color: var(--text-primary, #fff);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#studioNameOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.studio-name-card {
+  width: min(420px, calc(100vw - 32px));
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #12141c;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.studio-name-card .studio-name-kicker {
+  margin-bottom: 8px;
+}
+
+#studioNameEdit {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+#studioNameEdit:focus {
+  outline: 2px solid rgba(110, 231, 197, 0.55);
+  border-color: rgba(110, 231, 197, 0.6);
+}
+
+.studio-name-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.studio-name-cancel {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.cook-step-label {
+  font-size: calc(12px * var(--scale-factor, 1));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.studio-yours-pane .studio-name-row {
+  margin: 4px 0 16px;
+}
+
+.cook-bot-tag {
+  font-size: calc(13px * var(--scale-factor, 1));
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cook-bar {
+  height: calc(3px * var(--scale-factor, 1));
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: calc(14px * var(--scale-factor, 1));
+}
+
+.cook-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.85);
+  transition: width 0.28s ease;
+}
+
+.cook-title {
+  margin: 0 0 calc(6px * var(--scale-factor, 1));
+  font-size: calc(22px * var(--scale-factor, 1));
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--text-primary, #fff);
+}
+
+.cook-hint {
+  margin: 0;
+  font-size: calc(14px * var(--scale-factor, 1));
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.cook-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: calc(20px * var(--scale-factor, 1)) calc(24px * var(--scale-factor, 1)) calc(28px * var(--scale-factor, 1));
+  display: flex;
+  flex-direction: column;
+  gap: calc(18px * var(--scale-factor, 1));
+  position: relative;
+  z-index: 1;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.studio-trade-grid {
+  display: flex;
+  flex-direction: column;
+  gap: calc(22px * var(--scale-factor, 1));
+  position: relative;
+  z-index: 1;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.cook-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(14px * var(--scale-factor, 1));
+  padding: calc(16px * var(--scale-factor, 1)) calc(24px * var(--scale-factor, 1)) calc(20px * var(--scale-factor, 1));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 10, 18, 0.96);
+  position: relative;
+  z-index: 2;
+}
+
+.cook-foot-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(10px * var(--scale-factor, 1));
+}
+
+.cook-review-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: calc(14px * var(--scale-factor, 1));
+}
+
+.cook-btn,
+.cook-chip,
+.cook-edit,
+.studio-strat-card,
+.studio-family {
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cook-flow,
+.cook-body,
+.cook-foot,
+.cook-head {
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.cook-btn {
+  min-height: calc(44px * var(--scale-factor, 1));
+  padding: calc(10px * var(--scale-factor, 1)) calc(20px * var(--scale-factor, 1));
+  border-radius: calc(10px * var(--scale-factor, 1));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: calc(14px * var(--scale-factor, 1));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cook-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cook-btn-primary {
+  margin-left: auto;
+  min-width: calc(140px * var(--scale-factor, 1));
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.45);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.88);
+  color: #fff;
+}
+
+.cook-btn-primary:hover {
+  background: rgba(var(--accent-rgb, 90, 106, 255), 1);
+}
+
+.cook-btn-ghost {
+  background: transparent;
+}
+
+.cook-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(10px * var(--scale-factor, 1));
+}
+
+.cook-chip {
+  min-height: calc(40px * var(--scale-factor, 1));
+  padding: calc(8px * var(--scale-factor, 1)) calc(16px * var(--scale-factor, 1));
+  border-radius: calc(10px * var(--scale-factor, 1));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-size: calc(13px * var(--scale-factor, 1));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cook-chip:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.cook-chip.is-on {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.5);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.14);
+  color: #fff;
+}
+
+.cook-chip-sm {
+  font-size: calc(12px * var(--scale-factor, 1));
+  padding: calc(6px * var(--scale-factor, 1)) calc(12px * var(--scale-factor, 1));
+}
+
+.cook-field {
+  margin-bottom: 0;
+}
+
+.cook-label {
+  display: block;
+  margin-bottom: calc(10px * var(--scale-factor, 1));
+  font-size: calc(12px * var(--scale-factor, 1));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.cook-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(8px * var(--scale-factor, 1));
+  margin-top: calc(12px * var(--scale-factor, 1));
+  max-height: calc(180px * var(--scale-factor, 1));
+  overflow-y: auto;
+}
+
+.cook-pairs[hidden] {
+  display: none !important;
+}
+
+.cook-mg-row,
+.cook-field .ladder-grid,
+#studioMgCustom.ladder-grid {
+  display: none;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: calc(10px * var(--scale-factor, 1));
+  margin-top: calc(14px * var(--scale-factor, 1));
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.cook-mg-row.is-open,
+.cook-field .ladder-grid.is-open,
+#studioMgCustom.ladder-grid.is-open {
+  display: grid !important;
+}
+
+.cook-mg-row[hidden]:not(.is-open),
+.cook-field .ladder-grid[hidden]:not(.is-open),
+#studioMgCustom.ladder-grid[hidden]:not(.is-open) {
+  display: none !important;
+}
+
+.cook-field .ladder-cell,
+#studioMgCustom .ladder-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: calc(6px * var(--scale-factor, 1));
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.cook-field .ladder-cell-label,
+#studioMgCustom .ladder-cell-label {
+  display: block;
+  width: 100%;
+  font-size: calc(11px * var(--scale-factor, 1));
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.cook-field .ladder-cell-input,
+#studioMgCustom .ladder-cell-input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: calc(42px * var(--scale-factor, 1));
+  padding: 0 calc(6px * var(--scale-factor, 1));
+  box-sizing: border-box;
+  border-radius: calc(10px * var(--scale-factor, 1));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.cook-field .ladder-cell-input:focus-within,
+#studioMgCustom .ladder-cell-input:focus-within {
+  border-color: rgba(var(--accent-rgb, 90, 106, 255), 0.55);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.08);
+}
+
+.cook-field .ladder-cell-input input,
+#studioMgCustom .ladder-cell-input input {
+  width: 2.4em;
+  max-width: 70%;
+  min-width: 0;
+  flex: 0 1 auto;
+  border: none;
+  background: transparent;
+  color: #fff;
+  text-align: center;
+  padding: calc(8px * var(--scale-factor, 1)) 0;
+  font: inherit;
+  font-size: calc(14px * var(--scale-factor, 1));
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.cook-field .ladder-cell-input input::-webkit-outer-spin-button,
+.cook-field .ladder-cell-input input::-webkit-inner-spin-button,
+#studioMgCustom .ladder-cell-input input::-webkit-outer-spin-button,
+#studioMgCustom .ladder-cell-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.cook-field .ladder-cell-x,
+#studioMgCustom .ladder-cell-x {
+  flex: 0 0 auto;
+  font-size: calc(13px * var(--scale-factor, 1));
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1;
+  user-select: none;
+}
+
+.cook-flow .studio-name-field,
+.cook-flow .studio-name-field input {
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.cook-flow .studio-families {
+  margin-bottom: calc(16px * var(--scale-factor, 1));
+  gap: calc(10px * var(--scale-factor, 1));
+}
+
+.cook-flow .studio-family {
+  min-height: calc(40px * var(--scale-factor, 1));
+  padding: calc(9px * var(--scale-factor, 1)) calc(16px * var(--scale-factor, 1));
+  font-size: calc(13px * var(--scale-factor, 1));
+}
+
+.cook-flow .studio-strat-grid {
+  gap: calc(12px * var(--scale-factor, 1));
+  grid-template-columns: repeat(auto-fill, minmax(calc(180px * var(--scale-factor, 1)), 1fr));
+}
+
+.cook-flow .studio-strat-card {
+  min-height: calc(108px * var(--scale-factor, 1));
+  padding: calc(14px * var(--scale-factor, 1)) calc(16px * var(--scale-factor, 1));
+  gap: calc(6px * var(--scale-factor, 1));
+}
+
+.cook-flow .studio-strat-detail {
+  margin-top: calc(14px * var(--scale-factor, 1));
+  padding: calc(14px * var(--scale-factor, 1)) calc(16px * var(--scale-factor, 1));
+}
+
+.cook-flow .studio-toggles {
+  gap: calc(10px * var(--scale-factor, 1));
+}
+
+.cook-review {
+  padding: calc(18px * var(--scale-factor, 1)) calc(24px * var(--scale-factor, 1)) calc(24px * var(--scale-factor, 1));
+  overflow-y: auto;
+}
+
+.cook-review-section {
+  margin-bottom: calc(20px * var(--scale-factor, 1));
+  padding-bottom: calc(18px * var(--scale-factor, 1));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cook-review-section:last-child {
+  border-bottom: none;
+}
+
+.cook-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(12px * var(--scale-factor, 1));
+  font-size: calc(12px * var(--scale-factor, 1));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.cook-edit {
+  border: none;
+  background: none;
+  color: rgba(var(--accent-rgb, 90, 106, 255), 0.9);
+  font: inherit;
+  font-size: calc(12px * var(--scale-factor, 1));
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: calc(36px * var(--scale-factor, 1));
+  padding: calc(4px * var(--scale-factor, 1)) calc(8px * var(--scale-factor, 1));
+}
+
+.cook-edit:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cook-bar-fill {
+    transition: none;
+  }
+}

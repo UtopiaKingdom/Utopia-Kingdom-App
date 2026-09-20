@@ -1,0 +1,38 @@
+{
+  "buy": {
+    "x": 2420,
+    "y": 411
+  },
+  "sell": {
+    "x": 2422,
+    "y": 466
+  },
+  "asset": {
+    "x": 146,
+    "y": 213
+  },
+  "category_buttons": {
+    "currencies": {
+      "x": 179,
+      "y": 284
+    },
+    "crypto": {
+      "x": 182,
+      "y": 321
+    },
+    "commodities": {
+      "x": 178,
+      "y": 362
+    },
+    "stocks": {
+      "x": 172,
+      "y": 398
+    }
+  },
+  "list_origin": {
+    "x": 419,
+    "y": 356
+  },
+  "row_height": 30,
+  "jitter_enabled": true
+}

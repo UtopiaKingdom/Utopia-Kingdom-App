@@ -1,0 +1,247 @@
+{
+  "ADAUSD_OTC@0": {
+    "at": 1789758966.5764234,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "AEDCNY_OTC@0": {
+    "at": 1789760538.4181924,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "AUDCAD_OTC@0": {
+    "at": 1789685402.8201518,
+    "last": 92,
+    "n": 3,
+    "pct": 88,
+    "source": "settle"
+  },
+  "AUDCAD_OTC@30": {
+    "at": 1789671958.2846508,
+    "last": 88,
+    "n": 1,
+    "pct": 88,
+    "source": "seed-2026-09-17-po-ui-88"
+  },
+  "AUDCHF_OTC@0": {
+    "at": 1789666321.1394851,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "AUDNZD_OTC@0": {
+    "at": 1789750798.5664446,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "AUDUSD_OTC@0": {
+    "at": 1789759482.4634,
+    "last": 92,
+    "n": 6,
+    "pct": 92,
+    "source": "settle"
+  },
+  "BHDCNY_OTC@0": {
+    "at": 1789760878.5724707,
+    "last": 92,
+    "n": 10,
+    "pct": 92,
+    "source": "settle"
+  },
+  "BTCUSD_OTC@0": {
+    "at": 1789760556.3656209,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "CADJPY_OTC@0": {
+    "at": 1789678417.2681804,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "CHFJPY_OTC@0": {
+    "at": 1789751966.3913546,
+    "last": 92,
+    "n": 8,
+    "pct": 92,
+    "source": "settle"
+  },
+  "CHFNOK_OTC@0": {
+    "at": 1789750131.2727442,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "EURCHF_OTC@0": {
+    "at": 1789665875.4916747,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "EURGBP_OTC@0": {
+    "at": 1789752363.8847394,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "EURRUB_OTC@0": {
+    "at": 1789760518.9438617,
+    "last": 92,
+    "n": 10,
+    "pct": 92,
+    "source": "settle"
+  },
+  "EURUSD_OTC@0": {
+    "at": 1789760031.077895,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "GBPAUD_OTC@0": {
+    "at": 1789680590.0461316,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "GBPUSD_OTC@0": {
+    "at": 1789750226.3652074,
+    "last": 92,
+    "n": 6,
+    "pct": 92,
+    "source": "settle"
+  },
+  "JODCNY_OTC@20": {
+    "at": 1789657507,
+    "last": 79,
+    "n": 1,
+    "pct": 79,
+    "source": "seed-2026-09-17-po-history"
+  },
+  "KESUSD_OTC@0": {
+    "at": 1789746307.8803272,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "KESUSD_OTC@30": {
+    "at": 1789660812,
+    "last": 78,
+    "n": 1,
+    "pct": 78,
+    "source": "seed-2026-09-17-po-history"
+  },
+  "MADUSD_OTC@0": {
+    "at": 1789677910.8720872,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "MADUSD_OTC@30": {
+    "at": 1789660812,
+    "last": 88,
+    "n": 1,
+    "pct": 88,
+    "source": "seed-2026-09-17-po-history"
+  },
+  "NZDJPY_OTC@0": {
+    "at": 1789750413.846052,
+    "last": 92,
+    "n": 8,
+    "pct": 92,
+    "source": "settle"
+  },
+  "OMRCNY_OTC@0": {
+    "at": 1789752161.8317878,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDBRL_OTC@0": {
+    "at": 1789685703.6265624,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDCHF_OTC@0": {
+    "at": 1789746627.4110208,
+    "last": 92,
+    "n": 6,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDCLP_OTC@0": {
+    "at": 1789747725.8217506,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDCNH_OTC@0": {
+    "at": 1789749238.0668924,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDDZD_OTC@0": {
+    "at": 1789685308.884723,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDIDR_OTC@0": {
+    "at": 1789668792.095082,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDINR_OTC@0": {
+    "at": 1789749086.024081,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDPKR_OTC@0": {
+    "at": 1789684859.7907953,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDSGD_OTC@0": {
+    "at": 1789746002.5536056,
+    "last": 92,
+    "n": 2,
+    "pct": 92,
+    "source": "settle"
+  },
+  "USDVND_OTC@0": {
+    "at": 1789686231.8853273,
+    "last": 92,
+    "n": 4,
+    "pct": 92,
+    "source": "settle"
+  }
+}

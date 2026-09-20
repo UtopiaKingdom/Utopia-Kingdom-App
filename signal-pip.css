@@ -1,0 +1,259 @@
+/* Minimal signal mini player */
+:root {
+  --pip-text: 1;
+  --pip-scale: 1;
+  --pip-bg: #101014;
+  --pip-fg: #f2f3f5;
+  --pip-muted: #8b9098;
+  --pip-line: rgba(255, 255, 255, 0.08);
+  --pip-accent: #7aa2ff;
+  --pip-call: #3dd68c;
+  --pip-put: #ff6b81;
+  --pip-radius: 16px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--pip-fg);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
+
+.pip-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--pip-bg);
+  border: 1px solid var(--pip-line);
+  border-radius: var(--pip-radius);
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.pip-shell[data-bot="LUMIX"] { --pip-accent: #7aa2ff; }
+.pip-shell[data-bot="MIRAX"] { --pip-accent: #9b7bff; }
+.pip-shell[data-bot="NYX"] { --pip-accent: #5ee1d0; }
+
+.pip-chrome {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  min-height: calc(34px * var(--pip-scale));
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--pip-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pip-drag {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.pip-bot {
+  font-size: calc(11px * var(--pip-scale) * var(--pip-text));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pip-accent);
+}
+
+.pip-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.pip-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--pip-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pip-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--pip-fg);
+}
+
+.pip-btn-close:hover {
+  background: rgba(255, 80, 80, 0.18);
+  color: #ff8a8a;
+}
+
+.pip-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pip-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(10px * var(--pip-scale));
+  padding: calc(14px * var(--pip-scale)) calc(16px * var(--pip-scale)) calc(16px * var(--pip-scale));
+  box-sizing: border-box;
+}
+
+.pip-card.is-wait {
+  align-items: center;
+  text-align: center;
+}
+
+.pip-wait {
+  color: var(--pip-muted);
+  font-size: calc(13px * var(--pip-scale) * var(--pip-text));
+  font-weight: 500;
+}
+
+.pip-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pip-side {
+  font-size: calc(22px * var(--pip-scale) * var(--pip-text));
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.pip-side.is-call { color: var(--pip-call); }
+.pip-side.is-put { color: var(--pip-put); }
+.pip-side.is-neutral { color: var(--pip-fg); }
+
+.pip-pair {
+  color: var(--pip-fg);
+  font-size: calc(13px * var(--pip-scale) * var(--pip-text));
+  font-weight: 600;
+  text-align: right;
+  opacity: 0.92;
+  word-break: break-word;
+}
+
+.pip-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: calc(10px * var(--pip-scale)) calc(12px * var(--pip-scale));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--pip-line);
+}
+
+.pip-countdown-label {
+  color: var(--pip-muted);
+  font-size: calc(10px * var(--pip-scale) * var(--pip-text));
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.countdown-value,
+.pip-countdown-value {
+  color: var(--pip-fg);
+  font-size: calc(28px * var(--pip-scale) * var(--pip-text));
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pip-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: var(--pip-muted);
+  font-size: calc(11px * var(--pip-scale) * var(--pip-text));
+  font-weight: 550;
+}
+
+.pip-meta strong {
+  color: rgba(242, 243, 245, 0.88);
+  font-weight: 650;
+}
+
+.pip-note {
+  font-size: calc(11px * var(--pip-scale) * var(--pip-text));
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pip-muted);
+}
+
+.pip-note.is-save { color: var(--pip-call); background: rgba(61, 214, 140, 0.1); }
+.pip-note.is-warn { color: #ffb347; background: rgba(255, 179, 71, 0.1); }
+.pip-note.is-bad { color: var(--pip-put); background: rgba(255, 107, 129, 0.1); }
+.pip-note.is-win { color: #ffd56a; background: rgba(255, 213, 106, 0.12); }
+
+.pip-resize {
+  position: absolute;
+  z-index: 20;
+  -webkit-app-region: no-drag;
+  background: transparent;
+}
+
+.pip-resize.n { top: 0; left: 12px; right: 12px; height: 7px; cursor: ns-resize; }
+.pip-resize.s { bottom: 0; left: 12px; right: 12px; height: 7px; cursor: ns-resize; }
+.pip-resize.e { top: 12px; right: 0; bottom: 12px; width: 7px; cursor: ew-resize; }
+.pip-resize.w { top: 12px; left: 0; bottom: 12px; width: 7px; cursor: ew-resize; }
+.pip-resize.ne { top: 0; right: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+.pip-resize.nw { top: 0; left: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.pip-resize.se { bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
+.pip-resize.sw { bottom: 0; left: 0; width: 14px; height: 14px; cursor: nesw-resize; }
+
+.pip-shell.glow-preparing {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 179, 71, 0.45);
+}
+.pip-shell.glow-buy {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(61, 214, 140, 0.5);
+}
+.pip-shell.glow-sell {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 107, 129, 0.5);
+}
+.pip-shell.glow-win {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(61, 214, 140, 0.6);
+}
+.pip-shell.glow-loss {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 107, 129, 0.55);
+}
+.pip-shell.glow-cancelled {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 179, 71, 0.4);
+}
+
+body.is-resizing,
+body.is-resizing * {
+  cursor: inherit !important;
+}

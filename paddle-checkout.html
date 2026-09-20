@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utopia Kingdom — Subscribe</title>
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a14;
+      color: #fff;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+    }
+    .box { text-align: center; padding: 24px; max-width: 420px; }
+    .muted { color: #9aa0a6; font-size: 14px; margin-top: 12px; line-height: 1.5; }
+    .err { color: #ff6b6b; margin-top: 16px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Opening secure checkout…</h1>
+    <p class="muted">Complete payment in the Paddle window. Return to the app after paying — access unlocks automatically.</p>
+    <p id="err" class="err" hidden></p>
+  </div>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(location.search);
+      const token = (params.get('token') || '').trim();
+      const priceId = (params.get('priceId') || '').trim();
+      const email = (params.get('email') || '').trim();
+      const errEl = document.getElementById('err');
+      const titleEl = document.querySelector('h1');
+      const mutedEl = document.querySelector('.muted');
+
+      function fail(msg) {
+        errEl.hidden = false;
+        errEl.textContent = msg || 'Could not open checkout.';
+      }
+
+      if (!token || !priceId) {
+        fail('Missing Paddle checkout configuration.');
+        return;
+      }
+
+      try {
+        Paddle.Environment.set('production');
+        Paddle.Initialize({
+          token,
+          eventCallback: function (data) {
+            if (!data || !data.name) return;
+            if (data.name === 'checkout.completed') {
+              titleEl.textContent = 'Payment received';
+              mutedEl.textContent = 'Return to the app — your subscription will unlock shortly.';
+            }
+            if (data.name === 'checkout.error') {
+              const detail = data.data && data.data.detail ? String(data.data.detail) : 'Checkout error.';
+              fail(detail);
+            }
+          }
+        });
+
+        const openPayload = {
+          items: [{ priceId, quantity: 1 }],
+          settings: { displayMode: 'overlay', theme: 'dark', locale: 'en' }
+        };
+        if (email) openPayload.customer = { email };
+
+        await Paddle.Checkout.open(openPayload);
+      } catch (e) {
+        fail(e && e.message ? e.message : 'Failed to initialize Paddle.');
+      }
+    })();
+  </script>
+</body>
+</html>

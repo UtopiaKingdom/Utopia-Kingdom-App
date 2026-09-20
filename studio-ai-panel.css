@@ -1,0 +1,113 @@
+/* Studio AI upgrade panel */
+
+.studio-ai-pro {
+  margin: 12px 0 16px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--accent-rgb, 90, 106, 255), 0.22);
+  background: rgba(var(--accent-rgb, 90, 106, 255), 0.06);
+  animation: studioAiIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes studioAiIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.studio-ai-pro-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.studio-ai-pro-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #fff;
+}
+
+.studio-ai-pro-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.studio-ai-pro-summary {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.studio-ai-card {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.studio-ai-card strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.studio-ai-card p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.studio-ai-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.studio-strat-hint {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(110, 231, 197, 0.2);
+  background: rgba(110, 231, 197, 0.06);
+  animation: studioAiIn 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.studio-strat-hint-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ef0d4;
+  background: rgba(110, 231, 197, 0.12);
+  border: 1px solid rgba(110, 231, 197, 0.22);
+}
+
+.studio-strat-hint-line {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.studio-strat-hint-line:last-child {
+  margin-bottom: 0;
+}
+
+.studio-strat-hint-line span {
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.85);
+}

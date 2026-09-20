@@ -1,0 +1,208 @@
+/* History modal — quiet list, open next to close */
+
+#history-modal .confirm-modal-content.history-modal-content {
+  max-width: 560px;
+  padding: 18px 18px 12px;
+}
+
+#history-modal .confirm-title {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+#history-modal .history-list {
+  margin: 12px 0 4px !important;
+  gap: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#history-modal .history-item {
+  display: block;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  padding: 12px 2px 13px;
+  contain: content;
+}
+
+#history-modal .history-item:last-child {
+  border-bottom: none;
+}
+
+#history-modal .hist-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+#history-modal .hist-result {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+
+#history-modal .hist-result.win {
+  color: #e8c96a;
+}
+
+#history-modal .hist-result.loss {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+#history-modal .hist-pair {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#history-modal .hist-action {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  flex: 0 0 auto;
+}
+
+#history-modal .hist-action.buy {
+  color: rgba(110, 200, 150, 0.85);
+}
+
+#history-modal .hist-action.sell {
+  color: rgba(220, 140, 140, 0.85);
+}
+
+#history-modal .hist-save {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 165, 2, 0.92);
+  border: 1px solid rgba(255, 165, 2, 0.35);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+#history-modal .hist-date {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.32);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+#history-modal .hist-legs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px 12px;
+  margin-top: 8px;
+  padding-left: 0;
+  align-items: start;
+}
+
+#history-modal .hist-leg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+#history-modal .hist-leg-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+#history-modal .hist-leg-vals {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+#history-modal .hist-leg-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+#history-modal .hist-leg-price {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#history-modal .hist-delta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 52px;
+  padding: 0 4px;
+  text-align: center;
+}
+
+#history-modal .hist-delta-amt {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+#history-modal .hist-delta-up .hist-delta-amt {
+  color: rgba(110, 200, 150, 0.9);
+}
+
+#history-modal .hist-delta-down .hist-delta-amt {
+  color: rgba(220, 140, 140, 0.9);
+}
+
+#history-modal .hist-delta-flat .hist-delta-amt {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+#history-modal .hist-legs .hist-leg:last-child {
+  text-align: right;
+}
+
+#history-modal .hist-legs .hist-leg:last-child .hist-leg-vals {
+  justify-content: flex-end;
+}
+
+#history-modal .history-empty {
+  padding: 48px 0;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+@media (max-width: 520px) {
+  #history-modal .hist-legs {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+
+  #history-modal .hist-delta {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 2px;
+  }
+}

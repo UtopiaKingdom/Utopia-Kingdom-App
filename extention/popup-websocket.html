@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Utopia Kingdom - Auto Trade</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="popup">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1);">
+      <img
+        alt="Utopia Kingdom"
+        style="width:48px;height:48px;border-radius:10px;object-fit:contain;background:rgba(255,255,255,0.05);padding:4px;"
+        src="logo.png"
+      />
+      <h1 style="margin:0;">Utopia Kingdom</h1>
+    </div>
+    <div class="status">
+      <span id="connIndicator" class="indicator offline"></span>
+      <span id="connText">Disconnected</span>
+    </div>
+
+    <div class="controls" style="margin-top:12px;">
+      <div class="bot-list" id="botList">
+        <!-- Filled by popup JS -->
+      </div>
+    </div>
+
+    <div class="controls" style="margin-top:12px;display:flex;gap:8px;">
+      <button id="refreshConn" style="flex:1;">Refresh</button>
+      <button id="connectAll" style="flex:1;">Request Handshake</button>
+    </div>
+
+    <div class="help" style="margin-top:12px;">
+      <p style="color:#9aa0a6;">The app sends codes per bot when Auto Trade is ON. This popup shows the latest codes and connection state.</p>
+    </div>
+  </div>
+
+  <script src="popup-websocket.js"></script>
+</body>
+</html>

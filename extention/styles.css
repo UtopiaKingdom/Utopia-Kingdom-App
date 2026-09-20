@@ -1,0 +1,271 @@
+/* Modern dark theme for the extension popup */
+:root {
+  --bg: #121417;
+  --panel: #1a1d21;
+  --border: #2a2f36;
+  --text: #e6e9ef;
+  --muted: #9aa0a6;
+  --primary: #5a6aff;
+  --primary-600: #4356e6;
+  --accent: #23d18b;
+  --danger: #ff6b81;
+}
+
+html, body {
+  width: 340px;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.popup {
+  padding: 14px;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.2) inset;
+}
+.indicator.online { background: var(--accent); }
+.indicator.offline { background: #666; }
+
+.controls {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+select, input[type="text"] {
+  width: 100%;
+  background: #14171a;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  outline: none;
+}
+select:focus, input[type="text"]:focus {
+  border-color: var(--primary);
+}
+
+button {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.05s ease;
+}
+button:hover { background: var(--primary-600); }
+button:active { transform: translateY(1px); }
+
+#refreshConn {
+  background: #2a3138;
+}
+#refreshConn:hover {
+  background: #343b43;
+}
+
+.help p { margin: 6px 0; }
+.help { font-size: 12px; color: var(--muted); }
+
+#connectedInfo { font-size: 12px; }
+
+/* Popup toast */
+.toast {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(46, 213, 115, 0.1);
+  border: 1px solid #2ed573;
+  color: #2ed573;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 9999;
+  animation: toastIn 0.2s ease-out;
+}
+@keyframes toastIn { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Bot list cards */
+.bot-list { display: flex; flex-direction: column; gap: 10px; }
+.bot-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #14171a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.bot-meta { display: flex; flex-direction: column; gap: 4px; }
+.bot-name { font-weight: 600; color: var(--text); }
+.bot-code { font-size: 12px; color: var(--muted); word-break: break-all; }
+.chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.chip.on { color: #2ed573; border-color: rgba(46,213,115,0.5); background: rgba(46,213,115,0.08); }
+.chip.off { color: #ff6b6b; border-color: rgba(255,107,129,0.4); background: rgba(255,107,129,0.08); }
+
+/* Water ripple effect */
+@keyframes water-ripple {
+  0% { 
+    width: 2px; 
+    height: 2px; 
+    opacity: 1; 
+  }
+  100% { 
+    width: 100px; 
+    height: 100px; 
+    opacity: 0; 
+  }
+}
+
+/* Autotrade overlay */
+.autotrade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.autotrade-overlay.active {
+  display: flex;
+}
+
+.autotrade-overlay.hidden {
+  display: none;
+}
+
+.autotrade-content {
+  background: linear-gradient(135deg, #1a1d21 0%, #242829 100%);
+  border: 2px solid #5a6aff;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(90, 106, 255, 0.3);
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.autotrade-text {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #5a6aff 0%, #23d18b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 10px 0;
+  letter-spacing: 1px;
+}
+
+.autotrade-status {
+  font-size: 16px;
+  color: #9aa0a6;
+  margin: 0;
+}
+
+.autotrade-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #23d18b;
+  margin-right: 8px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.autotrade-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.autotrade-controls button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.btn-minimize {
+  background: rgba(255, 255, 255, 0.1);
+  color: #9aa0a6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-minimize:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e6e9ef;
+}
+
+.btn-close {
+  background: #ff6b81;
+  color: white;
+  border: none;
+}
+
+.btn-close:hover {
+  background: #ff5266;
+}

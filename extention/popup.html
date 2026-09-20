@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trading Selector</title>
+  <style>
+    body { font-family: Arial, sans-serif; width: 360px; padding: 12px; }
+    h4 { margin: 0 0 8px 0; }
+    #statusWrap { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    #indicator { width:14px; height:14px; border-radius:50%; background:#d9534f; box-shadow:0 0 4px rgba(0,0,0,0.1); }
+    #text { font-size:14px; color:#222; }
+    #codeArea { margin-top:10px; }
+    #codeInput { width:100%; padding:8px; font-size:16px; box-sizing:border-box; margin-top:6px; }
+    #controls { display:flex; gap:8px; margin-top:8px; }
+    #verifyBtn, #fillBtn { flex:1; padding:8px; font-size:14px; cursor:pointer; }
+    #info { margin-top:8px; font-size:12px; color:#666; }
+    .small { font-size:12px; color:#666; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <h4>Trading Selector</h4>
+
+  <div id="statusWrap">
+    <div id="indicator" title="connection status"></div>
+    <div id="text">Disconnected</div>
+  </div>
+
+  <div id="codeArea">
+    <div>Enter the connection code from the native host terminal:</div>
+    <input id="codeInput" type="text" placeholder="e.g. ABC123" autocomplete="off" />
+    <div id="controls">
+      <button id="fillBtn" type="button">Fill code</button>
+      <button id="verifyBtn" type="button">Verify</button>
+    </div>
+  </div>
+
+  <div id="info">Start native_host.py in a terminal (it prints a connection code). Type it above and press Verify — or press Fill code to copy the code the host issued (if available).</div>
+  <div class="small">The input is always visible so you can paste codes manually.</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

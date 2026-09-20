@@ -1,0 +1,12 @@
+{
+  "wsServer": "wss://utkingdom.com/ws",
+  "paddlePriceId": "pri_01km1j1mhsbckjb95kxra7qkww",
+  "paddleProductId": "pro_01km1hrz75f80nf4hrxnpthtrh",
+  "paddleCheckoutApiUrl": "https://utkingdom.com/api/paddle/checkout",
+  "paddleCheckoutPageUrl": "https://utkingdom.com/paddle/checkout",
+  "communityHubBases": [
+    "http://169.58.151.111:8789/hub",
+    "http://169.58.151.111:8788/hub",
+    "https://utkingdom.com/api/hub"
+  ]
+}

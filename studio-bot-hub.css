@@ -1,0 +1,366 @@
+/* studio-bot-hub.css — full-width bot hub + immersive detail like house bots */
+
+#section-studio .studio-page {
+  grid-template-columns: 1fr !important;
+}
+
+#section-studio .studio-rail {
+  display: none !important;
+}
+
+#section-studio .studio-page.is-bot-open,
+#section-studio.is-bot-open .studio-page {
+  grid-template-columns: 1fr;
+}
+
+#section-studio .studio-page.is-bot-open .studio-tabs,
+#section-studio.is-bot-open .studio-tabs {
+  display: none !important;
+}
+
+.studio-hub-mount {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.studio-hub-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.studio-hub-head h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--studio-text, rgba(255, 255, 255, 0.92));
+}
+
+.studio-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.studio-hub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-border, rgba(255, 255, 255, 0.06));
+  background: rgba(0, 0, 0, 0.22);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.studio-hub-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.studio-hub-card.is-live {
+  border-color: rgba(110, 231, 197, 0.28);
+  background: rgba(110, 231, 197, 0.06);
+}
+
+.studio-hub-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.studio-hub-card-name {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--studio-text, rgba(255, 255, 255, 0.92));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-hub-card-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--studio-muted, rgba(255, 255, 255, 0.48));
+  line-height: 1.4;
+}
+
+.studio-hub-empty {
+  text-align: center;
+  padding: 32px 20px 40px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.studio-hub-empty h2 {
+  margin: 0 0 8px;
+}
+
+#section-studio .studio-yours-pane.studio-bot-detail {
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+#section-studio .studio-tab-body:has(.studio-bot-detail) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.studio-health-compact-summary::after {
+  content: '▾';
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.35;
+  transition: transform 160ms ease;
+}
+
+.studio-live-health-compact[open] .studio-health-compact-summary::after {
+  transform: rotate(180deg);
+}
+
+.studio-bot-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 0 12px !important;
+  gap: 0 !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.studio-bot-detail.is-live-desk {
+  overflow: hidden !important;
+  flex: 1;
+  min-height: 0;
+}
+
+.studio-bot-detail.is-live-desk .studio-zone-desk {
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-shrink: 1;
+}
+
+.studio-bot-extras {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 4px;
+  box-sizing: border-box;
+}
+
+.studio-bot-extras .studio-zone-actions,
+.studio-bot-extras .studio-zone-path,
+.studio-bot-extras .studio-zone-recipe,
+.studio-bot-extras .studio-gate-wrap {
+  flex-shrink: 0;
+}
+
+.studio-bot-health-mount:empty {
+  display: none;
+}
+
+/* Private desk shell */
+.studio-desk-private.studio-feed-house {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 10px 12px 0;
+  box-sizing: border-box;
+}
+
+.studio-desk-private .studio-feed-header {
+  flex-shrink: 0;
+  margin: 0 0 12px;
+  padding: 0 0 10px;
+  gap: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.studio-desk-private .studio-feed-header-right {
+  gap: 10px;
+}
+
+.studio-desk-private .studio-feed-header-right .btn-secondary {
+  min-height: 30px;
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.studio-desk-private .studio-feed-title-private h1 {
+  font-size: calc(18px * var(--font-scale, 1));
+  font-weight: 700;
+}
+
+.studio-desk-private .studio-feed-title-private {
+  gap: 6px 8px;
+}
+
+.studio-desk-private .studio-feed-bot-container {
+  margin-top: 0;
+}
+
+/* Health strip under signal */
+.studio-bot-health-mount {
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.studio-live-health-compact {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.studio-live-health-compact.is-ok {
+  border-color: rgba(110, 231, 197, 0.22);
+  background: rgba(110, 231, 197, 0.05);
+}
+
+.studio-live-health-compact.is-warn {
+  border-color: rgba(232, 192, 122, 0.22);
+  background: rgba(232, 192, 122, 0.05);
+}
+
+.studio-live-health-compact.is-bad {
+  border-color: rgba(232, 120, 120, 0.22);
+  background: rgba(232, 120, 120, 0.05);
+}
+
+.studio-health-compact-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.studio-health-compact-summary::-webkit-details-marker {
+  display: none;
+}
+
+.studio-live-health-compact .studio-health-pill {
+  padding: 2px 7px;
+  font-size: 9px;
+}
+
+.studio-health-compact-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+
+.studio-health-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.studio-health-chip.is-ok {
+  color: rgba(158, 240, 212, 0.9);
+  border-color: rgba(110, 231, 197, 0.2);
+}
+
+.studio-health-chip.is-bad {
+  color: rgba(245, 168, 168, 0.9);
+  border-color: rgba(232, 120, 120, 0.2);
+}
+
+.studio-health-chip-mark {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
+.studio-health-compact-note {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+}
+
+.studio-health-list-compact {
+  margin: 0;
+  padding: 0 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.studio-health-list-compact .studio-health-row {
+  padding: 4px 0;
+  font-size: 10px;
+}
+
+.studio-health-list-compact .studio-health-row em {
+  font-size: 9px;
+}
+
+.studio-health-list-compact .studio-health-mark {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
+#section-studio .studio-bot-detail .studio-zone-desk {
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  min-height: 0;
+  flex-shrink: 1;
+}
+
+#section-studio .studio-bot-detail:not(.is-live-desk) .studio-zone-desk {
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+#section-studio .studio-bot-detail .studio-zone-actions {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--studio-border, rgba(255, 255, 255, 0.06));
+  background: rgba(0, 0, 0, 0.18);
+}
+
+#section-studio .studio-bot-detail .studio-zone-recipe {
+  border-radius: 10px;
+}
+
+/* Studio private desk uses same house-bot signal/panel sizing (see studio-bot-desk-layout.css) */
+
+@media (max-width: 820px) {
+  .studio-hub-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .studio-hub-head .studio-primary {
+    width: 100%;
+  }
+
+  .studio-health-compact-chips {
+    width: 100%;
+  }
+}
