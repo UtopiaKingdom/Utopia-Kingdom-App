@@ -10,11 +10,11 @@ routes = [
 
 # Environment variables
 [vars]
-APP_VERSION = "3.3.26"
+APP_VERSION = "3.3.27"
 FILE_SIZE_BYTES = "224245301"
 WS_SERVER_URL = "wss://site-production-24de.up.railway.app"
 FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.26/Utopia%20Kingdom-Setup-3.3.26.exe"
-MAC_FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.25/Utopia%20Kingdom-3.3.25-mac.dmg"
+MAC_FILE_DOWNLOAD_URL = "https://utkingdom.com/releases/v3.3.27/Utopia%20Kingdom-3.3.27-mac.dmg"
 ANDROID_DOWNLOAD_URL = "https://utkingdom.com/releases/mobile/UtopiaKingdom-1.2.8.apk"
 # Mobile in-app update check (bump when you upload a new APK)
 MOBILE_APP_VERSION = "1.2.8"

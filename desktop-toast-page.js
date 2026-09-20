@@ -9,6 +9,7 @@
   const sideEl = document.getElementById('toastSide');
   const barEl = document.getElementById('toastBar');
   const closeEl = document.getElementById('toastClose');
+  const logoEl = document.getElementById('toastLogo');
   let toastId = 0;
 
   const HOUSE = {
@@ -31,6 +32,11 @@
     titleEl.textContent = title;
     bodyEl.textContent = body;
     kickerEl.textContent = bot || 'Utopia Kingdom';
+
+    if (logoEl) {
+      const logoUrl = String(payload.logoUrl || '').trim();
+      if (logoUrl) logoEl.src = logoUrl;
+    }
 
     const house = HOUSE[String(bot).toUpperCase()];
     const accent = house ? house.hex : String(payload.accent || '').trim() || '#5a6aff';

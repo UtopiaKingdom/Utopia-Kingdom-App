@@ -2,8 +2,10 @@
  * Custom desktop toasts — frameless always-on-top cards (Celestial-style).
  * Closing a toast must NEVER quit the main app or steal focus.
  */
-const { BrowserWindow, ipcMain, screen } = require('electron');
+const { BrowserWindow, ipcMain, screen, app } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { pathToFileURL } = require('url');
 
 const TOAST_W = 380;
 const TOAST_H = 118;
@@ -22,6 +24,30 @@ function setToastDeps({ getMainWindow: gm, getBrowserWindowIcon, onToastClick } 
   if (typeof gm === 'function') getMainWindow = gm;
   if (typeof getBrowserWindowIcon === 'function') getIcon = getBrowserWindowIcon;
   if (typeof onToastClick === 'function') onClick = onToastClick;
+}
+
+/** Packaged relative logo.png often fails; prefer absolute file:// from resources. */
+function resolveToastLogoUrl() {
+  const candidates = [];
+  try {
+    if (process.resourcesPath) {
+      candidates.push(path.join(process.resourcesPath, 'logo.png'));
+      candidates.push(path.join(process.resourcesPath, 'icon.ico'));
+    }
+  } catch (e) {}
+  try {
+    if (app && typeof app.getAppPath === 'function') {
+      candidates.push(path.join(app.getAppPath(), 'logo.png'));
+    }
+  } catch (e) {}
+  candidates.push(path.join(__dirname, 'logo.png'));
+  candidates.push(path.join(__dirname, 'build', 'icon.ico'));
+  for (const p of candidates) {
+    try {
+      if (p && fs.existsSync(p)) return pathToFileURL(path.resolve(p)).href;
+    } catch (e) {}
+  }
+  return null;
 }
 
 function isToastWindow(win) {
@@ -161,6 +187,7 @@ function showToast(payload = {}) {
       win.webContents.send('desktop-toast-content', Object.assign({}, payload, {
         id,
         durationMs: holdMs,
+        logoUrl: resolveToastLogoUrl(),
       }));
     } catch (e) {}
   };

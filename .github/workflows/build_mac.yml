@@ -31,16 +31,18 @@ jobs:
         run: node scripts/prepare_mac_python.js
 
       - name: Packaging guard
-        continue-on-error: true
         run: node tools/check_packaged_assets.js
 
-      - name: Build unsigned universal DMG
-        run: npx electron-builder --mac dmg --publish never
+      - name: Build unsigned arm64 DMG
+        run: npx electron-builder --mac dmg --arm64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
+      - name: Verify packaged SSID helper
+        run: node tools/verify_mac_packaged_helper.js
+
       - name: List dist
-        run: ls -lah dist
+        run: ls -lah dist && ls -lah dist/mac-arm64 || true
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4

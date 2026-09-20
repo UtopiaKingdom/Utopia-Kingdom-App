@@ -547,6 +547,22 @@ function showNativeOsNotification({ notificationTitle, notificationBody, notific
   }
 }
 
+/** Main-process gate so parallel IPC callers can't double-toast the same signal. */
+const recentMainNotifyAt = Object.create(null);
+const MAIN_NOTIFY_DEDUPE_MS = 8000;
+function shouldSkipMainNotify(title, body, botName) {
+  const key = [String(botName || ''), String(title || ''), String(body || '')].join('|').toUpperCase();
+  if (!key || key === '||') return false;
+  const now = Date.now();
+  Object.keys(recentMainNotifyAt).forEach((k) => {
+    if (now - recentMainNotifyAt[k] > MAIN_NOTIFY_DEDUPE_MS * 3) delete recentMainNotifyAt[k];
+  });
+  const prev = recentMainNotifyAt[key] || 0;
+  if (now - prev < MAIN_NOTIFY_DEDUPE_MS) return true;
+  recentMainNotifyAt[key] = now;
+  return false;
+}
+
 // Custom desktop toasts (Celestial-style). Falls back to native OS toasts.
 try { ipcMain.removeHandler('show-notification'); } catch (e) {}
 ipcMain.handle('show-notification', async (event, { title, body, botName, currency, side, playSound, sound, studioId, autoCloseMs, accent, accentRgb } = {}) => {
@@ -567,12 +583,27 @@ ipcMain.handle('show-notification', async (event, { title, body, botName, curren
       notificationBody = parts.length > 0 ? parts.join(' • ') : 'Live signal';
     }
 
+    if (shouldSkipMainNotify(notificationTitle, notificationBody, botName)) {
+      mainLog('info', `[Notification] Deduped: ${notificationTitle} - ${notificationBody}`);
+      return { success: true, style: 'deduped' };
+    }
+
     const notificationIcon = (() => {
-      const icoPath = path.join(__dirname, 'build', 'icon.ico');
+      try {
+        const preferred = typeof getAppIconPath === 'function' ? getAppIconPath() : null;
+        if (preferred && fs.existsSync(preferred)) return preferred;
+      } catch (e) {}
+      try {
+        const winIcon = typeof getWindowsIconPath === 'function' ? getWindowsIconPath() : null;
+        if (winIcon && fs.existsSync(winIcon)) return winIcon;
+      } catch (e) {}
       const packagedIco = process.resourcesPath ? path.join(process.resourcesPath, 'icon.ico') : null;
+      const packagedPng = process.resourcesPath ? path.join(process.resourcesPath, 'logo.png') : null;
+      const icoPath = path.join(__dirname, 'build', 'icon.ico');
       const pngPath = path.join(__dirname, 'logo.png');
-      if (fs.existsSync(icoPath)) return icoPath;
       if (packagedIco && fs.existsSync(packagedIco)) return packagedIco;
+      if (packagedPng && fs.existsSync(packagedPng)) return packagedPng;
+      if (fs.existsSync(icoPath)) return icoPath;
       if (fs.existsSync(pngPath)) return pngPath;
       return undefined;
     })();
@@ -2205,6 +2236,14 @@ async function initSsidVault() {
       mainLog('error', `[SSID] Python helper missing: ${checkScript}`);
     } else {
       mainLog('info', `[SSID] Python helpers ready at ${collectorDir} via ${pythonExecutable}`);
+      // Warm the long-lived worker so the first Connect is not a cold start.
+      try {
+        if (typeof poTradeWorker !== 'undefined' && poTradeWorker && typeof poTradeWorker.ensureStarted === 'function') {
+          poTradeWorker.ensureStarted().catch((e) => {
+            mainLog('warn', `[SSID] early helper warm failed: ${e && e.message ? e.message : e}`);
+          });
+        }
+      } catch (eWarm) {}
     }
   } catch (e) {
     mainLog('error', '[SSID Vault] Initialization failed:', e.message);
@@ -2853,8 +2892,33 @@ function getBundledVenvRoot() {
  * Packaged venvs die if pyvenv.cfg `home=` still points at the build machine.
  * Point home at the shipped runtime folder (Windows + macOS).
  */
+/** Unsigned Mac DMGs leave Gatekeeper quarantine on nested binaries — spawn then fails. */
+function clearDarwinHelperQuarantine(venvRoot) {
+  if (process.platform !== 'darwin' || !venvRoot || !fs.existsSync(venvRoot)) return;
+  try {
+    const { spawnSync } = require('child_process');
+    spawnSync('xattr', ['-dr', 'com.apple.quarantine', venvRoot], {
+      windowsHide: true,
+      timeout: 25000,
+      encoding: 'utf8'
+    });
+  } catch (e) {}
+  const bins = [
+    ...venvPythonCandidates(venvRoot),
+    path.join(venvRoot, 'runtime', 'bin', 'python3'),
+    path.join(venvRoot, 'runtime', 'bin', 'python'),
+    path.join(venvRoot, 'bin', 'python3'),
+    path.join(venvRoot, 'bin', 'python')
+  ];
+  for (const p of bins) {
+    if (!p || !fs.existsSync(p)) continue;
+    try { fs.chmodSync(p, 0o755); } catch (e) {}
+  }
+}
+
 function ensurePortableBundledVenv(venvRoot) {
   if (!venvRoot) return { ok: false, reason: 'missing_venv' };
+  clearDarwinHelperQuarantine(venvRoot);
   const cfgPath = path.join(venvRoot, 'pyvenv.cfg');
   const runtimeHome = venvRuntimeHome(venvRoot);
   const runtimePy = venvRuntimePython(venvRoot);
@@ -4737,14 +4801,19 @@ async function warmPoTradeSession(ssid, currency) {
 
 async function connectPoSsidSession(ssid, currency) {
   if (!ssid) return { success: false, error: 'missing ssid' };
+  // First launch after an unsigned Mac install often needs a few helper boots
+  // (quarantine clear + cold Python import of BinaryOptionsToolsV2).
   let last = { success: false, error: 'not started' };
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 5; i++) {
     try {
+      if (process.platform === 'darwin') {
+        clearDarwinHelperQuarantine(getBundledVenvRoot() || getReadyBundledVenvRoot());
+      }
       await poTradeWorker.ensureStarted();
     } catch (e) {
       last = { success: false, error: (e && e.message) || 'Python helper failed to start' };
       mainLog('warn', `[SSID] helper start try ${i + 1}: ${last.error}`);
-      await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
+      await new Promise((r) => setTimeout(r, 1600 * (i + 1)));
       continue;
     }
     last = await warmPoTradeSession(ssid, currency || '');
@@ -4754,7 +4823,7 @@ async function connectPoSsidSession(ssid, currency) {
     }
     if (last && last.expired) return last;
     mainLog('warn', `[SSID] warm try ${i + 1} failed: ${(last && last.error) || 'unknown'}`);
-    await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+    await new Promise((r) => setTimeout(r, 1800 * (i + 1)));
   }
   return last || { success: false, error: 'could not connect Pocket Option' };
 }

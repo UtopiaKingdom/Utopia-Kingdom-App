@@ -178,11 +178,7 @@
       return false;
     }
 
-    try {
-      if (window.__utkSignalNotify && typeof window.__utkSignalNotify.showStudioSignal === 'function') {
-        window.__utkSignalNotify.showStudioSignal(bot.id, bot.name, signal);
-      }
-    } catch (eN) {}
+    // Desktop notify is handled by desk / notify poll — not here (was double-firing).
     const attempt = Number(signal.attempt || 1);
     const maxAttempts = Math.max(
       1,

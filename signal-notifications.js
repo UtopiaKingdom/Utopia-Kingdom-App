@@ -33,6 +33,36 @@
   let pollTimer = null;
   const lastHouseNotifyKey = { LUMIX: '', MIRAX: '', NYX: '' };
   const lastStudioSignalId = Object.create(null);
+  /** Global short-window dedupe so desk + autotrade + poll can't double-toast. */
+  const recentOsNotifyAt = Object.create(null);
+  const OS_NOTIFY_DEDUPE_MS = 9000;
+
+  function pruneRecentOsNotify(now) {
+    Object.keys(recentOsNotifyAt).forEach(function (k) {
+      if (now - recentOsNotifyAt[k] > OS_NOTIFY_DEDUPE_MS * 3) delete recentOsNotifyAt[k];
+    });
+  }
+
+  function osNotifyFingerprint(payload) {
+    payload = payload || {};
+    const bot = String(payload.botName || payload.studioId || '').trim().toUpperCase();
+    const side = String(payload.side || '').trim().toUpperCase();
+    const pair = String(payload.currency || '').trim().toUpperCase();
+    const title = String(payload.title || '').trim().toUpperCase();
+    const body = String(payload.body || '').trim().toUpperCase();
+    return [bot, side, pair, title, body].join('|');
+  }
+
+  function shouldSkipOsNotify(payload) {
+    const fp = osNotifyFingerprint(payload);
+    if (!fp || fp === '||||') return false;
+    const now = Date.now();
+    pruneRecentOsNotify(now);
+    const prev = recentOsNotifyAt[fp] || 0;
+    if (now - prev < OS_NOTIFY_DEDUPE_MS) return true;
+    recentOsNotifyAt[fp] = now;
+    return false;
+  }
 
   function defaultPrefs() {
     const house = {};
@@ -244,6 +274,7 @@
 
   function showOsNotification(payload) {
     try {
+      if (shouldSkipOsNotify(payload)) return;
       const { ipcRenderer } = require('electron');
       const theme = readToastTheme();
       let sound = payload && payload.sound;
@@ -288,10 +319,17 @@
 
     const currency = resolvePair(signal);
     const side = normalizeSide(signal);
-    const notifyKey = String(
-      (signal && (signal.signalId || signal.openedAtMs)) ||
-      (currency + '|' + side + '|' + ((signal && signal.openingTime) || ''))
+    const sid = String((signal && (signal.signalId || signal.id)) || '').trim();
+    const opened = String(
+      (signal && (signal.openedAtMs || signal.openingTime || signal.time || signal.timestamp)) || ''
     ).trim();
+    const notifyKey = sid
+      ? ('sid:' + sid)
+      : String(
+          currency + '|' + side + '|' + (opened
+            ? String(Math.floor(Number(opened) / 10000) || opened)
+            : '')
+        ).trim();
     if (notifyKey && lastHouseNotifyKey[key] === notifyKey) return;
     lastHouseNotifyKey[key] = notifyKey || (key + ':' + Date.now());
 
@@ -315,12 +353,22 @@
     if (!prefsAllowStudio(botId)) return;
     if (!isChainStartSignal(signal)) return;
 
-    const sid = String((signal && signal.signalId) || '').trim();
-    if (sid && lastStudioSignalId[botId] === sid) return;
-    if (sid) lastStudioSignalId[botId] = sid;
-
+    const sid = String((signal && (signal.signalId || signal.id)) || '').trim();
     const currency = resolvePair(signal);
     const side = normalizeSide(signal);
+    const opened = String(
+      (signal && (signal.openedAtMs || signal.openingTime || signal.time || signal.timestamp)) || ''
+    ).trim();
+    const dedupeId = sid
+      ? ('sid:' + sid)
+      : String(
+          currency + '|' + side + '|' + (opened
+            ? String(Math.floor(Number(opened) / 10000) || opened)
+            : '')
+        ).trim();
+    if (dedupeId && lastStudioSignalId[botId] === dedupeId) return;
+    if (dedupeId) lastStudioSignalId[botId] = dedupeId;
+
     const parts = [];
     if (side) parts.push(side);
     if (currency) parts.push(currency);
@@ -378,7 +426,9 @@
       const phase = String(sig.phase || '').toLowerCase();
       if (phase !== 'signal' && phase !== 'trading') return;
       const sid = String(sig.signalId || '').trim();
-      if (!sid || lastStudioSignalId[botId] === sid) return;
+      if (!sid) return;
+      const pollKey = 'sid:' + sid;
+      if (lastStudioSignalId[botId] === pollKey || lastStudioSignalId[botId] === sid) return;
 
       const bot = (data && data.bot) || meta || {};
       showStudioSignal(botId, bot.name || meta.name, sig);

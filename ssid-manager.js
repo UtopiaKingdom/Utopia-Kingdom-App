@@ -863,8 +863,8 @@ class SSIDManager {
 
  applyStatus(onlineStatus);
 
- for (let i = 0; i < 4 && !onlineStatus?.activeOnline; i++) {
- await sleep(1500);
+ for (let i = 0; i < 8 && !onlineStatus?.activeOnline; i++) {
+ await sleep(1800);
  const statusRes = await ipcRenderer.invoke('refresh-pocket-option-ssid-status', {
  botId: this.currentBotId || 'bot1',
  force: true
@@ -882,14 +882,31 @@ class SSIDManager {
  this.closeModal();
  } else {
  const raw = String(result.helperError || onlineStatus?.error || '');
+        const shortRaw = raw.replace(/\s+/g, ' ').trim().slice(0, 160);
         if (onlineStatus?.expired || /expired|unauthorized|invalid\s+(ssid|token)/i.test(raw)) {
           this.showError('SSID expired. Paste a fresh 42["auth",...] token');
-        } else if (/ModuleNotFoundError|missing helper|missing script/i.test(raw)) {
-          this.showError('Pocket Option helper is missing a file in this install. Update or reinstall the app, then connect again.');
-        } else if (/python|spawn|ENOENT|helper|worker|missing/i.test(raw)) {
-          this.showError('Pocket Option helper is starting. Keep the app open and click Connect again in a moment.');
+        } else if (/ModuleNotFoundError|No module named|missing helper|missing script/i.test(raw)) {
+          this.showError(
+            'Pocket Option helper is incomplete in this Mac/Windows install. Re-download the latest build from the site.'
+            + (shortRaw ? (' (' + shortRaw + ')') : '')
+          );
+        } else if (/EACCES|Operation not permitted|quarantine|cannot be opened because/i.test(raw)) {
+          this.showError('Mac blocked the Pocket Option helper. Quit the app, then in Terminal run: xattr -cr "/Applications/Utopia Kingdom.app" — then reopen and Connect again.');
+        } else if (/ENOENT|python.*(not found|failed)|spawn.*(ENOENT|python)/i.test(raw)) {
+          this.showError(
+            'Pocket Option helper binary missing from this install. Re-download the latest Mac build.'
+            + (shortRaw ? (' (' + shortRaw + ')') : '')
+          );
+        } else if (/python|spawn|helper|worker|missing|failed to start|exited/i.test(raw)) {
+          this.showError(
+            'Pocket Option helper failed to start. Quit completely, re-download the latest Mac build from the site, then Connect again.'
+            + (shortRaw ? (' Detail: ' + shortRaw) : '')
+          );
         } else {
-          this.showError('SSID saved. Pocket Option is still connecting. Keep the app open, it will retry. If it stays offline, paste a fresh token.');
+          this.showError(
+            'SSID saved. Pocket Option is still connecting. Keep the app open, it will retry. If it stays offline, paste a fresh token.'
+            + (shortRaw ? (' (' + shortRaw + ')') : '')
+          );
         }
  }
  } catch (error) {

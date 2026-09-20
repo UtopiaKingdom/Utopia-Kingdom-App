@@ -1,6 +1,6 @@
 {
   "name": "utopia-kingdom",
-  "version": "3.3.26",
+  "version": "3.3.27",
   "description": "Utopia Kingdom - Trading Platform",
   "main": "main.js",
   "author": "Utopia Kingdom",
@@ -309,7 +309,7 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "arm64"
           ]
         }
       ],

@@ -205,11 +205,15 @@
               window.__utkStudioAutotrade.tryPlace(payload.bot, sig, { ladder: payload.bot.ladder });
             }
           } catch (eAt) {}
-          try {
-            if (window.__utkSignalNotify && typeof window.__utkSignalNotify.showStudioSignal === 'function') {
-              window.__utkSignalNotify.showStudioSignal(payload.bot.id, payload.bot.name, sig);
-            }
-          } catch (eN) {}
+          // Notify only on phase edge — live ticks used to re-fire the same toast.
+          const prevPhaseLive = String(rootEl.getAttribute('data-desk-phase') || '').toLowerCase();
+          if (prevPhaseLive !== 'signal') {
+            try {
+              if (window.__utkSignalNotify && typeof window.__utkSignalNotify.showStudioSignal === 'function') {
+                window.__utkSignalNotify.showStudioSignal(payload.bot.id, payload.bot.name, sig);
+              }
+            } catch (eN) {}
+          }
         }
       }
       rootEl.setAttribute('data-desk-phase', phase);

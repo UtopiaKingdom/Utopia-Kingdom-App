@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Build a relocatable macOS Python tree into .venv/runtime for electron-builder.
- * Uses astral python-build-standalone (same idea as Windows bundle_python_runtime.js).
+ * Ships only what the Pocket Option SSID helper needs (BinaryOptionsToolsV2).
  *
  * Run on macOS only (GitHub Actions macos-latest).
  */
@@ -71,6 +71,22 @@ function archTriple() {
   die(`unsupported arch: ${a}`);
 }
 
+function linkVenvBin(py) {
+  const binDir = path.join(venvRoot, 'bin');
+  fs.mkdirSync(binDir, { recursive: true });
+  for (const name of ['python3', 'python']) {
+    const dest = path.join(binDir, name);
+    try { fs.rmSync(dest, { force: true }); } catch (e) {}
+    try {
+      fs.symlinkSync(path.relative(binDir, py), dest);
+    } catch (e) {
+      try { fs.copyFileSync(py, dest); } catch (e2) {}
+    }
+    try { fs.chmodSync(dest, 0o755); } catch (e) {}
+  }
+  try { fs.chmodSync(py, 0o755); } catch (e) {}
+}
+
 async function main() {
   if (process.platform !== 'darwin') {
     die('macOS only — use scripts/bundle_python_runtime.js on Windows');
@@ -81,6 +97,7 @@ async function main() {
   const url = `https://github.com/astral-sh/python-build-standalone/releases/download/${PSA_TAG}/${asset}`;
   const tgz = path.join(root, '.cache', asset);
 
+  console.log(`[prepare_mac_python] arch=${process.arch} triple=${triple}`);
   console.log(`[prepare_mac_python] ${url}`);
   fs.mkdirSync(path.dirname(tgz), { recursive: true });
   if (!exists(tgz)) {
@@ -94,34 +111,61 @@ async function main() {
   }
   fs.mkdirSync(runtimeRoot, { recursive: true });
 
-  // Archive root is usually `python/` — strip into runtime/
   run('tar', ['-xzf', tgz, '-C', runtimeRoot, '--strip-components=1']);
 
   const py = path.join(runtimeRoot, 'bin', 'python3');
   if (!exists(py)) die(`missing ${py} after extract`);
+  linkVenvBin(py);
 
-  console.log('[prepare_mac_python] installing pip deps into runtime');
+  console.log('[prepare_mac_python] installing pip + SSID helper deps');
   run(py, ['-m', 'ensurepip', '--upgrade']);
   run(py, ['-m', 'pip', 'install', '--upgrade', 'pip', 'wheel', 'setuptools']);
 
-  const reqs = [
-    path.join(root, 'requirements.txt'),
-    path.join(root, 'PO SSID Collector', 'requirements.txt')
-  ].filter(exists);
+  // Only Pocket Option helper deps — do NOT install the full app requirements.txt
+  // (selenium/flask/etc. are unused here and can soft-fail / bloat the DMG).
+  const poReq = path.join(root, 'PO SSID Collector', 'requirements.txt');
+  if (!exists(poReq)) die(`missing ${poReq}`);
 
-  for (const req of reqs) {
-    console.log(`[prepare_mac_python] pip install -r ${path.relative(root, req)}`);
-    // BinaryOptionsToolsV2 may be Windows-oriented; continue so the app still builds.
-    const r = spawnSync(py, ['-m', 'pip', 'install', '-r', req], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-    if (r.status !== 0) {
-      console.warn(`[prepare_mac_python] WARN pip failed for ${req}:\n${r.stderr || r.stdout}`);
-    }
+  console.log(`[prepare_mac_python] pip install -r ${path.relative(root, poReq)}`);
+  const pip = spawnSync(py, ['-m', 'pip', 'install', '-r', poReq], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  if (pip.status !== 0) {
+    die(`pip failed for Pocket Option helper:\n${pip.stderr || pip.stdout || 'no output'}`);
   }
+  console.log(String(pip.stdout || '').trim().split('\n').slice(-8).join('\n'));
 
-  // Minimal pyvenv.cfg so ensurePortableBundledVenv can rewrite home if needed.
+  const botv2 = spawnSync(
+    py,
+    ['-c', 'from BinaryOptionsToolsV2.pocketoption import PocketOption; print("botv2-ok")'],
+    { encoding: 'utf8' }
+  );
+  if (botv2.status !== 0) {
+    die(`BinaryOptionsToolsV2 import failed:\n${botv2.stderr || botv2.stdout || 'import failed'}`);
+  }
+  console.log(`[prepare_mac_python] ${String(botv2.stdout).trim()}`);
+
+  const collector = path.join(root, 'PO SSID Collector');
+  const workerProbe = spawnSync(
+    py,
+    [
+      '-c',
+      [
+        'import sys, os',
+        `sys.path.insert(0, ${JSON.stringify(collector)})`,
+        'import po_ssid',
+        'import execute_trade',
+        'print("worker-imports-ok")'
+      ].join('; ')
+    ],
+    { encoding: 'utf8', cwd: collector }
+  );
+  if (workerProbe.status !== 0) {
+    die(`SSID helper import probe failed:\n${workerProbe.stderr || workerProbe.stdout || 'failed'}`);
+  }
+  console.log(`[prepare_mac_python] ${String(workerProbe.stdout).trim()}`);
+
   fs.writeFileSync(
     path.join(venvRoot, 'pyvenv.cfg'),
     [
