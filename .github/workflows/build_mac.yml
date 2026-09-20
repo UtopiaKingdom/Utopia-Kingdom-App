@@ -24,6 +24,9 @@ jobs:
       - name: Install npm deps
         run: npm install --no-fund --no-audit
 
+      - name: Ship public config stub
+        run: cp config.ship.json config.json
+
       - name: Bundle relocatable Python for macOS
         run: node scripts/prepare_mac_python.js
 
